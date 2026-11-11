@@ -1,0 +1,14 @@
+# Build artifacts and local state
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.db
+*.sqlite
+*.sqlite3
+.DS_Store
+.env

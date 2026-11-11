@@ -1,0 +1,44 @@
+# READY ROOM — one-command local stack.
+#
+#   docker compose up --build      →  http://localhost:8080
+#
+# The browser talks only to the frontend nginx origin, which serves the SPA and
+# reverse-proxies /api/* to the backend. No external services, databases,
+# identity providers, or credentials are required.
+
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      READY_ROOM_ENVIRONMENT: demo
+      READY_ROOM_DB_ADAPTER: sqlalchemy
+      # SQLite on a persistent named volume. Point this at a PostgreSQL URL to
+      # run the same application against PostgreSQL — no code changes needed.
+      READY_ROOM_DATABASE_URL: sqlite:////data/ready_room.db
+      READY_ROOM_AUTH_PROVIDER: single_user
+      READY_ROOM_OPERATOR_ID: maverick
+      READY_ROOM_OPERATOR_DISPLAY_NAME: Maverick
+      READY_ROOM_DEFAULT_TIMEZONE: America/New_York
+      READY_ROOM_AUTHORIZATION_ENGINE: policy
+      READY_ROOM_SEED_ON_STARTUP: "true"
+    volumes:
+      - ready_room_data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      # Wait for backend *health*, not merely process start.
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ready_room_data:
+    name: ready_room_data

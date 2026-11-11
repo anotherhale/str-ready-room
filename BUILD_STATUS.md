@@ -18,6 +18,7 @@ Last updated: 2026-11-11
 | M7 Seeding and operational polish | **verified** | Idempotent seed (restart does not duplicate); reset restores defaults; README setup/config documented |
 | M8 Database portability verification | **verified** | Same suite green on SQLite **and** PostgreSQL (`READY_ROOM_TEST_DATABASE_URL=postgresql+psycopg://...:55432/...`) with no domain/application changes |
 | M9 Full verification and submission | **verified** | Clean Docker build; backend 120 passed + ruff + mypy clean; frontend 21 passed + typecheck + build; persistence across restart confirmed; live API exercised through the nginx origin |
+| M10 Dev quick-capture "Not Found" fix + timezone/UX polish | **verified** | Root-caused to the Vite dev proxy target (not the capture endpoint); proxy target now configurable + documented; `GET /api/timezones` + Settings drop-down; overdue/due card shading; quick capture captures category/due/priority. Backend **122 passed** + ruff clean; frontend **23 passed** + typecheck + build; live browser E2E on the rebuilt container (capture 201, "Captured.", 18 timezone options) |
 
 ## Environment notes
 
@@ -52,6 +53,23 @@ Last updated: 2026-11-11
 - 2026-11-11 — Browser: dashboard renders live seeded data; quick capture from
   the UI persisted a task visible in the inventory; Settings and Inventory views
   render correctly (M5).
+- 2026-11-11 — **Reproduced the "Not Found" report**: `npm run dev` (default
+  proxy `http://localhost:8000`) → all `/api/*` return `{"detail":"Not Found"}`
+  (404); `POST /api/tasks` from the UI shows a "Not Found" error. Root cause:
+  port 8000 was an unrelated service, not the backend (M10).
+- 2026-11-11 — `VITE_API_PROXY_TARGET=http://localhost:8099 npm run dev` →
+  `GET /api/me` 200 and browser quick capture `POST /api/tasks` **201**,
+  toast "Captured." (M10).
+- 2026-11-11 — `pytest -q` (full) -> **122 passed, 1 warning** (adds two
+  `/api/timezones` integration tests); `ruff check app tests` -> **All checks
+  passed** (M10).
+- 2026-11-11 — `npm run test:run` -> **23 passed** (QuickCapture suite expanded
+  to 5); `npm run typecheck` -> clean; `npm run build` -> built (M10).
+- 2026-11-11 — `docker compose up --build` (rebuilt) -> both containers healthy;
+  `GET /api/timezones` -> 18 zones incl. `America/New_York`, default
+  `America/Denver`; browser E2E on the container: quick capture with
+  category/priority/date `POST 201`, toast "Captured.", input cleared, Settings
+  timezone `<select>` renders 18 options, no console errors (M10).
 
 ## Remaining work
 

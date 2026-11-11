@@ -101,6 +101,20 @@ here. Keep this file current when a durable invariant or boundary changes.
   authorization outcomes, with a consistent typed error payload.
 - `TaskRead` includes computed fields (`urgency`, `days_until_due`, embedded
   recurrence info). These are computed, not stored columns.
+- `GET /api/timezones` returns the curated IANA shortlist plus `default_timezone`.
+  The list always includes the operator's current zone, even if it is outside the
+  shortlist. The backend still accepts any valid IANA identifier on `PATCH
+  /api/settings`.
+
+## Frontend dev proxy (gotcha)
+
+- The Vite dev server proxies `/api` to `VITE_API_PROXY_TARGET`
+  (default `http://localhost:8000`, see `frontend/.env.example`).
+- If that target is **not** a running READY ROOM backend, **every** `/api/*`
+  call returns `{"detail":"Not Found"}` — including quick capture. This is a
+  proxy misconfiguration, not an endpoint defect. Point the variable at the
+  backend (or the nginx origin) you actually started. The containerized app is
+  unaffected: nginx proxies `/api/*` to `backend:8000`.
 
 ## Commands
 

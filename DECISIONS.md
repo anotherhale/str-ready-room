@@ -284,3 +284,82 @@ appended as decisions are made. Each entry is tagged with its category:
   rather than back-dated.
 - **Reasoning:** The spec forbids fabricating historical timestamps; all
   recorded dates are the actual date of execution.
+
+## D-021 — Fix: quick capture "Not Found" in local dev (2026-11-11)
+
+- **Category:** ED (bug fix)
+- **Context:** Quick capture reported a **"Not Found"** error when the SPA was
+  run with the Vite dev server, while the containerized app at
+  `http://localhost:8080` worked. Reproduction: `npm run dev` → `POST /api/tasks`
+  returned `{"detail":"Not Found"}` (404) for *every* `/api/*` path, including
+  `GET /api/me` and `GET /api/dashboard`.
+- **Root cause:** `vite.config.ts` proxied `/api` to `http://localhost:8000` by
+  default. In this development environment port 8000 was occupied by an
+  unrelated service that answers `/api/*` with a generic `{"detail":"Not Found"}`.
+  The proxy forwarded faithfully; the dev server's own origin returned a JSON
+  "Not Found" for all API calls, so the SPA surfaced a "Not Found" error on
+  capture. This is a *development-environment* misconfiguration, not a defect in
+  the capture endpoint (verified: the same POST returns `201` through the
+  containerized nginx origin and through the dev proxy when pointed at a real
+  backend).
+- **Decision:** (1) Read the proxy target via `loadEnv` so a checked-in
+  `frontend/.env` (or `VITE_API_PROXY_TARGET` in the environment) selects the
+  backend, keeping the `http://localhost:8000` default for a directly-run
+  `uvicorn`. (2) Apply the same proxy to `vite preview`, which otherwise serves
+  the production build with no `/api` proxy and reproduces the identical
+  "Not Found". (3) Add `frontend/.env.example` documenting the override and the
+  nginx-origin alternative. (4) Document the failure mode in the README
+  "Local development" section.
+- **Alternatives:** Change the default to `http://localhost:8080` — rejected: it
+  would break the common `uvicorn --port 8000` workflow and couple the frontend
+  default to the Compose port mapping. Add CORS + call the backend directly from
+  the browser — rejected: the spec keeps the browser same-origin behind a proxy.
+- **Consequences:** Dev capture works once the proxy target is a running backend.
+  The default remains correct for the documented `uvicorn` workflow; Compose users
+  either publish the backend port or set `VITE_API_PROXY_TARGET` to the nginx
+  origin. No application code changed.
+
+## D-022 — Configurable timezone drop-down (2026-11-11)
+
+- **Category:** ED
+- **Context:** Settings exposed the operator timezone as a free-text field, which
+  invited typos that the backend then rejected (400).
+- **Decision:** Add `GET /api/timezones` returning a curated IANA shortlist
+  (`COMMON_TIMEZONES` in `config.py`) plus `default_timezone`, and render a
+  `<select>` in Settings. The list always includes the operator's current zone
+  (even if it is outside the shortlist) so the control never displays a value it
+  cannot represent; the backend still accepts any valid IANA identifier.
+- **Alternatives:** Ship the full `zoneinfo.available_timezones()` (~600 entries)
+  — rejected as noisy for a single-operator demo. Keep free text — rejected as
+  error-prone.
+- **Consequences:** `TimezonesResponse` added to the response schemas; two
+  integration tests cover the shortlist and the outside-shortlist case. No domain
+  or application change.
+
+## D-023 — Overdue/due-today card shading (2026-11-11)
+
+- **Category:** PI
+- **Context:** The dashboard's visual convention calls for "red: overdue, amber:
+  approaching" while never relying on colour alone. Task cards previously carried
+  only a coloured left border; overdue and due-today were easy to miss in a scan.
+- **Decision:** Add a subtle left-to-right background gradient to `.urgency-overdue`
+  and `.urgency-due` cards, plus a green left border for `.urgency-completed`. The
+  existing text label and glyph remain the primary, colour-independent signals.
+- **Consequences:** CSS-only; no component or contract change. Respects the print
+  stylesheet, which neutralises backgrounds.
+
+## D-024 — Quick capture captures category, due date, and priority (2026-11-11)
+
+- **Category:** PI
+- **Context:** Fast capture previously recorded only a title (defaulting the
+  category server-side). Maverick's core need is to capture a responsibility
+  *before it is forgotten* with enough context to be useful later.
+- **Decision:** Extend `QuickCapture` to a title plus three compact, pre-defaulted
+  controls — category (first configured category), due date (local today), and
+  priority (normal) — while keeping one-click capture. The full dialog remains the
+  path for notes and recurrence. The component now receives the category list and
+  submits a `TaskCreateInput`.
+- **Alternatives:** Keep title-only and force a second edit pass — rejected: adds
+  friction and defeats "fast capture".
+- **Consequences:** `App.tsx` passes active categories and forwards the full input;
+  QuickCapture tests updated (5 passing). The backend already accepted these fields.

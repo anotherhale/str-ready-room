@@ -129,6 +129,12 @@ a {
   min-width: 120px;
 }
 
+.quick-capture select,
+.quick-capture input[type="date"] {
+  flex: 0 0 auto;
+  max-width: 190px;
+}
+
 .quick-capture .hint {
   color: var(--text-faint);
   font-size: 12px;
@@ -268,10 +274,12 @@ a {
 
 .task-card.urgency-overdue {
   border-left: 3px solid var(--critical);
+  background: linear-gradient(90deg, var(--critical-bg), transparent 60%), var(--bg-panel-2);
 }
 
 .task-card.urgency-due {
   border-left: 3px solid var(--warning);
+  background: linear-gradient(90deg, var(--warning-bg), transparent 60%), var(--bg-panel-2);
 }
 
 .task-card.urgency-watch {
@@ -279,6 +287,7 @@ a {
 }
 
 .task-card.urgency-completed {
+  border-left: 3px solid var(--ok);
   opacity: 0.72;
 }
 

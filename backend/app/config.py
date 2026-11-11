@@ -10,6 +10,30 @@ from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+#: Curated shortlist of IANA zones offered in the Settings selector.  Validation
+#: still accepts any real IANA identifier, so this is a convenience, not a
+#: restriction.  A full list of ~600 zones would overwhelm a single operator.
+COMMON_TIMEZONES: tuple[str, ...] = (
+    "UTC",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "America/Phoenix",
+    "Pacific/Honolulu",
+    "America/Puerto_Rico",
+    "Pacific/Guam",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Asia/Tokyo",
+    "Asia/Seoul",
+    "Asia/Singapore",
+    "Asia/Dubai",
+    "Australia/Sydney",
+)
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="READY_ROOM_", env_file=None, extra="ignore")

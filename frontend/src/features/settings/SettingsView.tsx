@@ -23,6 +23,7 @@ export function SettingsView({
 }: SettingsViewProps) {
   const [warningWindow, setWarningWindow] = useState(settings.warning_window_days);
   const [timezone, setTimezone] = useState(settings.timezone);
+  const [timezones, setTimezones] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -32,6 +33,29 @@ export function SettingsView({
     setWarningWindow(settings.warning_window_days);
     setTimezone(settings.timezone);
   }, [settings]);
+
+  // Load the curated zone shortlist for the drop-down.  A failure is
+  // non-fatal: the current zone is still shown and saved.
+  useEffect(() => {
+    let active = true;
+    api
+      .listTimezones()
+      .then((res) => {
+        if (active) setTimezones(res.timezones);
+      })
+      .catch(() => {
+        if (active) setTimezones([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Always offer the operator's current zone, even if it is outside the
+  // curated shortlist (the backend accepts any valid IANA identifier).
+  const timezoneOptions = timezones.includes(settings.timezone)
+    ? timezones
+    : [settings.timezone, ...timezones];
 
   function flash(message: string) {
     setToast(message);
@@ -77,14 +101,15 @@ export function SettingsView({
           </div>
           <div className="field">
             <label htmlFor="set-tz">Operator timezone</label>
-            <input
-              id="set-tz"
-              type="text"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-            />
+            <select id="set-tz" value={timezone} onChange={(e) => setTimezone(e.target.value)}>
+              {timezoneOptions.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
             <span style={{ fontSize: 12, color: "var(--text-faint)" }}>
-              IANA identifier, e.g. America/New_York.
+              Drives local-date and Watch calculations. Any valid IANA zone is accepted.
             </span>
           </div>
           <button

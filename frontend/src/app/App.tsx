@@ -47,10 +47,9 @@ export function App() {
     }
   }
 
-  async function handleQuickCapture(title: string) {
-    const category = data.settings?.categories.find((c) => c.active)?.name ?? "General";
+  async function handleQuickCapture(input: TaskCreateInput) {
     try {
-      await mutate(() => api.createTask({ title, category }));
+      await mutate(() => api.createTask(input));
       flash("Captured.");
     } catch (err) {
       handleError(err);
@@ -87,7 +86,9 @@ export function App() {
     }
   }
 
-  const categories = (data.settings?.categories ?? []).map((c) => c.name);
+  const categories = (data.settings?.categories ?? [])
+    .filter((c) => c.active)
+    .map((c) => c.name);
 
   if (loading && !data.dashboard) {
     return <div className="status">Loading READY ROOM…</div>;
@@ -124,7 +125,12 @@ export function App() {
         <div className="header-spacer" />
       </header>
 
-      <QuickCapture onSubmit={handleQuickCapture} onOpenFull={openNew} busy={busy} />
+      <QuickCapture
+        categories={categories}
+        onSubmit={handleQuickCapture}
+        onOpenFull={openNew}
+        busy={busy}
+      />
 
       <main className="app-main">
         {error && (

@@ -49,6 +49,37 @@ Three ways to return to the demonstration state:
 
 ---
 
+## Local development (frontend hot reload)
+
+Docker Compose is the supported runtime; the instructions below are only for
+running the SPA with Vite hot reload against a backend.
+
+1. Start a backend the dev server can reach. Easiest: run the stack and point
+   the proxy at the nginx origin, which forwards `/api` to the backend:
+
+   ```bash
+   docker compose up --build          # stack on http://localhost:8080
+   cd frontend
+   VITE_API_PROXY_TARGET=http://localhost:8080 npm run dev   # http://localhost:5173
+   ```
+
+   Alternatively run the backend directly (it needs no Docker) and keep the
+   default proxy target:
+
+   ```bash
+   cd backend && uvicorn app.main:app --reload --port 8000
+   cd frontend && npm run dev
+   ```
+
+The Vite dev server proxies `/api` to `VITE_API_PROXY_TARGET` (default
+`http://localhost:8000`; see `frontend/.env.example`). The same proxy applies to
+`vite preview` (production build). **If that target is not a running READY ROOM
+backend, every `/api/*` call — including quick capture — returns
+`{"detail":"Not Found"}`.** Point the variable at the backend/nginx origin you
+actually started.
+
+---
+
 ## Product overview
 
 ### The operational scan
@@ -247,6 +278,7 @@ Base path: `/api`. Interactive docs at `/api/docs`.
 | POST | `/api/recurrence/preview` | Preview upcoming occurrence dates |
 | GET | `/api/settings` | Read settings + categories |
 | PATCH | `/api/settings` | Update warning window / timezone |
+| GET | `/api/timezones` | Curated IANA timezone list (includes the current zone) |
 | GET | `/api/categories` | List categories |
 | POST | `/api/categories` | Create category (normalised, duplicate -> 409) |
 | PATCH | `/api/categories/{id}` | Rename / activate / deactivate |

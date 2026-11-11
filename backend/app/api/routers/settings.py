@@ -9,6 +9,7 @@ from ...application.commands import (
     UpdateCategoryCommand,
     UpdateSettingsCommand,
 )
+from ...config import COMMON_TIMEZONES
 from ...schemas.requests import (
     CategoryCreateRequest,
     CategoryUpdateRequest,
@@ -22,11 +23,28 @@ from ...schemas.responses import (
     RecurrencePreviewResponse,
     ResetResponse,
     SettingsResponse,
+    TimezonesResponse,
     UpcomingOccurrenceResponse,
 )
 from ..dependencies import ContainerDep, CurrentPrincipal
 
 router = APIRouter(tags=["settings"])
+
+
+# -- timezones ------------------------------------------------------------
+@router.get("/timezones", response_model=TimezonesResponse)
+def list_timezones(container: ContainerDep, principal: CurrentPrincipal) -> TimezonesResponse:
+    """Curated IANA zones for the Settings selector.
+
+    Any real IANA identifier is still accepted by ``PATCH /settings``; this
+    endpoint only powers a drop-down so the operator does not have to type a
+    zone name from memory.
+    """
+    current = container.settings_service.get_settings(principal).timezone
+    zones = list(COMMON_TIMEZONES)
+    if current not in zones:
+        zones.insert(0, current)
+    return TimezonesResponse(timezones=zones, default_timezone=current)
 
 
 # -- settings -------------------------------------------------------------

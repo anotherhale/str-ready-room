@@ -130,6 +130,28 @@ def test_briefing_endpoint(client):
     assert body["date"] == "2026-03-10"
 
 
+def test_timezones_endpoint_returns_curated_list_with_current(client):
+    resp = client.get("/api/timezones")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["default_timezone"] == "America/New_York"
+    assert "America/New_York" in body["timezones"]
+    assert "UTC" in body["timezones"]
+    assert len(body["timezones"]) >= 10
+
+
+def test_timezones_endpoint_includes_configured_zone_outside_shortlist(client):
+    # Point the operator at a valid zone that is not in the curated shortlist;
+    # the endpoint must still offer it so the drop-down can display it.
+    patch = client.patch("/api/settings", json={"timezone": "Antarctica/Troll"})
+    assert patch.status_code == 200, patch.text
+    resp = client.get("/api/timezones")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["default_timezone"] == "Antarctica/Troll"
+    assert "Antarctica/Troll" in body["timezones"]
+
+
 def test_demo_reset_endpoint(client):
     resp = client.post("/api/demo/reset")
     assert resp.status_code == 200

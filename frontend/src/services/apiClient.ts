@@ -15,6 +15,7 @@ import type {
   TaskCreateInput,
   TaskListResponse,
   TaskUpdateInput,
+  TimezonesResponse,
 } from "../types";
 
 export class ApiError extends Error {
@@ -133,6 +134,7 @@ export const api = {
   getSettings: () => request<Settings>("/settings"),
   updateSettings: (input: { warning_window_days?: number; timezone?: string }) =>
     request<Settings>("/settings", { method: "PATCH", body: JSON.stringify(input) }),
+  listTimezones: () => request<TimezonesResponse>("/timezones"),
 
   listCategories: () => request<Category[]>("/categories"),
   createCategory: (name: string) =>

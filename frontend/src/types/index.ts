@@ -92,6 +92,11 @@ export interface Settings {
   categories: Category[];
 }
 
+export interface TimezonesResponse {
+  timezones: string[];
+  default_timezone: string;
+}
+
 export interface RecurrenceOverviewItem {
   rule_id: string;
   name: string;

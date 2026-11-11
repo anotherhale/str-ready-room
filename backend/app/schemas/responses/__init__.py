@@ -71,6 +71,17 @@ class SettingsResponse(BaseModel):
     categories: list[CategoryResponse]
 
 
+class TimezonesResponse(BaseModel):
+    """Curated IANA shortlist for the Settings selector.
+
+    ``default_timezone`` is the operator's configured zone so the UI can
+    guarantee it is selectable even if it is not in the shortlist.
+    """
+
+    timezones: list[str]
+    default_timezone: str
+
+
 class CountsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

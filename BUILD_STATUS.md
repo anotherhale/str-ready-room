@@ -102,6 +102,16 @@ Last updated: 2026-11-11
 - 2026-11-12 — Default operator timezone changed to **America/Denver** (MST/MDT)
   in `config.py`, the domain default, and `docker-compose.yml`; docs updated
   (README config table, AGENTS). A fresh reset/volume uses Denver.
+- 2026-11-12 — Calendar create-timezone fix: an event entered as 16:00 in the
+  `datetime-local` form was stored/returned **naive**, so the browser
+  re-interpreted it in its own zone and displayed 18:00. `create_event` now
+  anchors floating local times to the operator's zone; live check: POST
+  `2026-11-12T16:00` -> `2026-11-12T16:00:00-07:00`, survives sync. Backend
+  **193 passed** (+3), ruff + mypy clean (D-037).
+- 2026-11-12 — Calendar delete fix: `DELETE /api/calendar/events/{id}` returned
+  **500** because the cached CalDAV href is server-relative and `urllib` rejects
+  it; the provider now resolves hrefs to absolute in `list_events`/`delete_event`.
+  Live check: delete -> **204**. Backend tests added for the URL shapes (D-038).
 
 ## Remaining work
 

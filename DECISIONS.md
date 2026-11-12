@@ -639,3 +639,47 @@ appended as decisions are made. Each entry is tagged with its category:
   operator changes it in Settings or the volume is wiped — deliberate, since a
   stored preference must not be silently overwritten. The default is an
   assumption about the customer's home station, to confirm with Maverick.
+
+## D-037 — Created calendar events anchor floating local time to the operator zone (2026-11-12)
+
+- **Category:** ED
+- **Context:** The "+ Event" form uses a `datetime-local` control, which submits a
+  **floating** (naive) wall-clock string such as `2026-11-12T16:00`. The service
+  stored and returned it verbatim with no offset, so the DTO's `start` was
+  ambiguous. The browser formats with `Intl.DateTimeFormat({ timeZone })`, which
+  first interprets a naive string in the *browser's* zone and then re-projects
+  into the operator's zone — so an event entered for 16:00 rendered as 18:00 for
+  a viewer in Eastern time. Seeded events were unaffected because they carry an
+  explicit `TZID`/offset.
+- **Decision:** In `CalendarService.create_event`, a naive `start`/`end` is
+  anchored to the operator's **effective timezone** (the same setting that
+  resolves "today"), producing an offset-bearing value end to end. An already
+  aware value passes through untouched, so API callers that send an offset or a
+  `Z` are unaffected.
+- **Alternatives:** Assume naive input is UTC (the `serialize_calendar` rule) —
+  rejected: the UI means *local* time, so 16:00 would become 09:00 in Denver.
+  Reject naive input with a 422 and force the client to send an offset —
+  rejected: worse UX for a single-operator demo and a needless contract break.
+- **Consequences:** The zone is resolved once, before the provider call; the
+  read is a short separate unit of work (no provider I/O inside a transaction,
+  matching `sync`). `serialize_calendar` still has its own "naive = UTC" rule for
+  other callers, but the create path no longer feeds it a naive value.
+
+## D-038 — CalDAV provider resolves relative event hrefs before use (2026-11-12)
+
+- **Category:** ED
+- **Context:** Surfaced while cleaning up demo data: `DELETE /api/calendar/events/{id}`
+  returned HTTP 500. `list_events` cached the href exactly as CalDAV returns it —
+  a **server-relative** path like `/maverick/detachment/x.ics`. `delete_event`
+  then passed that straight to `urllib`, which raised `unknown url type` because
+  it requires an absolute URL.
+- **Decision:** Add `CalDavCalendarProvider._absolute(href)`, which resolves a
+  relative href against the configured base URL and passes absolute URLs through
+  unchanged. Use it in `list_events` (so the cache stores absolute hrefs) and in
+  `delete_event` (so a legacy relative href already in the cache still works).
+- **Alternatives:** Join only at delete time — rejected: the cache should hold
+  canonical absolute hrefs. Trust the provider to return absolute hrefs —
+  rejected: Radicale does not.
+- **Consequences:** Deleting a cached event works whether its stored href is
+  relative (pre-fix rows) or absolute (post-fix). Covered by unit tests that pin
+  the URL shapes with a stubbed `_request`, so no network is touched.

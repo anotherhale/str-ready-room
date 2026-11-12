@@ -18,6 +18,7 @@ Design notes (see DECISIONS D-025, D-030, D-032):
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from ...calendar.domain import CalendarEvent
 from ...calendar.entities import CalendarEventRecord
@@ -196,12 +197,21 @@ class CalendarService:
         # sync finds this row instead of replacing it (DECISIONS D-032).
         resolved = self._resolve_calendar(calendar_ref)
 
+        # A floating (naive) local time from the UI is anchored to the operator's
+        # effective timezone. Left naive, the value is ambiguous: the browser
+        # re-interprets it in its own zone before formatting, so the displayed
+        # time drifts (see DECISIONS D-037). The read is short and keeps the
+        # provider call outside the transaction, matching ``sync``.
+        with self._database.create() as uow:
+            settings = self._settings(uow, principal)
+            timezone_name = settings.timezone
+
         event = CalendarEvent(
             uid=self._ids.new_id(),
             calendar_id=resolved,
             summary=command.summary.strip(),
-            start=command.start,
-            end=command.end,
+            start=self._anchor_local(command.start, timezone_name),
+            end=self._anchor_local(command.end, timezone_name) if command.end is not None else None,
             all_day=command.all_day,
             location=command.location,
             description=command.description,
@@ -304,6 +314,22 @@ class CalendarService:
             return self._provider.resolve_calendar_id(ref)
         except CalendarError:
             return ref
+
+    @staticmethod
+    def _anchor_local(value: datetime, timezone_name: str | None) -> datetime:
+        """Attach the operator's zone to a floating (naive) local wall-clock time.
+
+        An aware value is passed through unchanged. A naive value is the
+        operator's *local* time (the UI's datetime-local control), so it is
+        anchored to their zone rather than left ambiguous or coerced to UTC.
+        """
+        if value.tzinfo is not None:
+            return value
+        try:
+            zone = ZoneInfo(timezone_name) if timezone_name else None
+        except Exception:  # noqa: BLE001 - unknown zone: leave the value floating
+            zone = None
+        return value.replace(tzinfo=zone) if zone is not None else value
 
     @staticmethod
     def _to_dto(record: CalendarEventRecord) -> CalendarEventDTO:

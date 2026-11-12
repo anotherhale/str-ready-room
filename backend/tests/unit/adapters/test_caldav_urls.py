@@ -70,3 +70,30 @@ def test_resolve_calendar_id_builds_under_principal_home(monkeypatch):
 
     assert resolved == f"{BASE}/maverick/detachment/"
     assert calls == [f"{BASE}/maverick/detachment/"]
+
+
+def test_absolute_resolves_server_relative_href():
+    p = _provider()
+    # CalDAV REPORT responses carry a server-relative path.
+    assert p._absolute("/maverick/detachment/x.ics") == f"{BASE}/maverick/detachment/x.ics"
+
+
+def test_absolute_passes_through_absolute_url():
+    p = _provider()
+    assert p._absolute(f"{BASE}/maverick/detachment/x.ics") == f"{BASE}/maverick/detachment/x.ics"
+
+
+def test_delete_event_resolves_relative_href_before_request(monkeypatch):
+    # Regression: a cached relative href was handed to urllib unchanged, which
+    # raised "unknown url type" -> HTTP 500 on delete.
+    p = _provider()
+    calls: list[str] = []
+
+    def fake_request(method, url, **kwargs):  # noqa: ANN001
+        calls.append(url)
+        return 204, ""
+
+    monkeypatch.setattr(p, "_request", fake_request)
+    p.delete_event("detachment", "uid-1", href="/maverick/detachment/uid-1.ics")
+
+    assert calls == [f"{BASE}/maverick/detachment/uid-1.ics"]

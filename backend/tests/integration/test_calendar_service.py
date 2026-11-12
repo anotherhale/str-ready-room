@@ -144,6 +144,36 @@ def test_create_event_caches_under_canonical_id(calendar, provider, services):
     assert len(calendar.agenda(services["principal"], days=7).events) == 1
 
 
+def test_create_event_anchors_floating_local_time_to_operator_zone(calendar, services):
+    # The UI's datetime-local control sends a naive wall-clock time. It must be
+    # anchored to the operator's zone, not stored/returned as ambiguous or as
+    # UTC — otherwise the browser re-interprets it and the displayed time drifts
+    # (regression: 16:00 entered showed as 18:00).
+    created = calendar.create_event(
+        services["principal"],
+        CalendarEventCreateCommand(
+            summary="Floating local time",
+            start=datetime(2026, 3, 12, 16, 0),
+            end=datetime(2026, 3, 12, 17, 0),
+        ),
+    )
+    # The principal's zone is America/New_York (conftest); the wall clock must
+    # survive and the value must be unambiguous (offset-bearing).
+    assert created.start.tzinfo is not None
+    assert created.start.utcoffset() is not None
+    assert created.start.hour == 16
+    assert created.start.utcoffset().total_seconds() == -4 * 3600  # EDT on 2026-03-12
+
+
+def test_create_event_preserves_aware_time(calendar, services):
+    aware = datetime.combine(date(2026, 3, 12), time(16, 0), tzinfo=ZONE)
+    created = calendar.create_event(
+        services["principal"],
+        CalendarEventCreateCommand(summary="Aware time", start=aware),
+    )
+    assert created.start == aware
+
+
 def test_agenda_window_excludes_far_future(calendar, provider, services):
     provider.seed(_event("near", day=10))
     provider.seed(_event("far", day=25))

@@ -102,7 +102,10 @@ class CalDavCalendarProvider(CalendarProvider):
 
         events: list[CalendarEvent] = []
         for response in _iter_responses(text):
-            href = _first_text(response, "href")
+            raw_href = _first_text(response, "href")
+            # Cache an absolute href: CalDAV returns a server-relative path
+            # (e.g. /maverick/detachment/x.ics) that urllib cannot open directly.
+            href = self._absolute(raw_href) if raw_href else None
             data = _first_text(response, "calendar-data", _CALDAV)
             if not data:
                 continue
@@ -136,7 +139,7 @@ class CalDavCalendarProvider(CalendarProvider):
         return event
 
     def delete_event(self, calendar_id: str, uid: str, href: str | None = None) -> None:
-        target = href or f"{self._calendar_url(calendar_id)}{quote(uid)}.ics"
+        target = self._absolute(href) if href else f"{self._calendar_url(calendar_id)}{quote(uid)}.ics"
         status, _ = self._request("DELETE", target)
         if status not in (200, 204, 404):
             raise CalendarError(f"CalDAV DELETE failed with status {status}", status=502)
@@ -215,6 +218,15 @@ class CalDavCalendarProvider(CalendarProvider):
         self._default_timezone_hint = timezone_name
 
     # -- internals -----------------------------------------------------
+    def _absolute(self, href: str) -> str:
+        """Resolve a possibly server-relative href against the CalDAV base URL.
+
+        ``list_events`` and ``resolve_calendar_id`` may return absolute URLs;
+        a REPORT response returns a server-relative path. Both must become a
+        URL urllib can open.
+        """
+        return href if href.startswith(("http://", "https://")) else urljoin(f"{self._base_url}/", href)
+
     def _calendar_url(self, calendar_id: str) -> str:
         """Absolute collection URL for a canonical id or a bare reference.
 

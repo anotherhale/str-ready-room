@@ -617,3 +617,25 @@ appended as decisions are made. Each entry is tagged with its category:
   wired only in `composition.py`; the application layer still imports no adapter.
   Integration-seed tests cover the calendar reseed+refresh, the mailbox reseed,
   the no-duplicate-on-reset case, and the base stack with no integrations.
+
+## D-036 — Default operator timezone is America/Denver (2026-11-12)
+
+- **Category:** AS (assumption to validate) / ED
+- **Context:** The operator's zone is how "today", urgency, and the daily
+  briefing are resolved, so its default is customer-visible on first run. The
+  original default was `America/New_York`; the customer asked for MST/Denver.
+- **Decision:** Default to **`America/Denver`** — the IANA zone for US Mountain
+  Time (MST in winter, MDT in summer, DST-aware). "MST/Denver" maps to this zone,
+  not a fixed `MST` offset, so the demo stays correct across DST transitions.
+  Changed in all three places a default is defined: `Settings.default_timezone`
+  (`config.py`), `DEFAULT_TIMEZONE` (`domain/settings/entities.py`), and the
+  `READY_ROOM_DEFAULT_TIMEZONE` value in `docker-compose.yml`.
+- **Alternatives:** A fixed-offset `Etc/GMT+7` — rejected: it never observes DST
+  and would drift an hour from Denver half the year. Leaving `America/New_York` —
+  rejected: contradicts the customer's stated location.
+- **Consequences:** New/fresh installs and `POST /api/demo/reset` use Denver
+  (reset restores the operator's effective zone, which flows from this default).
+  An existing database keeps whatever zone is already persisted until the
+  operator changes it in Settings or the volume is wiped — deliberate, since a
+  stored preference must not be silently overwritten. The default is an
+  assumption about the customer's home station, to confirm with Maverick.

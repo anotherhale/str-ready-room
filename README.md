@@ -249,7 +249,7 @@ prefix:
 | `READY_ROOM_AUTH_PROVIDER` | `single_user` | Identity adapter key |
 | `READY_ROOM_OPERATOR_ID` | `maverick` | Demo principal id |
 | `READY_ROOM_OPERATOR_DISPLAY_NAME` | `Maverick` | Demo principal name |
-| `READY_ROOM_DEFAULT_TIMEZONE` | `America/New_York` | Operator timezone (validated) |
+| `READY_ROOM_DEFAULT_TIMEZONE` | `America/Denver` | Operator timezone (validated) |
 | `READY_ROOM_AUTHORIZATION_ENGINE` | `policy` | Authorization adapter key |
 | `READY_ROOM_SEED_ON_STARTUP` | `true` | Idempotent demo seeding |
 | `READY_ROOM_CALENDAR_PROVIDER` | `none` | Calendar adapter: `caldav` or `none` (off) |

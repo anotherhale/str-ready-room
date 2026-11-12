@@ -48,7 +48,7 @@ here. Keep this file current when a durable invariant or boundary changes.
 - Persist datetimes as **naive UTC**. Due dates are plain `date`s.
 - Resolve `today` from the operator's effective timezone via the clock port —
   never inline `datetime.now()`. Handles UTC rollover (23:30Z is still the prior
-  day in America/New_York).
+  day in America/Denver). The demo default zone is **America/Denver** (MST/MDT).
 - Never compare a `date` with a `datetime`.
 - **`tzdata` is required** in the runtime image for `zoneinfo`.
 

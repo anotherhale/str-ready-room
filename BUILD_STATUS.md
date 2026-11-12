@@ -93,6 +93,15 @@ Last updated: 2026-11-11
   restart backend` -> mailbox still 3 messages (no duplication), calendar cache
   still 4 events, Radicale `PUT` count unchanged at 4; the mailbox seed
   self-repaired after the in-memory mail store was lost (M11).
+- 2026-11-12 — Mailbox capture UX fix: after capturing a message the detail pane
+  now flips to "In inventory" immediately (was showing a stale snapshot until the
+  message was reopened); regression test added (`frontend` 35 passed).
+- 2026-11-12 — Mailbox capture dialog now defaults its due date to the operator's
+  local today (server-resolved `dashboard.today`), instead of the empty
+  `mm/dd/yyyy` placeholder (`frontend` 36 passed, typecheck + build clean).
+- 2026-11-12 — Default operator timezone changed to **America/Denver** (MST/MDT)
+  in `config.py`, the domain default, and `docker-compose.yml`; docs updated
+  (README config table, AGENTS). A fresh reset/volume uses Denver.
 
 ## Remaining work
 

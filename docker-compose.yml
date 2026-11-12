@@ -19,7 +19,7 @@ services:
       READY_ROOM_AUTH_PROVIDER: single_user
       READY_ROOM_OPERATOR_ID: maverick
       READY_ROOM_OPERATOR_DISPLAY_NAME: Maverick
-      READY_ROOM_DEFAULT_TIMEZONE: America/New_York
+      READY_ROOM_DEFAULT_TIMEZONE: America/Denver
       READY_ROOM_AUTHORIZATION_ENGINE: policy
       READY_ROOM_SEED_ON_STARTUP: "true"
       # --- optional integrations (see DECISIONS D-025 – D-033) ----------

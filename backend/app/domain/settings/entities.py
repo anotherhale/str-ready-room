@@ -13,7 +13,7 @@ from ..shared.errors import ValidationError
 from ..tasks.urgency import DEFAULT_WARNING_WINDOW, validate_warning_window
 from ..tasks.value_objects import category_key, normalize_category
 
-DEFAULT_TIMEZONE = "America/New_York"
+DEFAULT_TIMEZONE = "America/Denver"
 
 #: Initial category assumptions (operator-editable, not validated requirements).
 DEFAULT_CATEGORIES: tuple[str, ...] = (

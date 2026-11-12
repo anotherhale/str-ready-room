@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     auth_provider: str = "single_user"
     operator_id: str = "maverick"
     operator_display_name: str = "Maverick"
-    default_timezone: str = "America/New_York"
+    default_timezone: str = "America/Denver"
 
     # --- authorization ----------------------------------------------
     authorization_engine: str = "policy"

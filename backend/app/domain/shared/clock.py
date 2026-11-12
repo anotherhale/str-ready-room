@@ -34,7 +34,7 @@ def resolve_today(now: datetime, timezone_name: str) -> date:
     """Resolve the local calendar date for an instant.
 
     Handles UTC rollover correctly: an instant at ``23:30Z`` is still the
-    previous day for an operator in ``America/New_York``.
+    previous day for an operator in ``America/New_York`` or ``America/Denver``.
     """
     try:
         zone = ZoneInfo(timezone_name)

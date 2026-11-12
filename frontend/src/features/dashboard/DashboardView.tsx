@@ -36,23 +36,23 @@ export function DashboardView({
       <p className="readiness">{dashboard.readiness_summary}</p>
 
       <div className="counts" role="group" aria-label="Operational counts">
-        <div className="count critical">
+        <div className="count-tile critical">
           <div className="n">{counts.overdue}</div>
           <div className="l">Overdue</div>
         </div>
-        <div className="count warning">
+        <div className="count-tile warning">
           <div className="n">{counts.due}</div>
           <div className="l">Due today</div>
         </div>
-        <div className="count warning">
+        <div className="count-tile warning">
           <div className="n">{counts.watch}</div>
           <div className="l">Watch</div>
         </div>
-        <div className="count">
+        <div className="count-tile">
           <div className="n">{counts.horizon}</div>
           <div className="l">Horizon</div>
         </div>
-        <div className="count ok">
+        <div className="count-tile ok">
           <div className="n">{counts.completed_this_week}</div>
           <div className="l">Done this week</div>
         </div>

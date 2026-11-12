@@ -230,23 +230,16 @@ a {
   background: var(--bg-panel);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 12px;
-  min-height: 96px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  padding: 10px 12px;
 }
 
 .count .n {
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .count .l {
-  margin-top: 6px;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -262,6 +255,46 @@ a {
 }
 
 .count.ok .n {
+  color: var(--ok);
+}
+
+/* Quick-scan tiles (dashboard only): taller, squarer, centered. */
+.count-tile {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.count-tile .n {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.count-tile .l {
+  margin-top: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
+.count-tile.critical .n {
+  color: var(--critical);
+}
+
+.count-tile.warning .n {
+  color: var(--warning);
+}
+
+.count-tile.ok .n {
   color: var(--ok);
 }
 

@@ -115,6 +115,15 @@ here. Keep this file current when a durable invariant or boundary changes.
 - **CalDAV collection creation:** a calendar is created with `MKCALENDAR` inside
   the principal home (`/‹user›/‹calendar›/`). `409 Conflict` on an existing
   collection is the idempotent "already exists" case, not an error.
+- **A canonical calendar id is an absolute URL.** `resolve_calendar_id` returns it
+  unchanged; it must never re-prefix the principal home (that yields
+  `/maverick/http://host/maverick/cal/` → `403`).
+- **The mailbox seed reconciles against the mailbox, not only its marker.** GreenMail
+  keeps mail in memory; if the marker says "seeded" but the mailbox is empty, reseed.
+- **Exercise a new adapter against its real protocol, not only a double.** The
+  in-memory doubles are genuine second adapters, but they normalise ids
+  idempotently and emit no `VTIMEZONE`, which hid three real bugs. Adapter-shape
+  regressions belong in `tests/unit/adapters/`.
 
 ## Runtime / Docker
 

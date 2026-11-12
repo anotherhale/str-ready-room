@@ -210,6 +210,7 @@ export function App() {
             status={data.mailboxStatus}
             categories={data.settings.categories}
             timezone={data.settings.timezone}
+            today={data.dashboard.today}
             busy={busy}
             onLoadMessage={(id) => api.getMessage(id)}
             onCapture={async (messageId, input: EmailCaptureInput) => {

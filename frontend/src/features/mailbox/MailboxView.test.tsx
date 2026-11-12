@@ -14,6 +14,7 @@ function renderMailbox(overrides: Partial<Parameters<typeof MailboxView>[0]> = {
     status: makeMailboxStatus({ message_count: 1 }),
     categories,
     timezone: "America/New_York",
+    today: "2026-11-11",
     onLoadMessage: vi.fn(async () => makeEmailMessage()),
     onCapture: vi.fn(async () => {}),
     busy: false,
@@ -48,6 +49,16 @@ describe("MailboxView", () => {
     );
   });
 
+  it("defaults the capture dialog's due date to the operator's today", async () => {
+    renderMailbox({ today: "2026-11-11" });
+
+    await userEvent.click(screen.getByRole("button", { name: /Tow bar inspection/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Capture" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Capture as responsibility" });
+    expect(within(dialog).getByLabelText("Due date")).toHaveValue("2026-11-11");
+  });
+
   it("marks a captured message and hides the Capture action", async () => {
     renderMailbox({
       messages: [makeEmailSummary({ captured: true, task_id: "t1" })],
@@ -75,6 +86,7 @@ describe("MailboxView", () => {
           status={makeMailboxStatus({ message_count: 1 })}
           categories={categories}
           timezone="America/New_York"
+          today="2026-11-11"
           onLoadMessage={vi.fn(async () => makeEmailMessage({ captured: false }))}
           onCapture={async (id, input) => {
             await onCapture(id, input);

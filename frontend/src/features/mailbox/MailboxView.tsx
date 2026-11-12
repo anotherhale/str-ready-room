@@ -14,6 +14,8 @@ export interface MailboxViewProps {
   status: MailboxStatus | null;
   categories: Category[];
   timezone: string;
+  /** The operator's local today (YYYY-MM-DD), server-resolved; seeds the capture dialog's due date. */
+  today: string;
   onLoadMessage: (messageId: string) => Promise<EmailMessage>;
   onCapture: (messageId: string, input: EmailCaptureInput) => Promise<void>;
   busy: boolean;
@@ -24,6 +26,7 @@ export function MailboxView({
   status,
   categories,
   timezone,
+  today,
   onLoadMessage,
   onCapture,
   busy,
@@ -149,6 +152,7 @@ export function MailboxView({
       <CaptureToTaskDialog
         open={capturing !== null}
         defaultTitle={capturing?.subject ?? ""}
+        defaultDueDate={today}
         categories={categories}
         onClose={() => setCapturing(null)}
         onSubmit={async (values: CaptureToTaskValues) => {

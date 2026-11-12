@@ -683,3 +683,57 @@ appended as decisions are made. Each entry is tagged with its category:
 - **Consequences:** Deleting a cached event works whether its stored href is
   relative (pre-fix rows) or absolute (post-fix). Covered by unit tests that pin
   the URL shapes with a stubbed `_request`, so no network is touched.
+
+## D-039 — Calendar/mailbox integrations on by default; live "arrival" injection (2026-11-12)
+
+- **Category:** ED + PI (engineering decision, product interpretation)
+- **Context:** A new requirement overrides the earlier "integrations off by
+  default" stance (D-028/D-029 area): the demonstration must show work
+  *arriving* — an incoming email and a calendar event — so Maverick sees how
+  READY ROOM catches responsibilities before they are forgotten. The prior
+  design left the integrations behind an `integrations` Compose profile with
+  `*_PROVIDER=none` defaults, so a plain `docker compose up --build` produced an
+  empty Calendar/Mailbox view.
+- **Options considered:**
+  1. Keep integrations opt-in and pre-seed only — rejected: the demo would still
+     need manual setup, and nothing *arrives* during the walkthrough.
+  2. Turn integrations on by default and seed at startup — accepted, but seeding
+     alone is static; the operator cannot show a fresh arrival.
+  3. On by default **plus** an on-demand arrival action — accepted.
+- **Decision:**
+  - Default `READY_ROOM_CALENDAR_PROVIDER=caldav` and
+    `READY_ROOM_EMAIL_PROVIDER=imap`; the Compose profile gating is removed so
+    Radicale and GreenMail start with the base stack. Opt out per integration
+    with `*_PROVIDER=none` (documented in the README).
+  - Add `POST /api/demo/arrivals`: `DemoService.inject_arrivals` delivers **one
+    new incoming email** (via the `MailSender` port → SMTP → mailbox) and **one
+    new calendar event** (via `CalendarService` → provider). It is best-effort
+    per channel and returns a per-channel delivered/detail summary, so a disabled
+    or unreachable integration is reported, never fatal.
+  - A monotonic `demo_arrival_seq` counter on `OperatorSettings` keeps successive
+    arrivals distinct (fresh message-id / event-uid); the counter is reset by
+    `POST /api/demo/reset`. A small catalog rotates subjects/summaries.
+  - New `DEMO_SIMULATE` permission, enforced through the same authorization path
+    as every other use case.
+  - `calendar_sync_on_startup` (previously defined but unused) is now wired: the
+    startup task seeds the provider **and** refreshes the app cache, so the
+    Calendar view is populated on first load rather than requiring a manual Sync.
+- **Consequences / trade-offs:**
+  - The base stack is no longer free of auxiliary containers, which is the
+    explicit trade the requirement asks for; opting out restores the
+    self-contained stack.
+  - Reset deliberately does **not** purge the external providers (GreenMail /
+    Radicale) — that data is not READY ROOM's to destroy — so repeated
+    arrivals accumulate until a volume wipe or container restart. Documented in
+    the README.
+  - **Bug found while implementing:** `SqlAlchemySettingsRepository.save` copied
+    settings fields to the row with a hand-written list, silently dropping any
+    new field from the update path — exactly what happened to
+    `demo_arrival_seq` (the counter never advanced, so repeated arrivals were
+    identical). `save` now copies every mapped column from the single mapper.
+    Regression test: `test_settings_update_persists_every_mapped_field`.
+  - **Robustness fix:** the calendar seeder treated an already-present event as a
+    failure ("provider unavailable") after a reset/DB-wipe with a persistent
+    provider. It now reconciles against the provider's current events and only
+    creates what is missing. Regression test:
+    `test_calendar_seed_reconciles_against_persistent_provider`.

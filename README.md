@@ -25,8 +25,12 @@ Then open **<http://localhost:8080>**.
 
 That single command builds and starts the complete application (FastAPI +
 SQLite backend, React SPA served by nginx) with synthetic demonstration data
-seeded automatically. No other software, cloud services, external databases,
-identity providers, or API keys are required -- only Docker.
+seeded automatically. It also starts the **calendar and mailbox integrations**
+by default (a self-hosted CalDAV calendar and a demo mail server) so the
+Calendar and Mailbox views are populated — see
+[Integrations](#integrations-calendar--mailbox) to switch them off. No other
+software, cloud services, external databases, identity providers, or API keys
+are required -- only Docker.
 
 ### Stop
 
@@ -43,7 +47,7 @@ Three ways to return to the demonstration state:
 
 | Method | How | Effect |
 |---|---|---|
-| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; restores default categories and settings; reseeds the demo scenario **and the optional calendar/mailbox demo data** immediately. |
+| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; restores default categories and settings; reseeds the demo scenario **and the calendar/mailbox demo data** immediately. |
 | **API** | `curl -X POST http://localhost:8080/api/demo/reset` | Same as the UI action. |
 | **Volume wipe** (last resort) | `docker compose down -v && docker compose up --build` | Destroys the SQLite volume entirely; a fresh database is initialised and reseeded. |
 
@@ -252,12 +256,12 @@ prefix:
 | `READY_ROOM_DEFAULT_TIMEZONE` | `America/Denver` | Operator timezone (validated) |
 | `READY_ROOM_AUTHORIZATION_ENGINE` | `policy` | Authorization adapter key |
 | `READY_ROOM_SEED_ON_STARTUP` | `true` | Idempotent demo seeding |
-| `READY_ROOM_CALENDAR_PROVIDER` | `none` | Calendar adapter: `caldav` or `none` (off) |
+| `READY_ROOM_CALENDAR_PROVIDER` | `caldav` | Calendar adapter: `caldav` or `none` (opt out) |
 | `READY_ROOM_CALDAV_URL` | `http://radicale:5232` | CalDAV base URL |
 | `READY_ROOM_CALDAV_USERNAME` | `maverick` | CalDAV username |
 | `READY_ROOM_CALDAV_PASSWORD` | `readyroom` | CalDAV password |
 | `READY_ROOM_CALDAV_CALENDAR` | `detachment` | Default calendar collection |
-| `READY_ROOM_EMAIL_PROVIDER` | `none` | Mailbox adapter: `imap` or `none` (off) |
+| `READY_ROOM_EMAIL_PROVIDER` | `imap` | Mailbox adapter: `imap` or `none` (opt out) |
 | `READY_ROOM_IMAP_HOST` | `greenmail` | IMAP host |
 | `READY_ROOM_IMAP_PORT` | `3143` | IMAP port |
 | `READY_ROOM_IMAP_USERNAME` | `maverick@detachment.demo` | **Full** mailbox address (see note) |
@@ -270,37 +274,50 @@ Frontend dev server proxies `/api` to the backend (see `frontend/vite.config.ts`
 
 ---
 
-## Optional integrations (calendar + mailbox)
+## Integrations (calendar + mailbox)
 
-The base stack above is fully self-contained. Two **optional** integrations add
-a Calendar view and a Mailbox view. They are off by default and degrade
-gracefully — if the servers are down or disabled, the views report
-"unavailable" and the rest of READY ROOM is unaffected.
+Two integrations add a Calendar view and a Mailbox view. They are **on by
+default**: `docker compose up --build` also starts a self-hosted CalDAV calendar
+([Radicale]) and a demo mail server ([GreenMail]), and the backend talks to both.
+They degrade gracefully — if a server is down or the integration is switched
+off, the view reports "unavailable" and the rest of READY ROOM is unaffected.
 
-Start the optional servers (a self-hosted CalDAV calendar, [Radicale], and a
-demo mail server, [GreenMail]) with the `integrations` profile:
+**Opt out** of either integration by setting its provider to `none`:
 
 ```bash
-READY_ROOM_CALENDAR_PROVIDER=caldav READY_ROOM_EMAIL_PROVIDER=imap \
-  docker compose --profile integrations up --build
+# Turn the mailbox off (calendar stays on):
+READY_ROOM_EMAIL_PROVIDER=none docker compose up --build
+
+# Turn both off — a fully self-contained stack with no integration servers:
+READY_ROOM_CALENDAR_PROVIDER=none READY_ROOM_EMAIL_PROVIDER=none \
+  docker compose up --build
 ```
 
-> `--profile integrations` only starts the Radicale and GreenMail **servers**.
-> The `READY_ROOM_*_PROVIDER` variables are what switch the **backend adapters**
-> on; without them the views stay "unavailable" even though the servers are up.
-> To change the providers later without a rebuild, edit the variables and run
-> `docker compose --profile integrations up -d`.
+The provider variables are what switch the **backend adapters** on (`caldav`,
+`imap`, or `none`); setting a provider to `none` also means the corresponding
+server does not need to be running. To change providers without a rebuild, edit
+the variables and run `docker compose up -d`.
 
-Then open <http://localhost:8080> and use the **Calendar** and **Mailbox** tabs.
-The backend seeds both with synthetic demo data (best-effort, non-blocking, and
+Open <http://localhost:8080> and use the **Calendar** and **Mailbox** tabs. The
+backend seeds both with synthetic demo data (best-effort, non-blocking, and
 idempotent), so restarting never duplicates it.
 
-- **Calendar** — READY ROOM keeps its own cache of events. `Sync` pulls from the
-  provider; the dashboard and Calendar view read only the cache. An event can be
-  **captured into a responsibility** with one click.
+- **Calendar** — READY ROOM keeps its own cache of events, refreshed from the
+  provider at startup and by an explicit `Sync`. The dashboard and Calendar view
+  read only the cache. An event can be **captured into a responsibility** with
+  one click.
 - **Mailbox** — read-only by design: list, read, and capture a message into a
   responsibility. There is no send/move/delete path. A captured message is
   marked so it cannot silently spawn duplicates.
+
+### Simulating an arrival (demo)
+
+To show work *arriving* live, use **Demo arrivals** in the header (or
+**Simulate arrival** on the Settings page). It delivers **one new incoming
+email and one new calendar event** on demand, so you can then capture either one
+into a responsibility. It is best-effort per channel: a disabled or unreachable
+integration is reported in the toast rather than failing. Successive presses
+rotate through a small catalog and always use fresh identifiers.
 
 Direct service ports (only needed for debugging): Radicale `http://localhost:5232`,
 GreenMail SMTP `localhost:3025` / IMAP `localhost:3143`.
@@ -308,6 +325,12 @@ GreenMail SMTP `localhost:3025` / IMAP `localhost:3143`.
 > **Note on the mailbox address:** the IMAP username must be the **full**
 > address (`maverick@detachment.demo`). GreenMail creates a *different* mailbox
 > for the bare local part, so using `maverick` alone would appear empty.
+
+> **Reset vs. external providers:** `POST /api/demo/reset` clears READY ROOM's
+> own data and cache, then reseeds the demo scenario. It intentionally does not
+> delete messages or events from the external providers (they are not READY
+> ROOM's data to destroy). GreenMail holds mail in memory, so it empties on
+> container restart; the seeder reconciles against the mailbox and repopulates.
 
 [Radicale]: https://radicale.org/
 [GreenMail]: https://greenmail-mail-test.github.io/greenmail/
@@ -341,6 +364,7 @@ Base path: `/api`. Interactive docs at `/api/docs`.
 | PATCH | `/api/categories/{id}` | Rename / activate / deactivate |
 | DELETE | `/api/categories/{id}` | Delete category |
 | POST | `/api/demo/reset` | Clear data, restore defaults |
+| POST | `/api/demo/arrivals` | Deliver one demo email + one demo calendar event |
 | GET | `/api/calendar/status` | Calendar provider availability |
 | GET | `/api/calendar/agenda` | Cached events for the agenda window |
 | POST | `/api/calendar/sync` | Pull events from the provider (best-effort) |
@@ -400,10 +424,10 @@ npm run build        # production build
 - **No notifications, AI extraction, mobile apps, cloud deployment, real-time
   sync, or server-side PDF.** Printing uses the browser's print dialog with a
   dedicated print stylesheet.
-- **Optional calendar/mailbox integrations are off by default.** They are
-  read-oriented (the mailbox is read-only; the calendar keeps a local cache) and
-  selected through a provider registry. They require the `integrations` Compose
-  profile and are not part of the base stack.
+- **Calendar/mailbox integrations are on by default.** They are read-oriented
+  (the mailbox is read-only; the calendar keeps a local cache) and selected
+  through a provider registry. They start automatically with the base stack and
+  can be switched off with `READY_ROOM_*_PROVIDER=none`.
 - **PostgreSQL** is supported by configuration and covered by the shared test
   suite; it is deliberately *not* part of the default Compose stack.
 - **Schema evolution** is additive and idempotent inside the SQLAlchemy adapter;

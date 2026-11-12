@@ -55,6 +55,9 @@ class OperatorSettings:
     seed_version: int = 0
     calendar_seed_version: int = 0
     email_seed_version: int = 0
+    #: Monotonic counter for the live "simulate an arrival" demo action, so
+    #: successive arrivals rotate content and use unique identifiers.
+    demo_arrival_seq: int = 0
     updated_at: datetime | None = None
 
     def __post_init__(self) -> None:

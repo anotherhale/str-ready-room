@@ -250,3 +250,22 @@ def test_reset_without_integrations_is_unaffected(services):
     with services["database"].create() as uow:
         tasks = uow.tasks.list(TaskQuery(), principal.id)
     assert len(tasks) > 0
+
+
+def test_calendar_seed_reconciles_against_persistent_provider(seed, services, calendar_provider):
+    """A fresh application DB with a persistent provider must not fail seeding.
+
+    After a reset (or a DB wipe) the marker is cleared, but the provider still
+    holds the demo events.  The seeder must detect that and set the marker,
+    rather than treating the create conflict as "provider unavailable".
+    """
+    principal = services["principal"]
+    assert seed.seed_calendar_if_needed(principal) is True
+    assert len(calendar_provider.list_events("detachment")) == 4
+
+    # Simulate a fresh marker (reset / DB wipe) while the provider keeps its data.
+    seed._set_marker(principal, "calendar_seed_version", 0)
+
+    assert seed.seed_calendar_if_needed(principal) is True
+    # Still exactly the four demo events — no duplicates, no spurious failure.
+    assert len(calendar_provider.list_events("detachment")) == 4

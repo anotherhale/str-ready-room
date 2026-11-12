@@ -165,6 +165,13 @@ export interface ResetSummary {
   categories_restored: number;
 }
 
+export interface DemoArrival {
+  email_delivered: boolean;
+  email_detail: string;
+  calendar_delivered: boolean;
+  calendar_detail: string;
+}
+
 export interface Health {
   status: string;
   environment: string;

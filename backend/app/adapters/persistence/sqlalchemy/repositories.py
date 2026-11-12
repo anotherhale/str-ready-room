@@ -205,12 +205,13 @@ class SqlAlchemySettingsRepository:
             if row is None:
                 self._session.add(settings_to_row(settings))
             else:
-                row.warning_window_days = settings.warning_window_days
-                row.timezone = settings.timezone
-                row.seed_version = settings.seed_version
-                row.calendar_seed_version = settings.calendar_seed_version
-                row.email_seed_version = settings.email_seed_version
-                row.updated_at = settings.updated_at
+                # Copy every mapped column from the single mapper rather than
+                # assigning fields by hand: a hand-written list silently drops
+                # any newly added settings field from the update path (this is
+                # exactly how ``demo_arrival_seq`` failed to persist).
+                mapped = settings_to_row(settings)
+                for column in SettingsRow.__table__.columns:
+                    setattr(row, column.name, getattr(mapped, column.name))
             self._session.flush()
         except SQLAlchemyError as exc:
             raise PersistenceError(f"failed to save settings: {exc}") from exc

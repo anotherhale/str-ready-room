@@ -7,7 +7,8 @@ always looks current.  Seeding is guarded by a ``seed_version`` marker *and* an
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from ...domain.authorization.permissions import Permission
 from ...domain.settings.entities import (
@@ -21,12 +22,14 @@ from ...domain.shared.errors import AuthorizationError
 from ...domain.tasks.entities import RecurrenceRule, Task
 from ...domain.tasks.enums import EndType, Frequency, Priority
 from ...domain.tasks.recurrence import first_occurrence
-from ..dto import ResetResultDTO
+from ..commands import CalendarEventCreateCommand
+from ..dto import DemoArrivalDTO, ResetResultDTO
 from ..ports.clock import IdGenerator
 from ..ports.identity import AuthorizationPort
+from ..ports.mail import MailSender, MailSenderError
 from ..ports.persistence import DatabaseFactoryPort, TaskQuery
 from .category_service import CategoryService
-from .integration_seed_service import IntegrationSeedService
+from .integration_seed_service import DEMO_RECIPIENT, DEMO_SENDER, IntegrationSeedService
 
 
 class DemoService:
@@ -39,6 +42,8 @@ class DemoService:
         *,
         integration_seed: IntegrationSeedService | None = None,
         calendar=None,  # noqa: ANN001 - CalendarService, optional integration
+        mail_sender: MailSender | None = None,
+        default_calendar: str = "detachment",
     ) -> None:
         self._database = database
         self._authorizer = authorizer
@@ -50,6 +55,8 @@ class DemoService:
         # D-028/D-034).
         self._integration_seed = integration_seed
         self._calendar = calendar
+        self._mail_sender = mail_sender
+        self._default_calendar = default_calendar
 
     def _authorize(self, principal, permission: Permission) -> None:
         decision = self._authorizer.authorize(principal, permission)
@@ -105,6 +112,7 @@ class DemoService:
             settings.seed_version = 0
             settings.calendar_seed_version = 0
             settings.email_seed_version = 0
+            settings.demo_arrival_seq = 0
             settings.updated_at = now
             uow.settings.save(settings)
 
@@ -143,6 +151,97 @@ class DemoService:
         # populated immediately, without waiting for a manual sync.
         if self._calendar is not None:
             self._calendar.sync_quietly(principal)
+
+    # -- live demo arrivals --------------------------------------------
+    def inject_arrivals(self, principal) -> DemoArrivalDTO:  # noqa: ANN001
+        """Deliver one new incoming email and one new calendar event, on demand.
+
+        This is the live demonstration hook: pressing the action shows a fresh
+        message landing in the inbox and a fresh event appearing on the calendar,
+        so the operator can then capture either one into a responsibility.
+
+        Both deliveries are **best-effort**: an integration that is switched off
+        or unreachable is reported in the result rather than raising, so the
+        button works whether or not the demo servers are running.  Unlike the
+        one-time seeders there is no idempotency marker — each call is meant to
+        produce a *new* arrival, so the content rotates through a small catalog
+        (keyed by a persisted counter) and uses unique identifiers.
+        """
+        self._authorize(principal, Permission.DEMO_SIMULATE)
+        index = self._next_arrival_index(principal)
+        email_delivered, email_detail = self._inject_email(index)
+        calendar_delivered, calendar_detail = self._inject_calendar(principal, index)
+        return DemoArrivalDTO(
+            email_delivered=email_delivered,
+            email_detail=email_detail,
+            calendar_delivered=calendar_delivered,
+            calendar_detail=calendar_detail,
+        )
+
+    def _next_arrival_index(self, principal) -> int:  # noqa: ANN001
+        """Return a monotonically increasing counter, persisted on settings.
+
+        Persisting the counter (rather than reading the current message/event
+        counts) keeps successive arrivals distinct across restarts and after a
+        reset, and avoids depending on the providers being reachable.
+        """
+        with self._database.create() as uow:
+            settings = uow.settings.get(principal.id) or OperatorSettings(
+                owner_id=principal.id, timezone=principal.timezone
+            )
+            index = settings.demo_arrival_seq
+            settings.demo_arrival_seq = index + 1
+            settings.updated_at = self._clock.now_utc()
+            uow.settings.save(settings)
+            uow.commit()
+        return index
+
+    def _inject_email(self, index: int) -> tuple[bool, str]:
+        if self._mail_sender is None:
+            return False, "Mailbox integration is not configured."
+        template = EMAIL_ARRIVALS[index % len(EMAIL_ARRIVALS)]
+        message_id = f"<demo-arrival-{self._ids.new_id()}@detachment.demo>"
+        try:
+            self._mail_sender.send(
+                sender=DEMO_SENDER,
+                recipient=DEMO_RECIPIENT,
+                subject=template["subject"],
+                body=template["body"],
+                message_id=message_id,
+            )
+        except MailSenderError as exc:
+            return False, f"Mail server unavailable: {exc}"
+        return True, f"New message: {template['subject']}"
+
+    def _inject_calendar(self, principal, index: int) -> tuple[bool, str]:  # noqa: ANN001
+        if self._calendar is None:
+            return False, "Calendar integration is not configured."
+        template = CALENDAR_ARRIVALS[index % len(CALENDAR_ARRIVALS)]
+        settings = self._read_settings(principal)
+        zone = ZoneInfo(settings.timezone)
+        today = self._clock.today(settings.timezone)
+        start = datetime.combine(today + timedelta(days=template["day_offset"]), template["start"], tzinfo=zone)
+        end = datetime.combine(today + timedelta(days=template["day_offset"]), template["end"], tzinfo=zone)
+        try:
+            self._calendar.create_event(
+                principal,
+                CalendarEventCreateCommand(
+                    summary=template["summary"],
+                    start=start,
+                    end=end,
+                    location=template.get("location"),
+                    description=template.get("description"),
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 - an optional service must not 500 the demo
+            return False, f"Calendar unavailable: {exc}"
+        return True, f"New event: {template['summary']}"
+
+    def _read_settings(self, principal):  # noqa: ANN001
+        with self._database.create() as uow:
+            return uow.settings.get(principal.id) or OperatorSettings(
+                owner_id=principal.id, timezone=principal.timezone
+            )
 
     # -- seed ----------------------------------------------------------
     def seed_if_needed(self, principal) -> bool:
@@ -386,3 +485,60 @@ class DemoService:
             recurrence_rule_id=rule_id,
             occurrence_number=occurrence_number,
         )
+
+
+# --- live demo arrival catalog ------------------------------------------------
+# Synthetic, deliberately generic content for the "simulate an arrival" demo
+# action.  Distinct from the one-time seed content so a demonstration can show
+# *new* work arriving, not the same items that were already on the board.
+
+EMAIL_ARRIVALS: tuple[dict[str, str], ...] = (
+    {
+        "subject": "Urgent: discrepancy write-up needs a signature",
+        "body": (
+            "Maverick,\n\nA new discrepancy write-up came in from the line shack and needs "
+            "your signature before end of day.\n\n- Maintenance Control"
+        ),
+    },
+    {
+        "subject": "Qualification package for review",
+        "body": (
+            "Sir,\n\nA new aircrew qualification package is ready for your review and "
+            "endorsement.\n\n- Admin"
+        ),
+    },
+    {
+        "subject": "Supply run cutoff moved up",
+        "body": (
+            "Detachment,\n\nThe next supply run cutoff has moved to tomorrow morning. Please "
+            "submit any outstanding requisitions.\n\n- Logistics"
+        ),
+    },
+)
+
+CALENDAR_ARRIVALS: tuple[dict, ...] = (
+    {
+        "summary": "Unscheduled maintenance stand-up",
+        "day_offset": 1,
+        "start": time(10, 0),
+        "end": time(10, 30),
+        "location": "Maintenance office",
+        "description": "New stand-up added to review the open discrepancies.",
+    },
+    {
+        "summary": "Detachment safety brief",
+        "day_offset": 2,
+        "start": time(14, 0),
+        "end": time(14, 45),
+        "location": "Ready room",
+        "description": "Quarterly safety brief added to the calendar.",
+    },
+    {
+        "summary": "Logistics inventory sync",
+        "day_offset": 4,
+        "start": time(9, 0),
+        "end": time(10, 0),
+        "location": "Supply",
+        "description": "Added inventory sync with the supply chief.",
+    },
+)

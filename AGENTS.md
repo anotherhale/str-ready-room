@@ -64,6 +64,9 @@ here. Keep this file current when a durable invariant or boundary changes.
   stay portable (no SQLite-only assumptions). `READY_ROOM_TEST_DATABASE_URL`
   lets the same suite run against PostgreSQL.
 - The additive schema-evolution helper is idempotent and never destroys data.
+- **Repositories must persist every mapped field on update.** `save` copies all
+  columns via the single mapper, never a hand-written field list — a hand-written
+  list silently drops newly added fields (this broke `demo_arrival_seq`).
 
 ## Identity and authorization
 
@@ -83,25 +86,39 @@ here. Keep this file current when a durable invariant or boundary changes.
 - `POST /api/demo/reset` clears task/recurrence/demo state, restores default
   categories and settings, and **immediately reseeds** the demo scenario so the
   board is repopulated the moment the request returns (never left blank). It
-  also **restores the optional integrations** (reseed + calendar cache refresh)
-  when providers are configured; both are best-effort and never raise, so the
-  base stack is unaffected.
+  also **restores the integrations** (reseed + calendar cache refresh) and
+  **zeroes the `demo_arrival_seq` counter**; both are best-effort and never
+  raise.
   A volume wipe is the last-resort reset.
+- Reset does **not** delete data from the external providers (GreenMail /
+  Radicale) — that is not READY ROOM's data to destroy. Repeated demo arrivals
+  therefore accumulate until a volume wipe or container restart.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
 
-## Optional integrations (calendar + mailbox)
+## Integrations (calendar + mailbox)
 
-- Both integrations are **optional and off by default** (`READY_ROOM_CALENDAR_PROVIDER=none`,
-  `READY_ROOM_EMAIL_PROVIDER=none`). A disabled or unreachable provider yields an
+- Both integrations are **on by default** (`READY_ROOM_CALENDAR_PROVIDER=caldav`,
+  `READY_ROOM_EMAIL_PROVIDER=imap`) and start with the base stack. Opt out per
+  integration with `*_PROVIDER=none`. A disabled or unreachable provider yields an
   "unavailable" view; it must never break the rest of the app.
+- **`POST /api/demo/arrivals` injects a live arrival** — one incoming email (via
+  the `MailSender` port) and one calendar event (via `CalendarService`) — to show
+  work arriving during a demo. It is best-effort **per channel** and returns a
+  per-channel delivered/detail summary; a disabled/unreachable integration is
+  reported, never fatal. A monotonic `demo_arrival_seq` on `OperatorSettings`
+  keeps successive arrivals distinct (fresh message-id / event-uid). It requires
+  the `demo:simulate` permission.
 - **Calendar is cache-first.** The app keeps its own `calendar_events` copy; the
   dashboard/Calendar view read only the cache, and `POST /api/calendar/sync` is
-  the only read path that talks to the provider. Adapter: `CalDavCalendarProvider`
+  the only read path that talks to the provider. The startup task seeds the
+  provider **and** syncs the cache when `calendar_sync_on_startup` is set, so the
+  view is populated on first load. Adapter: `CalDavCalendarProvider`
   (stdlib `urllib` + `xml.etree`, zero new dependencies).
 - **Mailbox is read-only.** List/read/capture only — there is **no** send, move,
-  or delete path. `MailSender` (SMTP) exists only for seeding/helpers, never the
-  request path.
+  or delete path from the mailbox. `MailSender` (SMTP) is used only to deliver
+  demo data (seeding, and the `POST /api/demo/arrivals` demo action); it never
+  mutates or removes an existing message.
 - **Capture is idempotent.** An event's `calendar_events.task_id` and a message's
   single `email_sources` row record provenance, so recapturing returns/updates the
   existing link instead of duplicating.
@@ -123,6 +140,10 @@ here. Keep this file current when a durable invariant or boundary changes.
 - **A canonical calendar id is an absolute URL.** `resolve_calendar_id` returns it
   unchanged; it must never re-prefix the principal home (that yields
   `/maverick/http://host/maverick/cal/` → `403`).
+- **The calendar seed reconciles against the provider, not only its marker.** A
+  reset or DB wipe clears the marker while the provider (Radicale) still holds the
+  demo events; the seeder lists existing events and creates only the missing ones,
+  so it never mis-reports a create conflict as "provider unavailable".
 - **The mailbox seed reconciles against the mailbox, not only its marker.** GreenMail
   keeps mail in memory; the seeder is idempotent on the demo messages' own
   `Message-ID`s, so it reseeds a lost/empty mailbox and never duplicates mail that

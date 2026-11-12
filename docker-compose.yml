@@ -5,6 +5,10 @@
 # The browser talks only to the frontend nginx origin, which serves the SPA and
 # reverse-proxies /api/* to the backend. No external services, databases,
 # identity providers, or credentials are required.
+#
+# The calendar (Radicale) and mailbox (GreenMail) demo servers start by default
+# and the backend talks to them by default. To opt out of either integration,
+# set its provider to "none" (see the READY_ROOM_*_PROVIDER variables below).
 
 services:
   backend:
@@ -22,18 +26,17 @@ services:
       READY_ROOM_DEFAULT_TIMEZONE: America/Denver
       READY_ROOM_AUTHORIZATION_ENGINE: policy
       READY_ROOM_SEED_ON_STARTUP: "true"
-      # --- optional integrations (see DECISIONS D-025 – D-033) ----------
-      # Off by default so the base stack stays self-contained. Start the
-      # optional servers with `--profile integrations` and switch the providers
-      # on to exercise the calendar/mailbox views:
-      #   READY_ROOM_CALENDAR_PROVIDER=caldav READY_ROOM_EMAIL_PROVIDER=imap \
-      #     docker compose --profile integrations up --build
-      READY_ROOM_CALENDAR_PROVIDER: ${READY_ROOM_CALENDAR_PROVIDER:-none}
+      # --- integrations (on by default; opt out with "none") -------------
+      # The calendar and mailbox demo servers below start with the stack, so
+      # both integrations are enabled by default. To turn one off, set it to
+      # "none":
+      #   READY_ROOM_CALENDAR_PROVIDER=none docker compose up --build
+      READY_ROOM_CALENDAR_PROVIDER: ${READY_ROOM_CALENDAR_PROVIDER:-caldav}
       READY_ROOM_CALDAV_URL: http://radicale:5232
       READY_ROOM_CALDAV_USERNAME: maverick
       READY_ROOM_CALDAV_PASSWORD: readyroom
       READY_ROOM_CALDAV_CALENDAR: detachment
-      READY_ROOM_EMAIL_PROVIDER: ${READY_ROOM_EMAIL_PROVIDER:-none}
+      READY_ROOM_EMAIL_PROVIDER: ${READY_ROOM_EMAIL_PROVIDER:-imap}
       READY_ROOM_IMAP_HOST: greenmail
       READY_ROOM_IMAP_PORT: "3143"
       READY_ROOM_IMAP_USERNAME: maverick@detachment.demo
@@ -44,6 +47,17 @@ services:
       - ready_room_data:/data
     expose:
       - "8000"
+    depends_on:
+      # Wait for the integration servers to be *healthy* so the first seed/sync
+      # finds them ready. ``required: false`` keeps startup resilient: if a
+      # server is absent (opted out, or its image is unavailable) the backend
+      # still starts, and the affected view simply reports "unavailable".
+      radicale:
+        condition: service_healthy
+        required: false
+      greenmail:
+        condition: service_healthy
+        required: false
     restart: unless-stopped
 
   frontend:
@@ -57,14 +71,12 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # --- optional integrations (profile: integrations) ---------------------
+  # --- integration servers (on by default) -------------------------------
   # A self-hosted CalDAV calendar (Radicale) and a demo mail server (GreenMail).
-  # They are NOT part of the default stack: the base application runs with no
-  # external services. Both are best-effort targets — the backend seeds them
-  # non-blockingly and degrades to an "unavailable" view if they are down.
+  # Both are best-effort targets — the backend seeds them non-blockingly and
+  # degrades to an "unavailable" view if they are down.
   radicale:
     image: tomsquest/docker-radicale:3.5.6.0
-    profiles: ["integrations"]
     ports:
       - "5232:5232"
     volumes:
@@ -79,7 +91,6 @@ services:
 
   greenmail:
     image: greenmail/standalone:2.1.3
-    profiles: ["integrations"]
     ports:
       - "3025:3025" # SMTP
       - "3143:3143" # IMAP

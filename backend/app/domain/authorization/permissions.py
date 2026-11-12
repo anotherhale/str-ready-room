@@ -28,6 +28,7 @@ class Permission(str, Enum):
     EMAIL_READ = "email:read"
     EMAIL_CAPTURE = "email:capture"
     DEMO_RESET = "demo:reset"
+    DEMO_SIMULATE = "demo:simulate"
 
 
 #: Permissions granted to the single demo operator.  A future policy adapter can

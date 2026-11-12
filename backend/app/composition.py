@@ -105,6 +105,8 @@ def build_container(settings: Settings | None = None) -> Container:
             database, authorizer, clock, ids,
             integration_seed=integration_seed,
             calendar=calendar_service,
+            mail_sender=mail_sender,
+            default_calendar=settings.caldav_calendar,
         ),
         calendar=calendar_service,
         email=email_service,

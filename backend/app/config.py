@@ -54,18 +54,19 @@ class Settings(BaseSettings):
     # --- authorization ----------------------------------------------
     authorization_engine: str = "policy"
 
-    # --- calendar integration (optional; best-effort) ----------------
-    # Disable with READY_ROOM_CALENDAR_PROVIDER=none; the rest of the app is
-    # unaffected when the provider is off or unreachable.
-    calendar_provider: str = "none"
+    # --- calendar integration (enabled by default; opt out with "none") ---
+    # The demo stack ships Radicale and GreenMail, so both integrations are on
+    # by default. Set READY_ROOM_CALENDAR_PROVIDER=none to switch one off; the
+    # rest of the app is unaffected when a provider is off or unreachable.
+    calendar_provider: str = "caldav"
     caldav_url: str = "http://radicale:5232"
     caldav_username: str = "maverick"
     caldav_password: str = "readyroom"
     caldav_calendar: str = "detachment"
     calendar_sync_on_startup: bool = True
 
-    # --- email integration (optional; read-only, best-effort) --------
-    email_provider: str = "none"
+    # --- email integration (enabled by default; read-only, best-effort) ---
+    email_provider: str = "imap"
     imap_host: str = "greenmail"
     imap_port: int = 3143
     # The mailbox is addressed by its *full* address; GreenMail creates a

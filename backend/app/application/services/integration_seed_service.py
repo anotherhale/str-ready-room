@@ -79,16 +79,29 @@ class IntegrationSeedService:
         for attempt in range(1, attempts + 1):
             try:
                 calendar_id = self._calendar.resolve_calendar_id(self._default_calendar)
+                # Reconcile against what the provider already holds: a restart
+                # (or a reset) with a fresh application DB but a persistent
+                # provider must not re-create the demo events and then mistake
+                # the resulting conflict for "provider unavailable".
+                existing_uids = {e.uid for e in self._calendar.list_events(calendar_id)}
                 for event in events:
+                    if event.uid in existing_uids:
+                        continue
                     event.calendar_id = calendar_id
-                    self._calendar.create_event(event)
+                    try:
+                        self._calendar.create_event(event)
+                    except CalendarError as exc:
+                        # A racing create, or an event already present under a
+                        # uid we did not list, is not a seeding failure.
+                        if exc.code != "conflict":
+                            raise
             except CalendarError as exc:
                 logger.warning(
                     "calendar seed attempt %s/%s failed: %s", attempt, attempts, exc.message
                 )
                 continue
             self._set_marker(principal, "calendar_seed_version", CURRENT_CALENDAR_SEED_VERSION)
-            logger.info("seeded %s demo calendar events", len(events))
+            logger.info("seeded demo calendar events (provider now holds %s)", len(existing_uids) or len(events))
             return True
         logger.warning("calendar seeding skipped; provider unavailable")
         return False

@@ -11,6 +11,7 @@ import type {
   CalendarSyncResult,
   Category,
   Dashboard,
+  DemoArrival,
   EmailCaptureInput,
   EmailMessage,
   EmailSummary,
@@ -154,6 +155,7 @@ export const api = {
   deleteCategory: (id: string) => request<void>(`/categories/${id}`, { method: "DELETE" }),
 
   resetDemo: () => request<ResetSummary>("/demo/reset", { method: "POST" }),
+  simulateArrivals: () => request<DemoArrival>("/demo/arrivals", { method: "POST" }),
 
   // -- calendar (optional integration) -----------------------------------
   getCalendarAgenda: (days?: number) =>

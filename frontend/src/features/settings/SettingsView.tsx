@@ -12,6 +12,7 @@ export interface SettingsViewProps {
   recurrence: RecurrenceOverview | null;
   onSaved: () => Promise<void>;
   onReset: () => Promise<void>;
+  onSimulate?: () => Promise<void>;
 }
 
 export function SettingsView({
@@ -20,6 +21,7 @@ export function SettingsView({
   recurrence,
   onSaved,
   onReset,
+  onSimulate,
 }: SettingsViewProps) {
   const [warningWindow, setWarningWindow] = useState(settings.warning_window_days);
   const [timezone, setTimezone] = useState(settings.timezone);
@@ -261,17 +263,33 @@ export function SettingsView({
           Reset clears all responsibilities and recurrence rules, then restores the default
           categories and settings. Use this to return to the demonstration state.
         </p>
-        <button
-          className="btn danger"
-          disabled={busy}
-          onClick={() => {
-            if (window.confirm("Reset all demonstration data? This cannot be undone.")) {
-              void run(onReset, "Demonstration data reset.");
-            }
-          }}
-        >
-          Reset demo data
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {onSimulate && (
+            <button
+              className="btn primary"
+              disabled={busy}
+              onClick={() =>
+                run(
+                  onSimulate,
+                  "Delivered a new demo message and calendar event.",
+                )
+              }
+            >
+              Simulate arrival
+            </button>
+          )}
+          <button
+            className="btn danger"
+            disabled={busy}
+            onClick={() => {
+              if (window.confirm("Reset all demonstration data? This cannot be undone.")) {
+                void run(onReset, "Demonstration data reset.");
+              }
+            }}
+          >
+            Reset demo data
+          </button>
+        </div>
       </section>
 
       {toast && (

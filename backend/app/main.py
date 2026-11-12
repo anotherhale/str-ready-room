@@ -43,10 +43,20 @@ def _integration_seed_tasks(container, principal):  # noqa: ANN001
     from .calendar.providers.registry import DISABLED as CALENDAR_DISABLED
     from .mailbox.providers.registry import DISABLED as EMAIL_DISABLED
 
+    calendar_on = container.settings.calendar_provider.strip().lower() not in CALENDAR_DISABLED
+    email_on = container.settings.email_provider.strip().lower() not in EMAIL_DISABLED
+
+    def seed_calendar() -> None:
+        # Seed the provider, then refresh the app cache so the Calendar view is
+        # populated on first load instead of requiring a manual Sync.
+        container.integration_seed.seed_calendar_if_needed(principal)
+        if container.settings.calendar_sync_on_startup:
+            container.calendar.sync_quietly(principal)
+
     coros = []
-    if container.settings.calendar_provider.strip().lower() not in CALENDAR_DISABLED:
-        coros.append(asyncio.to_thread(container.integration_seed.seed_calendar_if_needed, principal))
-    if container.settings.email_provider.strip().lower() not in EMAIL_DISABLED:
+    if calendar_on:
+        coros.append(asyncio.to_thread(seed_calendar))
+    if email_on:
         coros.append(asyncio.to_thread(container.integration_seed.seed_mailbox_if_needed, principal))
     return coros
 

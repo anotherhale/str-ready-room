@@ -107,3 +107,29 @@ def test_recurrence_overview_lists_rules(services):
     overview = services["recurrence"].overview(services["principal"])
     assert len(overview.rules) == 1
     assert overview.rules[0].name == "Weekly"
+
+
+def test_settings_update_persists_every_mapped_field(services):
+    """Regression: ``save`` must persist *all* mapped settings columns.
+
+    The update branch previously assigned fields by hand, so a newly added
+    settings field (``demo_arrival_seq``) was silently dropped on update.  This
+    guards against that class of bug for any future field.
+    """
+    from app.domain.settings.entities import OperatorSettings
+
+    principal = services["principal"]
+    database = services["database"]
+
+    with database.create() as uow:
+        settings = uow.settings.get(principal.id) or OperatorSettings(owner_id=principal.id)
+        settings.demo_arrival_seq = 7
+        settings.seed_version = 2
+        uow.settings.save(settings)
+        uow.commit()
+
+    with database.create() as uow:
+        reloaded = uow.settings.get(principal.id)
+    assert reloaded is not None
+    assert reloaded.demo_arrival_seq == 7
+    assert reloaded.seed_version == 2

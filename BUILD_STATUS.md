@@ -112,13 +112,29 @@ Last updated: 2026-11-11
   **500** because the cached CalDAV href is server-relative and `urllib` rejects
   it; the provider now resolves hrefs to absolute in `list_events`/`delete_event`.
   Live check: delete -> **204**. Backend tests added for the URL shapes (D-038).
+- 2026-11-12 — **Integrations on by default + live arrival injection (D-039).**
+  `READY_ROOM_CALENDAR_PROVIDER=caldav` / `READY_ROOM_EMAIL_PROVIDER=imap` are now
+  the defaults and the Compose profile gating is removed, so a plain
+  `docker compose up --build` starts Radicale + GreenMail and populates both
+  views (opt out with `*_PROVIDER=none`). New `POST /api/demo/arrivals` delivers
+  one incoming email + one calendar event on demand (header **Demo arrivals** /
+  Settings **Simulate arrival**); the monotonic `demo_arrival_seq` counter keeps
+  them distinct. `calendar_sync_on_startup` (previously dead config) now refreshes
+  the cache at startup. Two bugs found and fixed while implementing:
+  `SqlAlchemySettingsRepository.save` dropped new fields from the update path
+  (the counter never advanced) and the calendar seeder mis-reported an
+  already-present event as "provider unavailable". Backend **206 passed** (+13),
+  frontend **39 passed** (+3), ruff + mypy + `vite build` clean. Live on a
+  fresh volume: startup seeds 3 messages / 4 cached events; `POST /api/demo/arrivals`
+  -> HTTP 200 `{email_delivered:true, calendar_delivered:true}`; backend restart
+  leaves counts unchanged (idempotent); reset returns
+  `{tasks_deleted:10, rules_deleted:3, categories_restored:6}`.
 
 ## Remaining work
 
 - None blocking. All mandatory Definition of Done items verified.
-- The optional calendar/mailbox integrations (M11) are implemented and verified
-  behind the `integrations` Compose profile; they are off by default so the base
-  stack remains self-contained.
+- The calendar/mailbox integrations (M11) are implemented, **on by default**, and
+  verified live; they can be switched off with `READY_ROOM_*_PROVIDER=none`.
 - Optional/deferred (documented, out of scope for this cut): PostgreSQL in the
   default Compose stack, Alembic migrations, notifications, and multi-user
   collaboration.

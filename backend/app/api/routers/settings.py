@@ -18,6 +18,7 @@ from ...schemas.requests import (
 )
 from ...schemas.responses import (
     CategoryResponse,
+    DemoArrivalResponse,
     RecurrenceOverviewItem,
     RecurrenceOverviewResponse,
     RecurrencePreviewResponse,
@@ -127,3 +128,15 @@ def recurrence_preview(
 def demo_reset(container: ContainerDep, principal: CurrentPrincipal) -> ResetResponse:
     result = container.demo.reset(principal)
     return ResetResponse.model_validate(result)
+
+
+@router.post("/demo/arrivals", response_model=DemoArrivalResponse)
+def demo_arrivals(container: ContainerDep, principal: CurrentPrincipal) -> DemoArrivalResponse:
+    """Deliver one new incoming email and one new calendar event, on demand.
+
+    Live demonstration hook: the operator triggers it, then captures the new
+    message or event into a responsibility.  Best-effort per channel — a
+    disabled or unreachable integration is reported in the response, never a 5xx.
+    """
+    result = container.demo.inject_arrivals(principal)
+    return DemoArrivalResponse.model_validate(result)

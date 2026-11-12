@@ -21,6 +21,8 @@ ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("calendar_events", "task_id", "VARCHAR(36)"),
     ("operator_settings", "calendar_seed_version", "INTEGER NOT NULL DEFAULT 0"),
     ("operator_settings", "email_seed_version", "INTEGER NOT NULL DEFAULT 0"),
+    #: The live "simulate an arrival" counter (DECISIONS D-039).
+    ("operator_settings", "demo_arrival_seq", "INTEGER NOT NULL DEFAULT 0"),
 )
 
 

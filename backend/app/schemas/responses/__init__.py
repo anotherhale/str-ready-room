@@ -155,6 +155,17 @@ class ResetResponse(BaseModel):
     categories_restored: int
 
 
+class DemoArrivalResponse(BaseModel):
+    """Result of a live demo arrival injection (one email, one calendar event)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    email_delivered: bool
+    email_detail: str
+    calendar_delivered: bool
+    calendar_detail: str
+
+
 class HealthResponse(BaseModel):
     status: str
     environment: str

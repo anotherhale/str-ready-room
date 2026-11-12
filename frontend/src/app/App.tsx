@@ -71,6 +71,24 @@ export function App() {
     setDialogOpen(true);
   }
 
+  async function handleSimulateArrivals() {
+    setBusy(true);
+    try {
+      const result = await api.simulateArrivals();
+      // Refresh both integration views so the new message and event appear.
+      await refreshMailbox();
+      await refreshCalendar();
+      const parts: string[] = [];
+      parts.push(result.email_delivered ? "1 new message" : `Mailbox: ${result.email_detail}`);
+      parts.push(result.calendar_delivered ? "1 new event" : `Calendar: ${result.calendar_detail}`);
+      flash(`Demo arrivals — ${parts.join(", ")}.`);
+    } catch (err) {
+      handleError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleDialogSubmit(input: TaskCreateInput) {
     if (editing) {
       await mutate(() =>
@@ -128,6 +146,14 @@ export function App() {
           ))}
         </nav>
         <div className="header-spacer" />
+        <button
+          className="btn btn-sm"
+          title="Deliver one new incoming email and one new calendar event (demo)"
+          disabled={busy}
+          onClick={() => void handleSimulateArrivals()}
+        >
+          Demo arrivals
+        </button>
       </header>
 
       <QuickCapture
@@ -227,6 +253,7 @@ export function App() {
             categories={data.settings.categories}
             recurrence={data.recurrence}
             onSaved={refresh}
+            onSimulate={handleSimulateArrivals}
             onReset={async () => {
               await api.resetDemo();
             }}

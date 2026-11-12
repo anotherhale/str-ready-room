@@ -79,6 +79,7 @@ class SettingsRow(Base):
     seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     calendar_seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     email_seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    demo_arrival_seq: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 

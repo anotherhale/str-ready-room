@@ -135,6 +135,7 @@ def row_to_settings(row: SettingsRow) -> OperatorSettings:
         seed_version=row.seed_version,
         calendar_seed_version=row.calendar_seed_version,
         email_seed_version=row.email_seed_version,
+        demo_arrival_seq=row.demo_arrival_seq,
         updated_at=row.updated_at,
     )
 
@@ -147,6 +148,7 @@ def settings_to_row(settings: OperatorSettings) -> SettingsRow:
         seed_version=settings.seed_version,
         calendar_seed_version=settings.calendar_seed_version,
         email_seed_version=settings.email_seed_version,
+        demo_arrival_seq=settings.demo_arrival_seq,
         updated_at=settings.updated_at,
     )
 

@@ -113,6 +113,21 @@ class ResetResultDTO:
     categories_restored: int
 
 
+@dataclass(frozen=True)
+class DemoArrivalDTO:
+    """Result of a live demo arrival injection.
+
+    Each channel reports whether it delivered and a short human-readable note
+    (e.g. the email subject or a reason it was skipped), so the UI can confirm
+    what happened without polling the providers.
+    """
+
+    email_delivered: bool
+    email_detail: str
+    calendar_delivered: bool
+    calendar_detail: str
+
+
 # -- calendar -------------------------------------------------------------
 @dataclass(frozen=True)
 class CalendarEventDTO:

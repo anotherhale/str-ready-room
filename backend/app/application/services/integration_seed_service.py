@@ -148,51 +148,63 @@ class IntegrationSeedService:
     def seed_mailbox_if_needed(self, principal, *, attempts: int = 3) -> bool:  # noqa: ANN001
         if self._mail is None:
             return False
-        already_seeded = self._marker(principal, "email_seed_version") >= CURRENT_EMAIL_SEED_VERSION
-        # The marker lives in the persistent database, but a demo mail server
-        # (GreenMail) keeps messages in memory: after a partial restart the
-        # marker can say "seeded" while the mailbox is empty. Reconcile against
-        # the mailbox itself so the demo state is always restorable.
-        if already_seeded and not self._mailbox_is_empty():
+
+        # Idempotency is keyed on the demo messages' own Message-IDs, not only on
+        # the marker.  A demo mail server (GreenMail) keeps messages in memory, so
+        # the marker can say "seeded" while the mailbox is empty (after the mail
+        # container restarts) -- or the marker can be cleared (after a demo reset)
+        # while the mailbox still holds the messages.  Reconcile against the
+        # mailbox so the demo state is always restored and never duplicated.
+        marker_ok = self._marker(principal, "email_seed_version") >= CURRENT_EMAIL_SEED_VERSION
+        existing = self._existing_message_ids()
+        if marker_ok and (existing is None or existing):
             return False
 
         messages = self._demo_messages()
+        pending = messages if not existing else [m for m in messages if m["message_id"] not in existing]
+        if not pending:
+            self._set_marker(principal, "email_seed_version", CURRENT_EMAIL_SEED_VERSION)
+            return False
+
         for attempt in range(1, attempts + 1):
             try:
-                for index, message in enumerate(messages, start=1):
+                for message in pending:
                     self._mail.send(
                         sender=DEMO_SENDER,
                         recipient=DEMO_RECIPIENT,
                         subject=message["subject"],
                         body=message["body"],
-                        message_id=f"<demo-{index}@detachment.demo>",
+                        message_id=message["message_id"],
                     )
             except MailSenderError as exc:
                 logger.warning("mailbox seed attempt %s/%s failed: %s", attempt, attempts, exc)
                 continue
             self._set_marker(principal, "email_seed_version", CURRENT_EMAIL_SEED_VERSION)
-            logger.info("seeded %s demo mailbox messages", len(messages))
+            logger.info("seeded %s demo mailbox messages", len(pending))
             return True
         logger.warning("mailbox seeding skipped; mail server unavailable")
         return False
 
-    def _mailbox_is_empty(self) -> bool:
-        """Best-effort: is the demo mailbox currently empty?
+    def _existing_message_ids(self) -> set[str] | None:
+        """Best-effort set of Message-IDs already present in the mailbox.
 
-        A missing provider or an unreachable mailbox is treated as *not* empty
-        (``False``) so a transient error can never trigger duplicate seeding.
+        Returns ``None`` when there is no mailbox provider to inspect (or it is
+        unreachable), meaning "cannot tell" -- the caller then falls back to the
+        marker.  A reachable but empty mailbox returns an empty set, so the demo
+        messages are (re)seeded.
         """
         if self._mailbox is None:
-            return False
+            return None
         try:
-            return len(self._mailbox.list_messages(limit=1)) == 0
+            return {m.message_id for m in self._mailbox.list_messages(limit=100)}
         except MailboxError:
-            return False
+            return None
 
     @staticmethod
     def _demo_messages() -> list[dict[str, str]]:
         return [
             {
+                "message_id": "<demo-1@detachment.demo>",
                 "subject": "Tow bar inspection — need a signature",
                 "body": (
                     "Maverick,\n\nThe machine shop flagged the tow bar for inspection before "
@@ -201,6 +213,7 @@ class IntegrationSeedService:
                 ),
             },
             {
+                "message_id": "<demo-2@detachment.demo>",
                 "subject": "Training records overdue",
                 "body": (
                     "Sir,\n\nTwo training jacket updates are still outstanding to the squadron "
@@ -208,6 +221,7 @@ class IntegrationSeedService:
                 ),
             },
             {
+                "message_id": "<demo-3@detachment.demo>",
                 "subject": "Logistics consumables inventory",
                 "body": (
                     "Detachment,\n\nWe should count consumables soon and flag anything below the "

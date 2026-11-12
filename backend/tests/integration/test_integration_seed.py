@@ -160,3 +160,93 @@ def test_reset_clears_integration_markers_and_cache(seed, services, calendar_pro
     # A sync repopulates the cache from the still-present provider events.
     calendar.sync(principal)
     assert len(calendar.agenda(principal).events) >= 1
+
+
+def _wired_demo(services, seed, calendar):
+    """A DemoService with the integrations wired, as composition does."""
+    from app.application.services.demo_service import DemoService
+
+    return DemoService(
+        services["database"],
+        services["authorizer"],
+        services["clock"],
+        services["ids"],
+        integration_seed=seed,
+        calendar=calendar,
+    )
+
+
+def test_reset_reseeds_calendar_and_refreshes_cache(services, calendar_provider):
+    """A reset must leave the Calendar view populated, not blank (D-034)."""
+    from app.application.services.calendar_service import CalendarService
+
+    principal = services["principal"]
+    calendar = CalendarService(
+        services["database"], services["authorizer"], services["clock"], services["ids"],
+        provider=calendar_provider, default_calendar="detachment",
+    )
+    mailer = RecordingMailSender()
+    seed = IntegrationSeedService(
+        services["database"], services["clock"],
+        calendar_provider=calendar_provider, default_calendar="detachment", mail_sender=mailer,
+    )
+    demo = _wired_demo(services, seed, calendar)
+
+    demo.reset(principal)
+
+    # The provider is reseeded and the cache is refreshed in the same call.
+    assert len(calendar_provider.list_events("detachment")) == 4
+    assert len(calendar.agenda(principal).events) >= 1
+    assert seed._marker(principal, "calendar_seed_version") >= 1
+
+
+def test_reset_reseeds_mailbox(services):
+    """A reset must restore the demo mailbox messages (D-034)."""
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    seed = IntegrationSeedService(
+        services["database"], services["clock"], mail_sender=mailer, mailbox_provider=mailbox
+    )
+    demo = _wired_demo(services, seed, None)
+    principal = services["principal"]
+
+    demo.reset(principal)
+
+    assert len(mailer.sent) == 3
+    assert len(mailbox.list_messages()) == 3
+
+
+def test_reset_does_not_duplicate_mail_already_in_server(services):
+    """Reset clears the marker but the mail server still holds the messages.
+
+    Because the mailbox seeder is idempotent on the demo Message-IDs, a reset
+    must not re-send mail that is already present (the reset+restart defect).
+    """
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    seed = IntegrationSeedService(
+        services["database"], services["clock"], mail_sender=mailer, mailbox_provider=mailbox
+    )
+    demo = _wired_demo(services, seed, None)
+    principal = services["principal"]
+
+    seed.seed_mailbox_if_needed(principal)
+    assert len(mailbox.list_messages()) == 3
+
+    demo.reset(principal)
+
+    # No duplicates: still exactly the three demo messages.
+    assert len(mailbox.list_messages()) == 3
+    assert len(mailer.sent) == 3
+
+
+def test_reset_without_integrations_is_unaffected(services):
+    """The base stack (no providers) resets exactly as before."""
+    principal = services["principal"]
+    services["demo"].reset(principal)  # no integration_seed/calendar wired
+    # Core data is reseeded as usual.
+    from app.application.ports.persistence import TaskQuery
+
+    with services["database"].create() as uow:
+        tasks = uow.tasks.list(TaskQuery(), principal.id)
+    assert len(tasks) > 0

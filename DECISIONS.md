@@ -580,3 +580,40 @@ appended as decisions are made. Each entry is tagged with its category:
   adapters), but the new adapter unit tests pin the URL/parse shapes the doubles
   cannot. Lesson recorded in `AGENTS.md`: exercise a new adapter against its real
   protocol, not only against a double.
+
+## D-035 — Demo reset also restores the optional integrations (2026-11-12)
+
+- **Category:** ED / PI
+- **Context:** `DemoService.reset` cleared the calendar cache and zeroed the
+  integration seed markers, but never re-ran the integration seeders. Two
+  operator-visible defects followed, both reproduced against the live stack:
+  1. **Reset left the Calendar view empty.** The cached events were deleted and
+     the cache was only refilled by an explicit `POST /calendar/sync`, so the
+     operator had to know to sync after a reset.
+  2. **Reset + restart duplicated mail.** Reset zeroed `email_seed_version`
+     while GreenMail (in-memory) still held the three demo messages; the next
+     backend start saw a zero marker and re-sent them — 3 → 6 messages.
+- **Decision:** Make reset restore the *whole* demo state, not just tasks.
+  1. `DemoService.reset` now calls a best-effort `_reseed_integrations` after the
+     core reseed: it re-runs `seed_calendar_if_needed`/`seed_mailbox_if_needed`
+     and then `CalendarService.sync_quietly`, so the Calendar view is populated
+     the moment the reset returns. It never raises, so the base stack (no
+     providers) is unaffected.
+  2. The mailbox seeder is now **idempotent on the demo messages' own
+     `Message-ID`s**, not only on the marker. It lists the mailbox, sends only the
+     messages that are missing, and treats an unreachable mailbox as "cannot
+     tell" (fall back to the marker) rather than "empty" — so a transient error
+     can never duplicate mail, and a reset can never re-send mail that is still
+     present.
+- **Alternatives:** (a) Have reset leave integrations alone and document a manual
+  sync — rejected: reset is advertised as "return to the demonstration state",
+  and an empty Calendar reads as a bug. (b) Delete the demo messages from
+  GreenMail before reseeding — rejected: the mailbox port is deliberately
+  read-only (no delete verb, D-026); reconciliation by `Message-ID` achieves
+  idempotency without widening the port.
+- **Consequences:** `POST /api/demo/reset` now restores tasks, calendar, and mail
+  together, and is safe to run repeatedly and across restarts. `DemoService`
+  gains two optional, injectable collaborators (`integration_seed`, `calendar`),
+  wired only in `composition.py`; the application layer still imports no adapter.
+  Integration-seed tests cover the calendar reseed+refresh, the mailbox reseed,
+  the no-duplicate-on-reset case, and the base stack with no integrations.

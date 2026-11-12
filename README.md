@@ -43,7 +43,7 @@ Three ways to return to the demonstration state:
 
 | Method | How | Effect |
 |---|---|---|
-| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; restores default categories and settings; reseeds the demo scenario immediately. |
+| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; restores default categories and settings; reseeds the demo scenario **and the optional calendar/mailbox demo data** immediately. |
 | **API** | `curl -X POST http://localhost:8080/api/demo/reset` | Same as the UI action. |
 | **Volume wipe** (last resort) | `docker compose down -v && docker compose up --build` | Destroys the SQLite volume entirely; a fresh database is initialised and reseeded. |
 

@@ -82,7 +82,10 @@ here. Keep this file current when a durable invariant or boundary changes.
   check; restarting containers must never duplicate demo data.
 - `POST /api/demo/reset` clears task/recurrence/demo state, restores default
   categories and settings, and **immediately reseeds** the demo scenario so the
-  board is repopulated the moment the request returns (never left blank).
+  board is repopulated the moment the request returns (never left blank). It
+  also **restores the optional integrations** (reseed + calendar cache refresh)
+  when providers are configured; both are best-effort and never raise, so the
+  base stack is unaffected.
   A volume wipe is the last-resort reset.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
@@ -121,7 +124,9 @@ here. Keep this file current when a durable invariant or boundary changes.
   unchanged; it must never re-prefix the principal home (that yields
   `/maverick/http://host/maverick/cal/` → `403`).
 - **The mailbox seed reconciles against the mailbox, not only its marker.** GreenMail
-  keeps mail in memory; if the marker says "seeded" but the mailbox is empty, reseed.
+  keeps mail in memory; the seeder is idempotent on the demo messages' own
+  `Message-ID`s, so it reseeds a lost/empty mailbox and never duplicates mail that
+  is still present (a zero marker must not re-send existing messages).
 - **Exercise a new adapter against its real protocol, not only a double.** The
   in-memory doubles are genuine second adapters, but they normalise ids
   idempotently and emit no `VTIMEZONE`, which hid three real bugs. Adapter-shape

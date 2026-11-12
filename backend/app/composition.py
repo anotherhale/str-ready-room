@@ -101,7 +101,11 @@ def build_container(settings: Settings | None = None) -> Container:
         settings_service=SettingsService(database, authorizer, clock, ids),
         categories=CategoryService(database, authorizer, clock, ids),
         recurrence=RecurrenceService(database, authorizer, clock),
-        demo=DemoService(database, authorizer, clock, ids),
+        demo=DemoService(
+            database, authorizer, clock, ids,
+            integration_seed=integration_seed,
+            calendar=calendar_service,
+        ),
         calendar=calendar_service,
         email=email_service,
         integration_seed=integration_seed,

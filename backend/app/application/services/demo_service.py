@@ -26,6 +26,7 @@ from ..ports.clock import IdGenerator
 from ..ports.identity import AuthorizationPort
 from ..ports.persistence import DatabaseFactoryPort, TaskQuery
 from .category_service import CategoryService
+from .integration_seed_service import IntegrationSeedService
 
 
 class DemoService:
@@ -35,12 +36,20 @@ class DemoService:
         authorizer: AuthorizationPort,
         clock: Clock,
         ids: IdGenerator,
+        *,
+        integration_seed: IntegrationSeedService | None = None,
+        calendar=None,  # noqa: ANN001 - CalendarService, optional integration
     ) -> None:
         self._database = database
         self._authorizer = authorizer
         self._clock = clock
         self._ids = ids
         self._categories = CategoryService(database, authorizer, clock, ids)
+        # Optional integrations.  Both are best-effort and never raise, so the
+        # base stack (no providers configured) is unaffected (see DECISIONS
+        # D-028/D-034).
+        self._integration_seed = integration_seed
+        self._calendar = calendar
 
     def _authorize(self, principal, permission: Permission) -> None:
         decision = self._authorizer.authorize(principal, permission)
@@ -107,9 +116,33 @@ class DemoService:
         # clean, empty state rather than a half-cleared one.
         self.seed(principal)
 
+        # Restore the optional integrations too, so a reset returns the whole
+        # demo to its intended state.  Both are best-effort and never raise.
+        self._reseed_integrations(principal)
+
         return ResetResultDTO(
             tasks_deleted=len(tasks), rules_deleted=len(rules), categories_restored=restored
         )
+
+    def _reseed_integrations(self, principal) -> None:  # noqa: ANN001
+        """Best-effort: restore the demo calendar events and mailbox messages.
+
+        The clear step above already removed the cached calendar events and the
+        integration seed markers, so the seeders repopulate from scratch.  The
+        mailbox seeder is additionally idempotent on the demo Message-IDs, so a
+        reset can never duplicate mail that is still present in the mail server.
+        """
+        if self._integration_seed is None:
+            return
+        try:
+            self._integration_seed.seed_calendar_if_needed(principal)
+            self._integration_seed.seed_mailbox_if_needed(principal)
+        except Exception:  # noqa: BLE001 - a reset must not fail on an optional service
+            return
+        # Refresh the calendar cache from the provider so the Calendar view is
+        # populated immediately, without waiting for a manual sync.
+        if self._calendar is not None:
+            self._calendar.sync_quietly(principal)
 
     # -- seed ----------------------------------------------------------
     def seed_if_needed(self, principal) -> bool:

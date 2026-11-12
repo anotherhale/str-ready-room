@@ -285,6 +285,12 @@ READY_ROOM_CALENDAR_PROVIDER=caldav READY_ROOM_EMAIL_PROVIDER=imap \
   docker compose --profile integrations up --build
 ```
 
+> `--profile integrations` only starts the Radicale and GreenMail **servers**.
+> The `READY_ROOM_*_PROVIDER` variables are what switch the **backend adapters**
+> on; without them the views stay "unavailable" even though the servers are up.
+> To change the providers later without a rebuild, edit the variables and run
+> `docker compose --profile integrations up -d`.
+
 Then open <http://localhost:8080> and use the **Calendar** and **Mailbox** tabs.
 The backend seeds both with synthetic demo data (best-effort, non-blocking, and
 idempotent), so restarting never duplicates it.

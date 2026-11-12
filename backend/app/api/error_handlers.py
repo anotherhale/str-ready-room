@@ -15,6 +15,7 @@ from ..domain.shared.errors import (
     AuthorizationError,
     ConflictError,
     DomainError,
+    IntegrationError,
     NotFoundError,
     ValidationError,
 )
@@ -37,6 +38,11 @@ def _payload(code: str, message: str, *, details: object | None = None) -> dict:
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(DomainError)
     async def _domain_error(_request: Request, exc: DomainError) -> JSONResponse:
+        # IntegrationError carries its own HTTP-like status (502 unavailable,
+        # 409 conflict, 404 missing) because an optional upstream integration
+        # can fail in ways the generic mapping cannot know about.
+        if isinstance(exc, IntegrationError):
+            return JSONResponse(status_code=exc.status, content=_payload(exc.code, exc.message))
         status = _STATUS_BY_ERROR.get(type(exc), 400)
         return JSONResponse(status_code=status, content=_payload(exc.code, exc.message))
 

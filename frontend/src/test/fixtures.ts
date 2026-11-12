@@ -1,4 +1,16 @@
-import type { Briefing, Category, Dashboard, Settings, Task } from "../types";
+import type {
+  Briefing,
+  CalendarAgenda,
+  CalendarEvent,
+  CalendarStatus,
+  Category,
+  Dashboard,
+  EmailMessage,
+  EmailSummary,
+  MailboxStatus,
+  Settings,
+  Task,
+} from "../types";
 
 export function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -64,6 +76,85 @@ export function makeSettings(overrides: Partial<Settings> = {}): Settings {
       makeCategory("Maintenance", { is_default: true }),
       makeCategory("General", { is_default: true }),
     ],
+    ...overrides,
+  };
+}
+
+export function makeCalendarEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
+  return {
+    id: "ev1",
+    uid: "uid-1",
+    calendar_id: "/detachment/",
+    summary: "Detachment flight quarters",
+    start: "2026-03-10T07:30:00-04:00",
+    end: "2026-03-10T08:15:00-04:00",
+    all_day: false,
+    location: "Ready room",
+    description: null,
+    task_id: null,
+    captured: false,
+    ...overrides,
+  };
+}
+
+export function makeCalendarAgenda(overrides: Partial<CalendarAgenda> = {}): CalendarAgenda {
+  return {
+    date: "2026-03-10",
+    timezone: "America/New_York",
+    window_days: 7,
+    available: true,
+    events: [],
+    detail: null,
+    ...overrides,
+  };
+}
+
+export function makeCalendarStatus(overrides: Partial<CalendarStatus> = {}): CalendarStatus {
+  return {
+    available: true,
+    provider: "caldav",
+    calendar_id: "detachment",
+    cached_events: 0,
+    last_synced_at: "2026-03-10T13:00:00",
+    detail: null,
+    ...overrides,
+  };
+}
+
+export function makeEmailSummary(overrides: Partial<EmailSummary> = {}): EmailSummary {
+  return {
+    message_id: "<m1@x>",
+    sender: "ops@detachment.demo",
+    subject: "Tow bar inspection",
+    received_at: "2026-03-10T13:00:00",
+    snippet: "Confirm the window with the machine shop.",
+    captured: false,
+    task_id: null,
+    ...overrides,
+  };
+}
+
+export function makeEmailMessage(overrides: Partial<EmailMessage> = {}): EmailMessage {
+  return {
+    message_id: "<m1@x>",
+    sender: "ops@detachment.demo",
+    subject: "Tow bar inspection",
+    received_at: "2026-03-10T13:00:00",
+    body: "Full body: please confirm the inspection window with the machine shop.",
+    captured: false,
+    task_id: null,
+    ...overrides,
+  };
+}
+
+export function makeMailboxStatus(overrides: Partial<MailboxStatus> = {}): MailboxStatus {
+  return {
+    available: true,
+    provider: "imap",
+    mailbox: "INBOX",
+    message_count: 0,
+    captured_count: 0,
+    detail: null,
     ...overrides,
   };
 }

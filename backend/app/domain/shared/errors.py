@@ -44,3 +44,21 @@ class AuthorizationError(DomainError):
     """The principal may not perform the requested action (maps to HTTP 403)."""
 
     code = "forbidden"
+
+
+class IntegrationError(DomainError):
+    """An optional external integration (calendar, mailbox) failed.
+
+    Carries an HTTP-like ``status`` so inbound adapters can map it to a response
+    without importing the concrete adapter that raised it.  A default of 502
+    reflects that these failures are upstream/unavailable conditions, not client
+    mistakes.
+    """
+
+    code = "integration_error"
+
+    def __init__(
+        self, message: str, *, status: int = 502, code: str | None = None
+    ) -> None:
+        super().__init__(message, code=code)
+        self.status = status

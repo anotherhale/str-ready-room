@@ -5,10 +5,19 @@ thin.  Enum columns are stored as their string values and rebuilt on load.
 """
 from __future__ import annotations
 
+from ....calendar.entities import CalendarEventRecord
 from ....domain.settings.entities import Category, OperatorSettings
 from ....domain.tasks.entities import RecurrenceRule, Task
 from ....domain.tasks.enums import EndType, Frequency, Priority, TaskStatus
-from .models import CategoryRow, RecurrenceRuleRow, SettingsRow, TaskRow
+from ....mailbox.entities import EmailSource
+from .models import (
+    CalendarEventRow,
+    CategoryRow,
+    EmailSourceRow,
+    RecurrenceRuleRow,
+    SettingsRow,
+    TaskRow,
+)
 
 
 # -- Task -----------------------------------------------------------------
@@ -124,6 +133,8 @@ def row_to_settings(row: SettingsRow) -> OperatorSettings:
         warning_window_days=row.warning_window_days,
         timezone=row.timezone,
         seed_version=row.seed_version,
+        calendar_seed_version=row.calendar_seed_version,
+        email_seed_version=row.email_seed_version,
         updated_at=row.updated_at,
     )
 
@@ -134,6 +145,8 @@ def settings_to_row(settings: OperatorSettings) -> SettingsRow:
         warning_window_days=settings.warning_window_days,
         timezone=settings.timezone,
         seed_version=settings.seed_version,
+        calendar_seed_version=settings.calendar_seed_version,
+        email_seed_version=settings.email_seed_version,
         updated_at=settings.updated_at,
     )
 
@@ -159,3 +172,96 @@ def category_to_row(category: Category) -> CategoryRow:
         active=category.active,
         is_default=category.is_default,
     )
+
+
+# -- CalendarEvent --------------------------------------------------------
+def row_to_calendar_event(row: CalendarEventRow) -> CalendarEventRecord:
+    return CalendarEventRecord(
+        id=row.id,
+        owner_id=row.owner_id,
+        uid=row.uid,
+        calendar_id=row.calendar_id,
+        summary=row.summary,
+        start=row.start,
+        end=row.end,
+        all_day=row.all_day,
+        location=row.location,
+        description=row.description,
+        href=row.href,
+        task_id=row.task_id,
+        sequence=row.sequence,
+        timezone=row.timezone,
+        synced_at=row.synced_at,
+    )
+
+
+def calendar_event_to_row(record: CalendarEventRecord) -> CalendarEventRow:
+    return CalendarEventRow(
+        id=record.id,
+        owner_id=record.owner_id,
+        uid=record.uid,
+        calendar_id=record.calendar_id,
+        summary=record.summary,
+        start=record.start,
+        end=record.end,
+        all_day=record.all_day,
+        location=record.location,
+        description=record.description,
+        href=record.href,
+        task_id=record.task_id,
+        sequence=record.sequence,
+        timezone=record.timezone,
+        synced_at=record.synced_at,
+    )
+
+
+def apply_calendar_event_to_row(record: CalendarEventRecord, row: CalendarEventRow) -> None:
+    row.uid = record.uid
+    row.calendar_id = record.calendar_id
+    row.summary = record.summary
+    row.start = record.start
+    row.end = record.end
+    row.all_day = record.all_day
+    row.location = record.location
+    row.description = record.description
+    row.href = record.href
+    row.task_id = record.task_id
+    row.sequence = record.sequence
+    row.timezone = record.timezone
+    row.synced_at = record.synced_at
+
+
+# -- EmailSource ----------------------------------------------------------
+def row_to_email_source(row: EmailSourceRow) -> EmailSource:
+    return EmailSource(
+        id=row.id,
+        owner_id=row.owner_id,
+        message_id=row.message_id,
+        task_id=row.task_id,
+        sender=row.sender,
+        subject=row.subject,
+        received_at=row.received_at,
+        captured_at=row.captured_at,
+    )
+
+
+def email_source_to_row(source: EmailSource) -> EmailSourceRow:
+    return EmailSourceRow(
+        id=source.id,
+        owner_id=source.owner_id,
+        message_id=source.message_id,
+        task_id=source.task_id,
+        sender=source.sender,
+        subject=source.subject,
+        received_at=source.received_at,
+        captured_at=source.captured_at,
+    )
+
+
+def apply_email_source_to_row(source: EmailSource, row: EmailSourceRow) -> None:
+    row.message_id = source.message_id
+    row.task_id = source.task_id
+    row.sender = source.sender
+    row.subject = source.subject
+    row.received_at = source.received_at
+    row.captured_at = source.captured_at

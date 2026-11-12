@@ -85,6 +85,37 @@ here. Keep this file current when a durable invariant or boundary changes.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
 
+## Optional integrations (calendar + mailbox)
+
+- Both integrations are **optional and off by default** (`READY_ROOM_CALENDAR_PROVIDER=none`,
+  `READY_ROOM_EMAIL_PROVIDER=none`). A disabled or unreachable provider yields an
+  "unavailable" view; it must never break the rest of the app.
+- **Calendar is cache-first.** The app keeps its own `calendar_events` copy; the
+  dashboard/Calendar view read only the cache, and `POST /api/calendar/sync` is
+  the only read path that talks to the provider. Adapter: `CalDavCalendarProvider`
+  (stdlib `urllib` + `xml.etree`, zero new dependencies).
+- **Mailbox is read-only.** List/read/capture only — there is **no** send, move,
+  or delete path. `MailSender` (SMTP) exists only for seeding/helpers, never the
+  request path.
+- **Capture is idempotent.** An event's `calendar_events.task_id` and a message's
+  single `email_sources` row record provenance, so recapturing returns/updates the
+  existing link instead of duplicating.
+- **Provider selection is registry-only.** `build_calendar_provider` /
+  `build_mailbox_provider` are the single place a concrete adapter is chosen. An
+  unknown provider name is a configuration error.
+- **Seeding is separate and non-blocking.** `IntegrationSeedService` retries a few
+  times and logs; each integration has its own idempotency marker
+  (`calendar_seed_version`, `email_seed_version`). Never block API readiness on an
+  auxiliary container.
+- **IMAP gotchas (GreenMail):** address the mailbox by its **full** address
+  (`maverick@detachment.demo`), not the local part; look a message up by
+  `HEADER Message-ID` with a `seq-N` fallback.
+- **iCalendar parsing is scoped to the VEVENT.** A `VTIMEZONE` block carries its
+  own `DTSTART` lines; `parse_calendar` must ignore them (regression-tested).
+- **CalDAV collection creation:** a calendar is created with `MKCALENDAR` inside
+  the principal home (`/‹user›/‹calendar›/`). `409 Conflict` on an existing
+  collection is the idempotent "already exists" case, not an error.
+
 ## Runtime / Docker
 
 - One command: `docker compose up --build`; browser at `http://localhost:8080`.

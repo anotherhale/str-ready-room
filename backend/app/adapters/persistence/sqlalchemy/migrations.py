@@ -12,9 +12,15 @@ from sqlalchemy.engine import Engine
 
 #: Columns added after the initial schema, expressed portably.  Each entry is
 #: (table, column, column DDL used in a plain ALTER TABLE ADD COLUMN).
+#:
+#: ``calendar_events.task_id`` was introduced with the calendar→responsibility
+#: capture feature (DECISIONS D-030).  ``create_all`` only creates missing
+#: *tables*, never alters an existing one, so a database on a persistent volume
+#: from before that feature needs this additive column or capture would fail.
 ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
-    # Populated as the schema evolves; kept empty for the first cut because the
-    # initial create_all already contains every column.
+    ("calendar_events", "task_id", "VARCHAR(36)"),
+    ("operator_settings", "calendar_seed_version", "INTEGER NOT NULL DEFAULT 0"),
+    ("operator_settings", "email_seed_version", "INTEGER NOT NULL DEFAULT 0"),
 )
 
 

@@ -53,3 +53,44 @@ export function localGreeting(now: Date = new Date()): string {
 }
 
 export const WEEKDAY_NAMES = WEEKDAYS;
+
+// Format a timezone-aware ISO timestamp (as sent by the calendar provider) in
+// the operator's effective timezone.  The backend owns the zone; this only
+// renders the instant in it.  Returns "" for an unparseable value.
+export function formatEventTime(value: string, timeZone: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone,
+    }).format(date);
+  } catch {
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+}
+
+// Format a plain date string (YYYY-MM-DD) as a short weekday label.
+export function formatEventDay(value: string): string {
+  return formatShortDate(value.slice(0, 10));
+}
+
+// The calendar date (YYYY-MM-DD) of a timezone-aware instant, resolved in the
+// operator's timezone.  Used only to group events for display.
+export function localDateOf(value: string, timeZone: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone,
+    }).formatToParts(date);
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    return `${get("year")}-${get("month")}-${get("day")}`;
+  } catch {
+    return value.slice(0, 10);
+  }
+}

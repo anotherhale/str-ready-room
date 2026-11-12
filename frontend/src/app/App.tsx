@@ -3,24 +3,29 @@ import { useState } from "react";
 import { QuickCapture } from "../components/QuickCapture/QuickCapture";
 import { TaskDialog } from "../components/TaskDialog/TaskDialog";
 import { BriefingView } from "../features/briefing/BriefingView";
+import { CalendarView } from "../features/calendar/CalendarView";
 import { DashboardView } from "../features/dashboard/DashboardView";
+import { MailboxView } from "../features/mailbox/MailboxView";
 import { SettingsView } from "../features/settings/SettingsView";
 import { InventoryView } from "../features/tasks/InventoryView";
 import { api, ApiError } from "../services/apiClient";
 import { useAppData } from "../services/useAppData";
-import type { Task, TaskCreateInput } from "../types";
+import type { CalendarCaptureInput, EmailCaptureInput, Task, TaskCreateInput } from "../types";
 
-type View = "dashboard" | "inventory" | "briefing" | "settings";
+type View = "dashboard" | "inventory" | "calendar" | "mailbox" | "briefing" | "settings";
 
 const NAV: { id: View; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "inventory", label: "Inventory" },
+  { id: "calendar", label: "Calendar" },
+  { id: "mailbox", label: "Mailbox" },
   { id: "briefing", label: "Briefing" },
   { id: "settings", label: "Settings" },
 ];
 
 export function App() {
-  const { data, loading, error, filters, setFilters, refresh, mutate } = useAppData();
+  const { data, loading, error, filters, setFilters, refresh, refreshCalendar, refreshMailbox, mutate } =
+    useAppData();
   const [view, setView] = useState<View>("dashboard");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
@@ -175,6 +180,45 @@ export function App() {
         )}
 
         {view === "briefing" && data.briefing && <BriefingView briefing={data.briefing} />}
+
+        {view === "calendar" && (
+          <CalendarView
+            agenda={data.calendar}
+            status={data.calendarStatus}
+            categories={data.settings.categories}
+            busy={busy}
+            onSync={async () => {
+              await api.syncCalendar();
+              await refreshCalendar();
+              await refresh();
+            }}
+            onCreate={async (input) => {
+              await api.createCalendarEvent(input);
+              await refreshCalendar();
+            }}
+            onCapture={async (event, input: CalendarCaptureInput) => {
+              await mutate(() => api.captureCalendarEvent(event.id, input));
+              await refreshCalendar();
+              flash("Captured to inventory.");
+            }}
+          />
+        )}
+
+        {view === "mailbox" && (
+          <MailboxView
+            messages={data.mailbox}
+            status={data.mailboxStatus}
+            categories={data.settings.categories}
+            timezone={data.settings.timezone}
+            busy={busy}
+            onLoadMessage={(id) => api.getMessage(id)}
+            onCapture={async (messageId, input: EmailCaptureInput) => {
+              await mutate(() => api.captureMessage(messageId, input));
+              await refreshMailbox();
+              flash("Captured to inventory.");
+            }}
+          />
+        )}
 
         {view === "settings" && (
           <SettingsView

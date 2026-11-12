@@ -363,3 +363,213 @@ appended as decisions are made. Each entry is tagged with its category:
   friction and defeats "fast capture".
 - **Consequences:** `App.tsx` passes active categories and forwards the full input;
   QuickCapture tests updated (5 passing). The backend already accepted these fields.
+
+---
+
+## Integration block (D-025 – D-033) — email + calendar (2026-11-12)
+
+> These entries record the email/calendar integration work. They are written on
+> the day the code was completed. The module docstrings reference these numbers;
+> the earlier integration code had reused numbers already taken by D-020 – D-024,
+> so the references and these entries were renumbered together into a fresh,
+> non-colliding block.
+
+## D-025 — Calendar integration behind a cache and a zero-dependency CalDAV adapter (2026-11-12)
+
+- **Category:** PI / ED
+- **Context:** Maverick wants to see what is coming without another silo, and the
+  brief explicitly lists calendar awareness. READY ROOM must stay usable when the
+  calendar server is slow, misconfigured, or down.
+- **Decision:** Keep READY ROOM's **own cache** of provider events
+  (`calendar_events` table, `CalendarEventRecord`). The dashboard and Calendar
+  view read only the cache; a single explicit `POST /calendar/sync` is the only
+  read path that talks to the provider, and it is best-effort — an unreachable
+  provider surfaces as an `available: false` status, never a failed request. The
+  CalDAV adapter drives `PROPFIND`/`REPORT`/`MKCOL`/`PUT`/`DELETE` with the
+  standard library (`urllib` + `xml.etree`), so the runtime gains **zero** new
+  dependencies; iCalendar parse/serialize is shared with every future adapter via
+  `calendar.domain`.
+- **Alternatives:** Call the provider live on every dashboard load — rejected:
+  couples page latency to an external server and breaks the "app works offline"
+  property. Add a CalDAV client library — rejected: an avoidable dependency for
+  the handful of verbs needed.
+- **Consequences:** `CalendarProvider` is a port; the CalDAV adapter is one
+  implementation selected by `READY_ROOM_CALENDAR_PROVIDER`. A Google/Microsoft
+  adapter is added in the registry without touching domain, services, API, or UI.
+
+## D-026 — Mailbox is read-only; capture writes one provenance row (2026-11-12)
+
+- **Category:** PI / ED
+- **Context:** "New work arrives through email … and must be captured before it is
+  forgotten." That is an *inbound* concern. Sending, moving, or deleting mail is
+  out of scope and would imply mailbox ownership READY ROOM does not have.
+- **Decision:** The mailbox integration is deliberately **read-only**: the API
+  exposes list/read/status and a single capture action, and there is no
+  send/move/delete endpoint. Capturing a message writes one `EmailSource`
+  provenance row (message id, sender, subject, received time, task id). The row is
+  what lets the UI mark a message "already captured" so it cannot silently spawn
+  duplicates; recapturing **reuses the single row** and re-points it at the newest
+  task rather than inserting a second.
+- **Alternatives:** Mark messages read/moved on capture — rejected: mutates the
+  operator's mailbox, which is not ours to change. Store provenance on the task
+  only — rejected: "was this captured?" would then need a scan and could not be
+  enforced as a single-row invariant.
+- **Consequences:** `EmailSource.message_id` is unique per owner. The UI's
+  captured badge is derived from this row, not from a client-side flag.
+
+## D-027 — IMAP adapter shaped by GreenMail realities; SMTP only for seeding (2026-11-12)
+
+- **Category:** ED
+- **Context:** The demo mailbox is a self-hosted GreenMail. Two behaviours had to
+  be accommodated, and the capture path looks a message up by its identifier.
+- **Decision:** All `imaplib` usage lives in the IMAP adapter and is read-only
+  (`SELECT`/`SEARCH`/`FETCH`), using `BODY.PEEK` so listing never marks a message
+  read. (1) The mailbox is addressed by its **full** address
+  (`maverick@detachment.demo`), not the local part — logging in as the local part
+  creates a *different* mailbox. (2) A message is looked up by
+  `HEADER Message-ID`, with a `seq-N` sequence-number fallback for messages that
+  genuinely lack a `Message-ID`. A separate `MailSender` port (SMTP adapter) exists
+  **only** for the seeder and demo helper; it always sets an explicit `Message-ID`
+  because a seeded message without one could not be found by the capture path. The
+  application request path never sends mail.
+- **Alternatives:** Parse the local part off the configured username — rejected:
+  silently targets the wrong mailbox on GreenMail. Require `Message-ID` — rejected:
+  would make some real messages uncapturable.
+- **Consequences:** `MailSender` is not part of the read-only `MailboxProvider`
+  port; the two are intentionally distinct.
+
+## D-028 — Integration seeding is separate, best-effort, and non-blocking (2026-11-12)
+
+- **Category:** ED
+- **Context:** The calendar and mail containers may still be booting when the API
+  becomes ready. Blocking startup on them would delay or break the app; running
+  them inline would make startup flaky.
+- **Decision:** Keep the integration seeders (`IntegrationSeedService`) separate
+  from the core task seed (`DemoService`). On startup the lifespan schedules each
+  integration seed as an `asyncio.to_thread` task — **non-blocking** — and each
+  seeder is best-effort: it retries a few times, logs on failure, and never raises.
+  Each integration has its **own** marker column (`calendar_seed_version`,
+  `email_seed_version`) beside the core `seed_version`, so the integrations can be
+  seeded or skipped independently and never duplicate data across restarts.
+- **Alternatives:** Seed synchronously during startup — rejected: couples API
+  readiness to auxiliary containers. One combined marker — rejected: could not
+  re-seed one integration after only the other was cleared.
+- **Consequences:** `demo reset` clears all three markers, so a reset re-seeds the
+  full demonstration scenario on the next startup.
+
+## D-029 — Calendar wall-clock fidelity: naive UTC plus an IANA zone (2026-11-12)
+
+- **Category:** ED
+- **Context:** A naive datetime handed to a provider is treated as UTC, which would
+  shift a "07:30 local" event to 00:30 local when read back — an unacceptable error
+  for a flight-quarters brief.
+- **Decision:** Store each cached event's `start`/`end` as **naive UTC** alongside
+  the IANA `timezone` it is anchored to. The seed builds events with **aware** local
+  datetimes (`ZoneInfo(operator_tz)`) so the intended wall-clock time survives the
+  round trip. This mirrors the app-wide rule: persist naive UTC, resolve local time
+  through the operator's zone.
+- **Alternatives:** Store aware datetimes — rejected: inconsistent with the rest of
+  the schema and the "naive UTC" invariant. Store local wall-clock with no zone —
+  rejected: loses the DST anchor.
+- **Consequences:** An all-day event keeps its date; a timed event keeps its local
+  clock time. Covered by calendar domain and service tests.
+
+## D-030 — Capture a calendar event into a responsibility (2026-11-12)
+
+- **Category:** PI / ED
+- **Context:** Seeing an event is not the same as owning a responsibility for it.
+  Maverick should be able to turn "tow bar inspection window" into a tracked task.
+- **Decision:** `POST /calendar/events/{id}/tasks` captures a cached event into a
+  task and sets `calendar_events.task_id` to link them. Capture is **idempotent**:
+  an already-linked event returns its existing task instead of creating a second.
+  The link lives on the cache row, so the Calendar view can show "captured".
+- **Alternatives:** Copy the event with no back-link — rejected: the UI could not
+  show provenance and re-capturing would duplicate. A separate link table —
+  rejected: one nullable column is sufficient for this cut.
+- **Consequences:** `task_id` is a nullable FK-like column on `calendar_events`;
+  see D-031 for how it reaches an existing volume.
+
+## D-031 — Additive schema evolution for the new integration tables/columns (2026-11-12)
+
+- **Category:** ED
+- **Context:** `create_all` only creates missing **tables**, never alters an
+  existing one. A database on a persistent volume from before the integration
+  feature would lack `calendar_events.task_id` and the two seed-marker columns, and
+  capture (or seeding) would fail.
+- **Decision:** Extend the existing idempotent additive-migration helper inside the
+  SQLAlchemy adapter to add the missing columns portably (`ALTER TABLE … ADD COLUMN`),
+  including `calendar_events.task_id`, `operator_settings.calendar_seed_version`,
+  and `operator_settings.email_seed_version`. Still **no Alembic** at this size
+  (see D-009); the helper only adds, never drops or rewrites, and is safe to re-run.
+- **Alternatives:** Adopt Alembic now — rejected: disproportionate for three
+  additive columns; the trade-off remains recorded in D-009. Require a volume wipe —
+  rejected: destroys user data for an additive change.
+- **Consequences:** Existing volumes upgrade in place. A later Alembic migration
+  would live in the same adapter and preserve the same ports.
+
+## D-032 — Event identity and cache key (2026-11-12)
+
+- **Category:** ED
+- **Context:** Sync must update events, not duplicate them; a locally created event
+  must not be deleted-and-reinserted by the next sync, which would silently drop
+  its capture link.
+- **Decision:** Identify a cached event by `(owner_id, uid, calendar_id)` — the
+  `uid` is the provider's stable event identifier and `calendar_id` the collection
+  it lives in; `href` and `sequence` are carried for provider bookkeeping. A locally
+  created event is cached under the provider's **canonical** calendar id (resolved
+  through the port, not the user's typed label) so a later sync finds and updates
+  the same row. A unique index enforces the key.
+- **Alternatives:** Key on `href` — rejected: `href` is not stable across some
+  providers and is absent for local creates. Key on summary+start — rejected:
+  collides for legitimate repeats.
+- **Consequences:** The unique index `ix_calendar_owner_uid` makes duplicate cache
+  rows impossible; the agenda returns events by keying on the same identity.
+
+## D-033 — Mailbox provider is selected by a registry, like calendar (2026-11-12)
+
+- **Category:** ED
+- **Context:** A future mailbox backend (Graph, Gmail API, JMAP) should attach the
+  same way a calendar backend does, with no changes to domain, services, API, or UI.
+- **Decision:** Add `mailbox/providers/registry.py` mirroring the calendar
+  registry: `build_mailbox_provider(settings)` returns the configured
+  `MailboxProvider` (currently `imap`) or `None` when disabled, and rejects an
+  unknown provider name as a configuration error. Disabled simply means the Mailbox
+  view reports "unavailable" and the rest of READY ROOM is unaffected.
+- **Alternatives:** Instantiate the IMAP provider directly in composition —
+  rejected: would spread provider selection across the codebase and break the
+  "select adapters in one place" rule.
+- **Consequences:** `READY_ROOM_EMAIL_PROVIDER=imap|none` selects the adapter; a new
+  provider is one branch here plus its adapter module.
+
+## D-034 — CalDAV/IMAP adapter hardening found by live-container probing (2026-11-12)
+
+- **Category:** ED
+- **Context:** The integration adapters passed the in-memory test doubles but
+  failed against real containers. Probing a live Radicale (`:5232`) and GreenMail
+  (`:3143`) exposed defects the doubles could not: the doubles normalise ids
+  idempotently and never emit a `VTIMEZONE`, so they masked real-world behaviour.
+- **Decisions / fixes:**
+  1. **iCalendar parsing is scoped to the `VEVENT` block.** A `VCALENDAR` may carry
+     a `VTIMEZONE` whose own `DTSTART` lines describe historical transitions;
+     scanning the whole payload let `DTSTART:20001029T020000` win over the event's
+     real start. `parse_calendar` now extracts the first `VEVENT` first
+     (regression test `test_parse_ignores_vtimezone_dtstart`).
+  2. **A canonical calendar id is an absolute URL and must never be re-prefixed.**
+     `resolve_calendar_id` was prepending the principal home to an already-absolute
+     id, yielding `/maverick/http://radicale:5232/maverick/detachment/` → `403`.
+     It now returns an absolute id unchanged (unit tests in
+     `tests/unit/adapters/test_caldav_urls.py`). This bug was invisible to the
+     in-memory provider because its `resolve_calendar_id` is idempotent.
+  3. **`list_calendars` searches the principal home, not just the root.** Radicale
+     exposes calendars at `/<user>/<calendar>/`; a root-level `PROPFIND` depth 1
+     returns only the principal, so the list was empty.
+  4. **The mailbox seed reconciles against the mailbox, not just a DB marker.**
+     GreenMail keeps mail in memory; after a partial restart (persistent DB, fresh
+     mail container) the `email_seed_version` marker said "seeded" while the
+     mailbox was empty. The seeder now reseeds when the marker is set but the
+     mailbox is empty (test `test_mailbox_seed_repairs_after_mail_server_restart`).
+- **Consequences:** Both integrations now work end to end against real containers
+  through the nginx origin. The in-memory doubles remain (they are genuine second
+  adapters), but the new adapter unit tests pin the URL/parse shapes the doubles
+  cannot. Lesson recorded in `AGENTS.md`: exercise a new adapter against its real
+  protocol, not only against a double.

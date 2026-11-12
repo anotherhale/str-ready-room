@@ -7,11 +7,14 @@ domain entities and application-owned criteria only, and never commit.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Protocol, runtime_checkable
 
+from ...calendar.entities import CalendarEventRecord
 from ...domain.settings.entities import Category, OperatorSettings
 from ...domain.tasks.entities import RecurrenceRule, Task
 from ...domain.tasks.enums import TaskStatus
+from ...mailbox.entities import EmailSource
 
 
 class PersistenceError(Exception):
@@ -85,6 +88,40 @@ class CategoryRepository(Protocol):
     def count(self, owner_id: str) -> int: ...
 
 
+class CalendarEventRepository(Protocol):
+    """Cache of provider calendar events, scoped by owner."""
+
+    def get_by_id(self, event_id: str, owner_id: str) -> CalendarEventRecord | None: ...
+
+    def get_by_uid(self, uid: str, calendar_id: str, owner_id: str) -> CalendarEventRecord | None: ...
+
+    def list(
+        self, owner_id: str, *, start: date | None = None, end: date | None = None
+    ) -> list[CalendarEventRecord]: ...
+
+    def save(self, record: CalendarEventRecord) -> CalendarEventRecord: ...
+
+    def delete(self, event_id: str, owner_id: str) -> bool: ...
+
+    def delete_missing(self, calendar_id: str, keep_uids: set[str], owner_id: str) -> int: ...
+
+    def count(self, owner_id: str) -> int: ...
+
+
+class EmailSourceRepository(Protocol):
+    """Provenance records for captured messages, scoped by owner."""
+
+    def get_by_message_id(self, message_id: str, owner_id: str) -> EmailSource | None: ...
+
+    def list(self, owner_id: str) -> list[EmailSource]: ...
+
+    def save(self, source: EmailSource) -> EmailSource: ...
+
+    def delete(self, source_id: str, owner_id: str) -> bool: ...
+
+    def count(self, owner_id: str) -> int: ...
+
+
 @runtime_checkable
 class DatabasePort(Protocol):
     """A unit of work: exposes repositories and owns the transaction boundary.
@@ -104,6 +141,12 @@ class DatabasePort(Protocol):
 
     @property
     def categories(self) -> CategoryRepository: ...
+
+    @property
+    def calendar_events(self) -> CalendarEventRepository: ...
+
+    @property
+    def email_sources(self) -> EmailSourceRepository: ...
 
     def commit(self) -> None: ...
 

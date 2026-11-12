@@ -6,7 +6,7 @@ which inputs are optional vs. "clear this field".
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
 from ...domain.tasks.enums import EndType, Frequency, Priority
 
@@ -74,3 +74,41 @@ class CreateCategoryCommand:
 class UpdateCategoryCommand:
     name: str | None = None
     active: bool | None = None
+
+
+# -- calendar -------------------------------------------------------------
+@dataclass(frozen=True)
+class CalendarEventCreateCommand:
+    """Create an event on the provider (and cache it)."""
+
+    summary: str
+    start: datetime
+    end: datetime | None = None
+    all_day: bool = False
+    location: str | None = None
+    description: str | None = None
+    calendar_id: str | None = None
+
+
+@dataclass(frozen=True)
+class CaptureCalendarEventCommand:
+    """Turn a cached event into a responsibility."""
+
+    event_id: str
+    category: str | None = None
+    priority: Priority | None = None
+    due_date: date | None = None
+    title: str | None = None
+    description: str | None = None
+
+
+# -- email ----------------------------------------------------------------
+@dataclass(frozen=True)
+class CaptureEmailCommand:
+    """Turn a mailbox message into a responsibility."""
+
+    message_id: str
+    category: str | None = None
+    priority: Priority | None = None
+    due_date: date | None = None
+    title: str | None = None

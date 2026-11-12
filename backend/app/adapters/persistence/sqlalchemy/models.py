@@ -77,6 +77,8 @@ class SettingsRow(Base):
     warning_window_days: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    calendar_seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    email_seed_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
@@ -91,3 +93,56 @@ class CategoryRow(Base):
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     __table_args__ = (Index("ix_categories_owner_name", "owner_id", "name"),)
+
+
+class CalendarEventRow(Base):
+    """Cache of provider calendar events.
+
+    ``task_id`` links a cached event to the responsibility it was captured into.
+    It was added after the first schema (see DECISIONS D-030/D-031), so the
+    additive migration in ``migrations.py`` also creates it on existing volumes.
+    """
+
+    __tablename__ = "calendar_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    uid: Mapped[str] = mapped_column(String(255), nullable=False)
+    calendar_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    location: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    href: Mapped[str | None] = mapped_column(Text, nullable=True)
+    task_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index("ix_calendar_owner_uid", "owner_id", "uid", "calendar_id", unique=True),
+        Index("ix_calendar_owner_start", "owner_id", "start"),
+    )
+
+
+class EmailSourceRow(Base):
+    """Provenance record for a message captured into a task.
+
+    ``message_id`` is unique per owner so recapture updates one row rather than
+    inserting a second (see DECISIONS D-026).
+    """
+
+    __tablename__ = "email_sources"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    message_id: Mapped[str] = mapped_column(String(998), nullable=False)
+    task_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    sender: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subject: Mapped[str | None] = mapped_column(Text, nullable=True)
+    received_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    captured_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (Index("ix_email_source_owner_message", "owner_id", "message_id", unique=True),)

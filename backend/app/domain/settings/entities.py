@@ -28,6 +28,12 @@ DEFAULT_CATEGORIES: tuple[str, ...] = (
 #: Marker recording which seed generation last ran.
 CURRENT_SEED_VERSION = 1
 
+#: Markers for the *optional* integration seeds.  They live beside the core
+#: ``seed_version`` so every seeder has its own idempotency marker and the
+#: integrations can be seeded (or not) independently (see DECISIONS D-028).
+CURRENT_CALENDAR_SEED_VERSION = 1
+CURRENT_EMAIL_SEED_VERSION = 1
+
 
 def validate_timezone(name: str) -> str:
     if not name or not isinstance(name, str):
@@ -47,6 +53,8 @@ class OperatorSettings:
     warning_window_days: int = DEFAULT_WARNING_WINDOW
     timezone: str = DEFAULT_TIMEZONE
     seed_version: int = 0
+    calendar_seed_version: int = 0
+    email_seed_version: int = 0
     updated_at: datetime | None = None
 
     def __post_init__(self) -> None:

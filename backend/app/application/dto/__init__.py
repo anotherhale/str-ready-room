@@ -111,3 +111,86 @@ class ResetResultDTO:
     tasks_deleted: int
     rules_deleted: int
     categories_restored: int
+
+
+# -- calendar -------------------------------------------------------------
+@dataclass(frozen=True)
+class CalendarEventDTO:
+    id: str
+    uid: str
+    calendar_id: str
+    summary: str
+    start: datetime  # aware, in the event's zone
+    end: datetime | None
+    all_day: bool
+    location: str | None
+    description: str | None
+    #: Set when the event has been captured into a responsibility.
+    task_id: str | None
+
+    @property
+    def captured(self) -> bool:
+        return self.task_id is not None
+
+
+@dataclass(frozen=True)
+class CalendarAgendaDTO:
+    date: date
+    timezone: str
+    window_days: int
+    available: bool
+    events: list[CalendarEventDTO]
+    #: Human-readable note when the integration is unavailable.
+    detail: str | None = None
+
+
+@dataclass(frozen=True)
+class CalendarStatusDTO:
+    available: bool
+    provider: str | None
+    calendar_id: str | None
+    cached_events: int
+    last_synced_at: datetime | None
+    detail: str | None = None
+
+
+@dataclass(frozen=True)
+class CalendarSyncResultDTO:
+    fetched: int
+    created: int
+    updated: int
+    pruned: int
+    synced_at: datetime
+
+
+# -- email ----------------------------------------------------------------
+@dataclass(frozen=True)
+class EmailSummaryDTO:
+    message_id: str
+    sender: str
+    subject: str
+    received_at: datetime | None
+    snippet: str
+    captured: bool
+    task_id: str | None
+
+
+@dataclass(frozen=True)
+class EmailMessageDTO:
+    message_id: str
+    sender: str
+    subject: str
+    received_at: datetime | None
+    body: str
+    captured: bool
+    task_id: str | None
+
+
+@dataclass(frozen=True)
+class MailboxStatusDTO:
+    available: bool
+    provider: str | None
+    mailbox: str | None
+    message_count: int
+    captured_count: int
+    detail: str | None = None

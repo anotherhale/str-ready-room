@@ -22,6 +22,11 @@ class Permission(str, Enum):
     CATEGORIES_MANAGE = "categories:manage"
     RECURRENCE_READ = "recurrence:read"
     RECURRENCE_WRITE = "recurrence:write"
+    CALENDAR_READ = "calendar:read"
+    CALENDAR_SYNC = "calendar:sync"
+    CALENDAR_WRITE = "calendar:write"
+    EMAIL_READ = "email:read"
+    EMAIL_CAPTURE = "email:capture"
     DEMO_RESET = "demo:reset"
 
 
@@ -36,5 +41,7 @@ VIEWER_PERMISSIONS: frozenset[Permission] = frozenset(
         Permission.BRIEFING_READ,
         Permission.SETTINGS_READ,
         Permission.RECURRENCE_READ,
+        Permission.CALENDAR_READ,
+        Permission.EMAIL_READ,
     }
 )

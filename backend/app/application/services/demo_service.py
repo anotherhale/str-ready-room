@@ -61,6 +61,12 @@ class DemoService:
             for rule in rules:
                 uow.recurrence_rules.delete(rule.id, principal.id)
 
+            # Clear cached integration data too, so a reset is a true clean slate.
+            for event in uow.calendar_events.list(principal.id):
+                uow.calendar_events.delete(event.id, principal.id)
+            for source in uow.email_sources.list(principal.id):
+                uow.email_sources.delete(source.id, principal.id)
+
             # Remove all categories, then restore the defaults.
             for category in uow.categories.list(principal.id, include_inactive=True):
                 uow.categories.delete(category.id, principal.id)
@@ -82,6 +88,8 @@ class DemoService:
             settings.warning_window_days = 3
             settings.timezone = principal.timezone
             settings.seed_version = 0
+            settings.calendar_seed_version = 0
+            settings.email_seed_version = 0
             settings.updated_at = now
             uow.settings.save(settings)
 

@@ -252,8 +252,59 @@ prefix:
 | `READY_ROOM_DEFAULT_TIMEZONE` | `America/New_York` | Operator timezone (validated) |
 | `READY_ROOM_AUTHORIZATION_ENGINE` | `policy` | Authorization adapter key |
 | `READY_ROOM_SEED_ON_STARTUP` | `true` | Idempotent demo seeding |
+| `READY_ROOM_CALENDAR_PROVIDER` | `none` | Calendar adapter: `caldav` or `none` (off) |
+| `READY_ROOM_CALDAV_URL` | `http://radicale:5232` | CalDAV base URL |
+| `READY_ROOM_CALDAV_USERNAME` | `maverick` | CalDAV username |
+| `READY_ROOM_CALDAV_PASSWORD` | `readyroom` | CalDAV password |
+| `READY_ROOM_CALDAV_CALENDAR` | `detachment` | Default calendar collection |
+| `READY_ROOM_EMAIL_PROVIDER` | `none` | Mailbox adapter: `imap` or `none` (off) |
+| `READY_ROOM_IMAP_HOST` | `greenmail` | IMAP host |
+| `READY_ROOM_IMAP_PORT` | `3143` | IMAP port |
+| `READY_ROOM_IMAP_USERNAME` | `maverick@detachment.demo` | **Full** mailbox address (see note) |
+| `READY_ROOM_IMAP_PASSWORD` | `readyroom` | IMAP password |
+| `READY_ROOM_IMAP_MAILBOX` | `INBOX` | Mailbox to read |
+| `READY_ROOM_SMTP_HOST` | `greenmail` | SMTP host (seeding/helper only) |
+| `READY_ROOM_SMTP_PORT` | `3025` | SMTP port |
 
 Frontend dev server proxies `/api` to the backend (see `frontend/vite.config.ts`).
+
+---
+
+## Optional integrations (calendar + mailbox)
+
+The base stack above is fully self-contained. Two **optional** integrations add
+a Calendar view and a Mailbox view. They are off by default and degrade
+gracefully — if the servers are down or disabled, the views report
+"unavailable" and the rest of READY ROOM is unaffected.
+
+Start the optional servers (a self-hosted CalDAV calendar, [Radicale], and a
+demo mail server, [GreenMail]) with the `integrations` profile:
+
+```bash
+READY_ROOM_CALENDAR_PROVIDER=caldav READY_ROOM_EMAIL_PROVIDER=imap \
+  docker compose --profile integrations up --build
+```
+
+Then open <http://localhost:8080> and use the **Calendar** and **Mailbox** tabs.
+The backend seeds both with synthetic demo data (best-effort, non-blocking, and
+idempotent), so restarting never duplicates it.
+
+- **Calendar** — READY ROOM keeps its own cache of events. `Sync` pulls from the
+  provider; the dashboard and Calendar view read only the cache. An event can be
+  **captured into a responsibility** with one click.
+- **Mailbox** — read-only by design: list, read, and capture a message into a
+  responsibility. There is no send/move/delete path. A captured message is
+  marked so it cannot silently spawn duplicates.
+
+Direct service ports (only needed for debugging): Radicale `http://localhost:5232`,
+GreenMail SMTP `localhost:3025` / IMAP `localhost:3143`.
+
+> **Note on the mailbox address:** the IMAP username must be the **full**
+> address (`maverick@detachment.demo`). GreenMail creates a *different* mailbox
+> for the bare local part, so using `maverick` alone would appear empty.
+
+[Radicale]: https://radicale.org/
+[GreenMail]: https://greenmail-mail-test.github.io/greenmail/
 
 ---
 
@@ -284,6 +335,16 @@ Base path: `/api`. Interactive docs at `/api/docs`.
 | PATCH | `/api/categories/{id}` | Rename / activate / deactivate |
 | DELETE | `/api/categories/{id}` | Delete category |
 | POST | `/api/demo/reset` | Clear data, restore defaults |
+| GET | `/api/calendar/status` | Calendar provider availability |
+| GET | `/api/calendar/agenda` | Cached events for the agenda window |
+| POST | `/api/calendar/sync` | Pull events from the provider (best-effort) |
+| POST | `/api/calendar/events` | Create an event on the provider + cache |
+| DELETE | `/api/calendar/events/{id}` | Delete a cached/provider event |
+| POST | `/api/calendar/events/{id}/tasks` | Capture an event into a responsibility |
+| GET | `/api/mail/status` | Mailbox provider availability |
+| GET | `/api/mail/messages` | List mailbox messages (read-only) |
+| GET | `/api/mail/messages/{id}` | Read one message |
+| POST | `/api/mail/messages/{id}/tasks` | Capture a message into a responsibility |
 
 `TaskRead` includes **computed** fields -- `urgency`, `days_until_due`, and an
 embedded recurrence summary -- which are derived on read and never persisted.
@@ -330,9 +391,13 @@ npm run build        # production build
   are intentionally out of scope for the first cut. The ownership model
   (`owner_id` on every user-owned entity) is already in place so a future
   multi-user implementation does not require a schema redesign.
-- **No notifications, email/calendar integrations, AI extraction, mobile apps,
-  cloud deployment, real-time sync, or server-side PDF.** Printing uses the
-  browser's print dialog with a dedicated print stylesheet.
+- **No notifications, AI extraction, mobile apps, cloud deployment, real-time
+  sync, or server-side PDF.** Printing uses the browser's print dialog with a
+  dedicated print stylesheet.
+- **Optional calendar/mailbox integrations are off by default.** They are
+  read-oriented (the mailbox is read-only; the calendar keeps a local cache) and
+  selected through a provider registry. They require the `integrations` Compose
+  profile and are not part of the base stack.
 - **PostgreSQL** is supported by configuration and covered by the shared test
   suite; it is deliberately *not* part of the default Compose stack.
 - **Schema evolution** is additive and idempotent inside the SQLAlchemy adapter;

@@ -3,9 +3,19 @@
 
 import type {
   Briefing,
+  CalendarAgenda,
+  CalendarCaptureInput,
+  CalendarEvent,
+  CalendarEventInput,
+  CalendarStatus,
+  CalendarSyncResult,
   Category,
   Dashboard,
+  EmailCaptureInput,
+  EmailMessage,
+  EmailSummary,
   Health,
+  MailboxStatus,
   Principal,
   RecurrenceInput,
   RecurrenceOverview,
@@ -144,4 +154,31 @@ export const api = {
   deleteCategory: (id: string) => request<void>(`/categories/${id}`, { method: "DELETE" }),
 
   resetDemo: () => request<ResetSummary>("/demo/reset", { method: "POST" }),
+
+  // -- calendar (optional integration) -----------------------------------
+  getCalendarAgenda: (days?: number) =>
+    request<CalendarAgenda>(`/calendar/agenda${query({ days: days ? String(days) : undefined })}`),
+  getCalendarStatus: () => request<CalendarStatus>("/calendar/status"),
+  syncCalendar: () => request<CalendarSyncResult>("/calendar/sync", { method: "POST" }),
+  createCalendarEvent: (input: CalendarEventInput) =>
+    request<CalendarEvent>("/calendar/events", { method: "POST", body: JSON.stringify(input) }),
+  deleteCalendarEvent: (id: string) =>
+    request<void>(`/calendar/events/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  captureCalendarEvent: (id: string, input: CalendarCaptureInput) =>
+    request<Task>(`/calendar/events/${encodeURIComponent(id)}/tasks`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  // -- email (optional integration) --------------------------------------
+  listMessages: (limit?: number) =>
+    request<EmailSummary[]>(`/mail/messages${query({ limit: limit ? String(limit) : undefined })}`),
+  getMailboxStatus: () => request<MailboxStatus>("/mail/status"),
+  getMessage: (messageId: string) =>
+    request<EmailMessage>(`/mail/messages/${encodeURIComponent(messageId)}`),
+  captureMessage: (messageId: string, input: EmailCaptureInput) =>
+    request<Task>(`/mail/messages/${encodeURIComponent(messageId)}/tasks`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
 };

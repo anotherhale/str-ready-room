@@ -20,7 +20,9 @@ from ....application.ports.persistence import DatabasePort, PersistenceError
 from .migrations import run_additive_migrations
 from .models import Base
 from .repositories import (
+    SqlAlchemyCalendarEventRepository,
     SqlAlchemyCategoryRepository,
+    SqlAlchemyEmailSourceRepository,
     SqlAlchemyRecurrenceRuleRepository,
     SqlAlchemySettingsRepository,
     SqlAlchemyTaskRepository,
@@ -61,6 +63,8 @@ class SqlAlchemyUnitOfWork(DatabasePort):
         self._rules: SqlAlchemyRecurrenceRuleRepository | None = None
         self._settings: SqlAlchemySettingsRepository | None = None
         self._categories: SqlAlchemyCategoryRepository | None = None
+        self._calendar_events: SqlAlchemyCalendarEventRepository | None = None
+        self._email_sources: SqlAlchemyEmailSourceRepository | None = None
 
     # -- lifecycle -----------------------------------------------------
     def __enter__(self) -> SqlAlchemyUnitOfWork:
@@ -69,6 +73,8 @@ class SqlAlchemyUnitOfWork(DatabasePort):
         self._rules = SqlAlchemyRecurrenceRuleRepository(self._session)
         self._settings = SqlAlchemySettingsRepository(self._session)
         self._categories = SqlAlchemyCategoryRepository(self._session)
+        self._calendar_events = SqlAlchemyCalendarEventRepository(self._session)
+        self._email_sources = SqlAlchemyEmailSourceRepository(self._session)
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
@@ -109,6 +115,18 @@ class SqlAlchemyUnitOfWork(DatabasePort):
         self._ensure()
         assert self._categories is not None
         return self._categories
+
+    @property
+    def calendar_events(self) -> SqlAlchemyCalendarEventRepository:
+        self._ensure()
+        assert self._calendar_events is not None
+        return self._calendar_events
+
+    @property
+    def email_sources(self) -> SqlAlchemyEmailSourceRepository:
+        self._ensure()
+        assert self._email_sources is not None
+        return self._email_sources
 
     # -- transaction ---------------------------------------------------
     def commit(self) -> None:

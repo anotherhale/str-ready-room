@@ -9,8 +9,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "../services/apiClient";
 import type {
   Briefing,
+  CalendarAgenda,
+  CalendarStatus,
   Category,
   Dashboard,
+  EmailSummary,
+  MailboxStatus,
   Principal,
   RecurrenceOverview,
   Settings,
@@ -25,6 +29,12 @@ export interface AppData {
   categories: Category[];
   recurrence: RecurrenceOverview | null;
   principal: Principal | null;
+  // Optional integrations.  ``null`` means "not loaded"; ``available: false``
+  // means the integration is configured off or unreachable (never an error).
+  calendar: CalendarAgenda | null;
+  calendarStatus: CalendarStatus | null;
+  mailbox: EmailSummary[] | null;
+  mailboxStatus: MailboxStatus | null;
 }
 
 export interface TaskFilters {
@@ -41,6 +51,10 @@ const EMPTY: AppData = {
   categories: [],
   recurrence: null,
   principal: null,
+  calendar: null,
+  calendarStatus: null,
+  mailbox: null,
+  mailboxStatus: null,
 };
 
 export interface UseAppData {
@@ -51,6 +65,8 @@ export interface UseAppData {
   setFilters: (next: Partial<TaskFilters>) => void;
   refresh: () => Promise<void>;
   refreshTasks: () => Promise<void>;
+  refreshCalendar: () => Promise<void>;
+  refreshMailbox: () => Promise<void>;
   mutate: <T>(action: () => Promise<T>) => Promise<T>;
 }
 
@@ -77,6 +93,43 @@ export function useAppData(initialFilters?: Partial<TaskFilters>): UseAppData {
     return result.items;
   }, []);
 
+  // Best-effort integration load.  Each call is individually guarded so one
+  // failing integration cannot blank the other, and neither can fail the whole
+  // dashboard refresh.
+  const loadIntegrations = useCallback(async () => {
+    const [calendar, calendarStatus, mailbox, mailboxStatus] = await Promise.all([
+      api.getCalendarAgenda().catch(() => null),
+      api.getCalendarStatus().catch(() => null),
+      api.listMessages().catch(() => null),
+      api.getMailboxStatus().catch(() => null),
+    ]);
+    return { calendar, calendarStatus, mailbox, mailboxStatus };
+  }, []);
+
+  const refreshCalendar = useCallback(async () => {
+    try {
+      const [calendar, calendarStatus] = await Promise.all([
+        api.getCalendarAgenda(),
+        api.getCalendarStatus(),
+      ]);
+      setData((prev) => ({ ...prev, calendar, calendarStatus }));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Unable to load calendar.");
+    }
+  }, []);
+
+  const refreshMailbox = useCallback(async () => {
+    try {
+      const [mailbox, mailboxStatus] = await Promise.all([
+        api.listMessages(),
+        api.getMailboxStatus(),
+      ]);
+      setData((prev) => ({ ...prev, mailbox, mailboxStatus }));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Unable to load mailbox.");
+    }
+  }, []);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
@@ -90,7 +143,10 @@ export function useAppData(initialFilters?: Partial<TaskFilters>): UseAppData {
           api.getRecurrenceOverview(),
           loadTasks(),
         ]);
-      setData({ principal, dashboard, briefing, settings, categories, recurrence, tasks });
+      // Integrations load best-effort: a disabled or unreachable provider must
+      // never block the operational views.  Their status carries the reason.
+      const integrations = await loadIntegrations();
+      setData({ principal, dashboard, briefing, settings, categories, recurrence, tasks, ...integrations });
       setError(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong loading data.");
@@ -134,7 +190,18 @@ export function useAppData(initialFilters?: Partial<TaskFilters>): UseAppData {
   );
 
   return useMemo(
-    () => ({ data, loading, error, filters, setFilters, refresh, refreshTasks, mutate }),
-    [data, loading, error, filters, setFilters, refresh, refreshTasks, mutate],
+    () => ({
+      data,
+      loading,
+      error,
+      filters,
+      setFilters,
+      refresh,
+      refreshTasks,
+      refreshCalendar,
+      refreshMailbox,
+      mutate,
+    }),
+    [data, loading, error, filters, setFilters, refresh, refreshTasks, refreshCalendar, refreshMailbox, mutate],
   );
 }

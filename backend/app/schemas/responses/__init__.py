@@ -171,4 +171,81 @@ class PrincipalResponse(BaseModel):
     roles: list[str]
 
 
+# -- calendar -------------------------------------------------------------
+class CalendarEventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    uid: str
+    calendar_id: str
+    summary: str
+    start: datetime
+    end: datetime | None
+    all_day: bool
+    location: str | None
+    description: str | None
+    task_id: str | None
+    captured: bool
+
+
+class CalendarAgendaResponse(BaseModel):
+    date: date
+    timezone: str
+    window_days: int
+    available: bool
+    events: list[CalendarEventResponse]
+    detail: str | None = None
+
+
+class CalendarStatusResponse(BaseModel):
+    available: bool
+    provider: str | None
+    calendar_id: str | None
+    cached_events: int
+    last_synced_at: datetime | None
+    detail: str | None = None
+
+
+class CalendarSyncResponse(BaseModel):
+    fetched: int
+    created: int
+    updated: int
+    pruned: int
+    synced_at: datetime
+
+
+# -- email ----------------------------------------------------------------
+class EmailSummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    message_id: str
+    sender: str
+    subject: str
+    received_at: datetime | None
+    snippet: str
+    captured: bool
+    task_id: str | None
+
+
+class EmailMessageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    message_id: str
+    sender: str
+    subject: str
+    received_at: datetime | None
+    body: str
+    captured: bool
+    task_id: str | None
+
+
+class MailboxStatusResponse(BaseModel):
+    available: bool
+    provider: str | None
+    mailbox: str | None
+    message_count: int
+    captured_count: int
+    detail: str | None = None
+
+
 RecurrenceOverviewResponse.model_rebuild()

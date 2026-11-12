@@ -5,7 +5,7 @@ application layers.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -81,3 +81,34 @@ class RecurrencePreviewRequest(BaseModel):
     end_date: date | None = None
     active: bool = True
     count: int = Field(default=5, ge=1, le=50)
+
+
+# -- calendar -------------------------------------------------------------
+class CalendarEventCreateRequest(BaseModel):
+    summary: str = Field(min_length=1, max_length=300)
+    start: datetime
+    end: datetime | None = None
+    all_day: bool = False
+    location: str | None = Field(default=None, max_length=300)
+    description: str | None = Field(default=None, max_length=4000)
+    calendar_id: str | None = Field(default=None, max_length=200)
+
+
+class CalendarCaptureRequest(BaseModel):
+    """Turn a cached event into a responsibility.  All fields are optional."""
+
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    priority: Priority | None = None
+    due_date: date | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=300)
+    description: str | None = Field(default=None, max_length=4000)
+
+
+# -- email ----------------------------------------------------------------
+class EmailCaptureRequest(BaseModel):
+    """Turn a mailbox message into a responsibility.  All fields are optional."""
+
+    category: str | None = Field(default=None, min_length=1, max_length=80)
+    priority: Priority | None = None
+    due_date: date | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=300)

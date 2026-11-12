@@ -13,16 +13,24 @@ from .adapters.ids import UuidIdGenerator
 from .adapters.persistence.registry import build_database_factory
 from .application.ports.clock import Clock, IdGenerator
 from .application.ports.identity import AuthorizationPort, AuthProvider
+from .application.ports.mail import MailSender
 from .application.ports.persistence import DatabaseFactoryPort
 from .application.services.briefing_service import BriefingService
+from .application.services.calendar_service import CalendarService
 from .application.services.category_service import CategoryService
 from .application.services.dashboard_service import DashboardService
 from .application.services.demo_service import DemoService
+from .application.services.email_service import EmailService
+from .application.services.integration_seed_service import IntegrationSeedService
 from .application.services.recurrence_service import RecurrenceService
 from .application.services.settings_service import SettingsService
 from .application.services.task_service import TaskService
+from .calendar.providers.base import CalendarProvider
+from .calendar.providers.registry import build_calendar_provider
 from .config import Settings
 from .domain.shared.clock import FixedClock, SystemClock
+from .mailbox.providers.base import MailboxProvider
+from .mailbox.providers.registry import build_mailbox_provider
 
 
 @dataclass
@@ -42,6 +50,12 @@ class Container:
     categories: CategoryService
     recurrence: RecurrenceService
     demo: DemoService
+    calendar: CalendarService
+    email: EmailService
+    integration_seed: IntegrationSeedService
+    #: Optional integrations; ``None`` when disabled in configuration.
+    calendar_provider: CalendarProvider | None = None
+    mailbox_provider: MailboxProvider | None = None
 
 
 def build_container(settings: Settings | None = None) -> Container:
@@ -51,6 +65,28 @@ def build_container(settings: Settings | None = None) -> Container:
     authorizer = build_authorizer(settings)
     clock = _build_clock(settings)
     ids = UuidIdGenerator()
+
+    calendar_provider = build_calendar_provider(settings)
+    mailbox_provider = build_mailbox_provider(settings)
+    mail_sender = _build_mail_sender(settings) if mailbox_provider is not None else None
+
+    calendar_service = CalendarService(
+        database, authorizer, clock, ids,
+        provider=calendar_provider,
+        default_calendar=settings.caldav_calendar,
+    )
+    email_service = EmailService(
+        database, authorizer, clock, ids,
+        provider=mailbox_provider,
+        mailbox_name=settings.imap_mailbox,
+    )
+    integration_seed = IntegrationSeedService(
+        database, clock,
+        calendar_provider=calendar_provider,
+        default_calendar=settings.caldav_calendar,
+        mail_sender=mail_sender,
+        mailbox_provider=mailbox_provider,
+    )
 
     return Container(
         settings=settings,
@@ -66,7 +102,18 @@ def build_container(settings: Settings | None = None) -> Container:
         categories=CategoryService(database, authorizer, clock, ids),
         recurrence=RecurrenceService(database, authorizer, clock),
         demo=DemoService(database, authorizer, clock, ids),
+        calendar=calendar_service,
+        email=email_service,
+        integration_seed=integration_seed,
+        calendar_provider=calendar_provider,
+        mailbox_provider=mailbox_provider,
     )
+
+
+def _build_mail_sender(settings: Settings) -> MailSender:
+    from .application.ports.mail import SmtpMailSender
+
+    return SmtpMailSender(host=settings.smtp_host, port=settings.smtp_port)
 
 
 def _build_clock(settings: Settings):

@@ -54,6 +54,30 @@ class Settings(BaseSettings):
     # --- authorization ----------------------------------------------
     authorization_engine: str = "policy"
 
+    # --- calendar integration (optional; best-effort) ----------------
+    # Disable with READY_ROOM_CALENDAR_PROVIDER=none; the rest of the app is
+    # unaffected when the provider is off or unreachable.
+    calendar_provider: str = "none"
+    caldav_url: str = "http://radicale:5232"
+    caldav_username: str = "maverick"
+    caldav_password: str = "readyroom"
+    caldav_calendar: str = "detachment"
+    calendar_sync_on_startup: bool = True
+
+    # --- email integration (optional; read-only, best-effort) --------
+    email_provider: str = "none"
+    imap_host: str = "greenmail"
+    imap_port: int = 3143
+    # The mailbox is addressed by its *full* address; GreenMail creates a
+    # different mailbox for the bare local part (see DECISIONS D-027).
+    imap_username: str = "maverick@detachment.demo"
+    imap_password: str = "readyroom"
+    imap_mailbox: str = "INBOX"
+    email_seed_on_startup: bool = True
+    # SMTP is used only by the seeder/demo script, never by the request path.
+    smtp_host: str = "greenmail"
+    smtp_port: int = 3025
+
     # --- seed --------------------------------------------------------
     seed_on_startup: bool = True
 

@@ -19,6 +19,7 @@ Last updated: 2026-11-11
 | M8 Database portability verification | **verified** | Same suite green on SQLite **and** PostgreSQL (`READY_ROOM_TEST_DATABASE_URL=postgresql+psycopg://...:55432/...`) with no domain/application changes |
 | M9 Full verification and submission | **verified** | Clean Docker build; backend 120 passed + ruff + mypy clean; frontend 21 passed + typecheck + build; persistence across restart confirmed; live API exercised through the nginx origin |
 | M10 Dev quick-capture "Not Found" fix + timezone/UX polish | **verified** | Root-caused to the Vite dev proxy target (not the capture endpoint); proxy target now configurable + documented; `GET /api/timezones` + Settings drop-down; overdue/due card shading; quick capture captures category/due/priority. Backend **122 passed** + ruff clean; frontend **23 passed** + typecheck + build; live browser E2E on the rebuilt container (capture 201, "Captured.", 18 timezone options) |
+| M11 Calendar + mailbox integrations (optional profile) | **verified** | Optional `integrations` Compose profile (Radicale + GreenMail); CalDAV and IMAP adapters verified against real containers through the nginx origin; capture (event/message -> task) idempotent; no duplication across restart. Backend **183 passed** + ruff + mypy clean; frontend **34 passed** + typecheck + build. See D-025–D-034 |
 
 ## Environment notes
 
@@ -70,10 +71,35 @@ Last updated: 2026-11-11
   `America/Denver`; browser E2E on the container: quick capture with
   category/priority/date `POST 201`, toast "Captured.", input cleared, Settings
   timezone `<select>` renders 18 options, no console errors (M10).
+- 2026-11-12 — `pytest` (full) -> **183 passed, 1 warning**; `ruff check app tests`
+  -> **All checks passed**; `mypy app` -> **Success: no issues found in 84 source
+  files** (M11).
+- 2026-11-12 — `npm run test:run` -> **34 passed**; `npm run typecheck` -> clean;
+  `npm run build` -> built (M11).
+- 2026-11-12 — `docker compose up --build` (base stack) -> backend + frontend
+  healthy; `/api/health` ok; SPA HTTP 200; `POST /api/demo/reset` then backend
+  restart reseeded **10** tasks (M11 base regression check).
+- 2026-11-12 — Live recurring completion through the nginx origin: complete ->
+  `completed`, **idempotent** second complete -> unchanged, exactly **one** open
+  successor (`occurrence_number=2`, `due_date=2026-11-20`) (M11).
+- 2026-11-12 — `READY_ROOM_CALENDAR_PROVIDER=caldav READY_ROOM_EMAIL_PROVIDER=imap
+  docker compose --profile integrations up --build` -> **four** services healthy
+  (backend, frontend, radicale, greenmail). `POST /api/calendar/sync` ->
+  `fetched 4, created 4`; agenda shows the events at the correct local wall-clock
+  times; `POST /api/mail/messages/{id}/tasks` and
+  `POST /api/calendar/events/{id}/tasks` both captured into tasks (recapture
+  reused the same task) (M11).
+- 2026-11-12 — Integration restart check: `docker compose --profile integrations
+  restart backend` -> mailbox still 3 messages (no duplication), calendar cache
+  still 4 events, Radicale `PUT` count unchanged at 4; the mailbox seed
+  self-repaired after the in-memory mail store was lost (M11).
 
 ## Remaining work
 
 - None blocking. All mandatory Definition of Done items verified.
+- The optional calendar/mailbox integrations (M11) are implemented and verified
+  behind the `integrations` Compose profile; they are off by default so the base
+  stack remains self-contained.
 - Optional/deferred (documented, out of scope for this cut): PostgreSQL in the
-  default Compose stack, Alembic migrations, notifications, integrations, and
-  multi-user collaboration.
+  default Compose stack, Alembic migrations, notifications, and multi-user
+  collaboration.

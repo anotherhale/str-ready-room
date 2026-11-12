@@ -171,3 +171,99 @@ export interface Health {
   database_adapter: string;
   auth_provider: string;
 }
+
+// -- calendar -------------------------------------------------------------
+export interface CalendarEvent {
+  id: string;
+  uid: string;
+  calendar_id: string;
+  summary: string;
+  start: string;
+  end: string | null;
+  all_day: boolean;
+  location: string | null;
+  description: string | null;
+  task_id: string | null;
+  captured: boolean;
+}
+
+export interface CalendarAgenda {
+  date: string;
+  timezone: string;
+  window_days: number;
+  available: boolean;
+  events: CalendarEvent[];
+  detail: string | null;
+}
+
+export interface CalendarStatus {
+  available: boolean;
+  provider: string | null;
+  calendar_id: string | null;
+  cached_events: number;
+  last_synced_at: string | null;
+  detail: string | null;
+}
+
+export interface CalendarSyncResult {
+  fetched: number;
+  created: number;
+  updated: number;
+  pruned: number;
+  synced_at: string;
+}
+
+export interface CalendarEventInput {
+  summary: string;
+  start: string;
+  end?: string | null;
+  all_day?: boolean;
+  location?: string | null;
+  description?: string | null;
+  calendar_id?: string | null;
+}
+
+export interface CalendarCaptureInput {
+  category?: string;
+  priority?: Priority;
+  due_date?: string | null;
+  title?: string;
+  description?: string | null;
+}
+
+// -- email ----------------------------------------------------------------
+export interface EmailSummary {
+  message_id: string;
+  sender: string;
+  subject: string;
+  received_at: string | null;
+  snippet: string;
+  captured: boolean;
+  task_id: string | null;
+}
+
+export interface EmailMessage {
+  message_id: string;
+  sender: string;
+  subject: string;
+  received_at: string | null;
+  body: string;
+  captured: boolean;
+  task_id: string | null;
+}
+
+export interface MailboxStatus {
+  available: boolean;
+  provider: string | null;
+  mailbox: string | null;
+  message_count: number;
+  captured_count: number;
+  detail: string | null;
+}
+
+export interface EmailCaptureInput {
+  category?: string;
+  priority?: Priority;
+  due_date?: string | null;
+  title?: string;
+}

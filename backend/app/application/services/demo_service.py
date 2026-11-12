@@ -49,7 +49,13 @@ class DemoService:
 
     # -- reset ---------------------------------------------------------
     def reset(self, principal) -> ResetResultDTO:
-        """Clear application data and restore default categories/settings."""
+        """Clear application data, restore defaults, and reseed the scenario.
+
+        The reset returns the operator to the *intended demonstration state*
+        immediately, not an empty board: it clears data and restores default
+        categories/settings, then repopulates the synthetic scenario so the
+        dashboard is populated the moment the request returns.
+        """
         self._authorize(principal, Permission.DEMO_RESET)
         now = self._clock.now_utc()
         with self._database.create() as uow:
@@ -94,9 +100,16 @@ class DemoService:
             uow.settings.save(settings)
 
             uow.commit()
-            return ResetResultDTO(
-                tasks_deleted=len(tasks), rules_deleted=len(rules), categories_restored=restored
-            )
+
+        # Repopulate the demonstration scenario in its own transaction so the
+        # reset leaves the board populated, not blank.  Seeding after the clear
+        # commit keeps the two steps independent: a seed failure still leaves a
+        # clean, empty state rather than a half-cleared one.
+        self.seed(principal)
+
+        return ResetResultDTO(
+            tasks_deleted=len(tasks), rules_deleted=len(rules), categories_restored=restored
+        )
 
     # -- seed ----------------------------------------------------------
     def seed_if_needed(self, principal) -> bool:

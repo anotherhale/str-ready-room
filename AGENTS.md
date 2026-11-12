@@ -80,8 +80,10 @@ here. Keep this file current when a durable invariant or boundary changes.
 
 - Seeding is guarded by a `seed_version` marker **and** an "any tasks exist?"
   check; restarting containers must never duplicate demo data.
-- `POST /api/demo/reset` clears task/recurrence/demo state and restores default
-  categories and settings. A volume wipe is the last-resort reset.
+- `POST /api/demo/reset` clears task/recurrence/demo state, restores default
+  categories and settings, and **immediately reseeds** the demo scenario so the
+  board is repopulated the moment the request returns (never left blank).
+  A volume wipe is the last-resort reset.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
 

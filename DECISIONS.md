@@ -264,15 +264,22 @@ appended as decisions are made. Each entry is tagged with its category:
 - **Category:** ED
 - **Context:** The spec requires reset to "clear application data and restore
   the default category list and seed state".
-- **Decision:** `POST /api/demo/reset` clears tasks and recurrence rules and
-  restores default categories and settings, and zeroes the seed marker so the
-  idempotent seeder will repopulate the demonstration scenario on the next
-  startup. The reset is verified to clear data immediately and reseed on restart.
-- **Alternatives:** Have reset immediately re-seed in the same transaction —
-  rejected because the verified/tested contract is "clear + restore defaults,
-  reseed on startup", and it keeps reset a fast, single-transaction operation.
-- **Consequences:** Documented in README; a volume wipe remains the last-resort
-  full reset.
+- **Decision:** `POST /api/demo/reset` clears tasks, recurrence rules, cached
+  integration data, and categories, restores default categories/settings, and
+  then **immediately reseeds** the synthetic demonstration scenario. The reset
+  returns the operator to the *intended demonstration state* the moment the
+  request returns; the board is repopulated, not left blank.
+- **Alternatives:** (a) Zero the seed marker and let the idempotent seeder
+  repopulate on the next container startup — this was the original D-019
+  choice, but it left the dashboard visibly empty until a restart, which reads
+  as data loss to the operator and contradicts "restore the seed state" (§3.8).
+  Rejected. (b) Reseed inside the same clear transaction — rejected so a seed
+  failure still leaves a clean, empty state rather than a half-cleared one; the
+  two steps stay independent (clear+commit, then seed).
+- **Consequences:** Reset is now self-contained and idempotent (repeatable
+  without accumulation). The seed marker is still zeroed so startup seeding
+  remains a no-op when data exists. Documented in README; a volume wipe remains
+  the last-resort full reset. (Supersedes the original D-019 decision.)
 
 ## D-020 — Retrospective note on milestone tracking (2026-11-11)
 

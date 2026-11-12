@@ -55,14 +55,30 @@ def test_reset_clears_data_and_restores_defaults(services):
     assert result.rules_deleted >= 1
     assert result.categories_restored == len(DEFAULT_CATEGORIES)
 
-    # No tasks remain.
-    remaining = services["tasks"].list_tasks(principal, ListTasksQuery(status="all"))
-    assert remaining == []
-
     # Defaults restored, settings reset.
     settings = services["settings"].get_settings(principal)
     assert sorted(c.name for c in settings.categories) == sorted(DEFAULT_CATEGORIES)
     assert settings.warning_window_days == 3
 
-    # Reseed after reset works again.
-    assert services["demo"].seed_if_needed(principal) is True
+    # Reset returns the operator to the intended demonstration state
+    # immediately: the scenario is reseeded, not left blank.
+    dash = services["dashboard"].build_dashboard(principal)
+    assert len(dash.today_tasks) >= 1
+    assert len(dash.watch_tasks) >= 1
+    assert len(dash.horizon_tasks) >= 1
+
+
+def test_reset_is_repeatable_and_does_not_accumulate(services):
+    principal = services["principal"]
+    services["demo"].seed_if_needed(principal)
+
+    first = services["demo"].reset(principal)
+    count_first = services["tasks"].list_tasks(principal, ListTasksQuery(status="all"))
+    # A second reset clears the reseeded scenario and reseeds again: the board
+    # returns to the same shape rather than growing.
+    second = services["demo"].reset(principal)
+    count_second = services["tasks"].list_tasks(principal, ListTasksQuery(status="all"))
+
+    assert first.tasks_deleted >= 1
+    assert second.tasks_deleted >= 1
+    assert len(count_first) == len(count_second)

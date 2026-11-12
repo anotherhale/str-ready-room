@@ -156,9 +156,12 @@ def test_demo_reset_endpoint(client):
     resp = client.post("/api/demo/reset")
     assert resp.status_code == 200
     assert resp.json()["categories_restored"] >= 1
-    # After reset, no tasks remain.
+    # Reset restores the intended demonstration state, so the board is
+    # repopulated (not left empty) the moment the request returns.
     tasks = client.get("/api/tasks", params={"status": "all"})
-    assert tasks.json()["total"] == 0
+    assert tasks.json()["total"] >= 1
+    dashboard = client.get("/api/dashboard").json()
+    assert len(dashboard["today_tasks"]) >= 1
 
 
 def test_recurrence_preview_endpoint(client):

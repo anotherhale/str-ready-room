@@ -34,6 +34,30 @@ export function MailboxView({
 
   const unavailable = status !== null && !status.available;
 
+  // The message body is a one-shot load, but capture state is owned by the
+  // refreshed ``messages`` list.  Reading it from the list (rather than from
+  // the ``selected`` snapshot taken when the message was opened) keeps the
+  // detail pane in step after a capture, so the Capture action is replaced by
+  // "In inventory" immediately -- no reopen required.
+  const selectedSummary = selected
+    ? messages?.find((m) => m.message_id === selected.message_id) ?? null
+    : null;
+  const selectedCaptured = selectedSummary?.captured ?? selected?.captured ?? false;
+
+  // Prefer the list entry; fall back to the loaded message so the dialog still
+  // opens if the list has not caught up yet.
+  function summaryFor(message: EmailMessage): EmailSummary {
+    return {
+      message_id: message.message_id,
+      sender: message.sender,
+      subject: message.subject,
+      received_at: message.received_at,
+      snippet: message.body.slice(0, 120),
+      captured: message.captured,
+      task_id: message.task_id,
+    };
+  }
+
   async function open(messageId: string) {
     setError(null);
     try {
@@ -99,13 +123,13 @@ export function MailboxView({
               <>
                 <div className="panel-head">
                   <span className="panel-title">{selected.subject || "(no subject)"}</span>
-                  {selected.captured ? (
+                  {selectedCaptured ? (
                     <span className="badge ok">In inventory</span>
                   ) : (
                     <button
                       className="btn primary btn-sm"
                       disabled={busy}
-                      onClick={() => setCapturing(messages?.find((m) => m.message_id === selected.message_id) ?? null)}
+                      onClick={() => setCapturing(selectedSummary ?? summaryFor(selected))}
                     >
                       Capture
                     </button>

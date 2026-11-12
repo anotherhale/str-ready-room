@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { MailboxView } from "./MailboxView";
@@ -55,6 +56,46 @@ describe("MailboxView", () => {
     expect(screen.getByText("Captured")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /Tow bar inspection/ }));
+    expect(await screen.findByText("In inventory")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Capture" })).not.toBeInTheDocument();
+  });
+
+  it("updates the open message detail immediately after a capture", async () => {
+    // Regression: the detail pane used to render the snapshot taken when the
+    // message was opened, so it kept showing "Capture" until the message was
+    // reopened.  Capture state must come from the refreshed list.
+    const summary = makeEmailSummary({ captured: false });
+    const onCapture = vi.fn(async (_id: string, _input: unknown) => {});
+
+    function Harness() {
+      const [messages, setMessages] = useState([summary]);
+      return (
+        <MailboxView
+          messages={messages}
+          status={makeMailboxStatus({ message_count: 1 })}
+          categories={categories}
+          timezone="America/New_York"
+          onLoadMessage={vi.fn(async () => makeEmailMessage({ captured: false }))}
+          onCapture={async (id, input) => {
+            await onCapture(id, input);
+            setMessages((prev) =>
+              prev.map((m) => (m.message_id === id ? { ...m, captured: true, task_id: "t1" } : m)),
+            );
+          }}
+          busy={false}
+        />
+      );
+    }
+    render(<Harness />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Tow bar inspection/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Capture" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Capture as responsibility" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Capture" }));
+
+    // No reopen: the detail pane flips to "In inventory" on its own.
+    expect(onCapture).toHaveBeenCalled();
     expect(await screen.findByText("In inventory")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Capture" })).not.toBeInTheDocument();
   });

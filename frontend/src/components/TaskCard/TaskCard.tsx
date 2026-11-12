@@ -42,7 +42,7 @@ export function TaskCard({ task, onEdit, onComplete, onReopen, onDelete, busy }:
       </div>
       <div className="task-actions">
         {!completed && onComplete && (
-          <button className="btn btn-sm" disabled={busy} onClick={() => onComplete(task)}>
+          <button className="btn btn-sm complete" disabled={busy} onClick={() => onComplete(task)}>
             Complete
           </button>
         )}

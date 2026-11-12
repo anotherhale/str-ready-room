@@ -12,7 +12,7 @@ function BriefingList({ tasks }: { tasks: Task[] }) {
           <span className="no-print">
             <UrgencyBadge urgency={task.urgency} />
           </span>{" "}
-          <span style={{ color: "var(--text-faint)", fontSize: 12 }}>
+          <span className="briefing-meta">
             {task.category}
             {task.due_date ? ` · ${formatShortDate(task.due_date)}` : ""}
             {task.series_id ? ` · occurrence ${task.occurrence_number}` : ""}
@@ -28,7 +28,7 @@ export function BriefingView({ briefing }: { briefing: BriefingData }) {
     <div className="briefing">
       <div className="briefing-head">
         <h1>READY ROOM — Daily Briefing</h1>
-        <p style={{ margin: "6px 0 0", color: "var(--text-dim)" }}>
+        <p>
           {formatLongDate(briefing.date)} · {briefing.timezone}
         </p>
       </div>

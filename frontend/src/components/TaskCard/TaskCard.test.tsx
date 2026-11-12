@@ -17,7 +17,10 @@ describe("TaskCard", () => {
     const onComplete = vi.fn();
     const onReopen = vi.fn();
     const { rerender } = render(<TaskCard task={makeTask()} onComplete={onComplete} />);
-    expect(screen.getByRole("button", { name: "Complete" })).toBeInTheDocument();
+    const complete = screen.getByRole("button", { name: "Complete" });
+    expect(complete).toBeInTheDocument();
+    // Complete is the affirmative (green) action; Reopen stays neutral.
+    expect(complete).toHaveClass("complete");
     expect(screen.queryByRole("button", { name: "Reopen" })).not.toBeInTheDocument();
 
     rerender(

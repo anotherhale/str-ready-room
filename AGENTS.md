@@ -155,13 +155,19 @@ here. Keep this file current when a durable invariant or boundary changes.
 - `POST /api/demo/reset` clears task/recurrence/demo state, restores default
   categories and settings, and **immediately reseeds** the demo scenario so the
   board is repopulated the moment the request returns (never left blank). It
-  also **restores the integrations** (reseed + calendar cache refresh) and
-  **zeroes the `demo_arrival_seq` counter**; both are best-effort and never
-  raise.
+  also **clears the demo providers** (purges the demo mailbox and deletes the
+  demo calendar's events) and **restores the integrations** (reseed + calendar
+  cache refresh), and **zeroes the `demo_arrival_seq` counter**; the provider
+  clear and the reseed are best-effort and never raise. So a reset returns the
+  *whole* demo — tasks, calendar, and mailbox — to the baseline, and repeated
+  "Simulate arrival" injections do not accumulate across resets (D-040).
   A volume wipe is the last-resort reset.
-- Reset does **not** delete data from the external providers (GreenMail /
-  Radicale) — that is not READY ROOM's data to destroy. Repeated demo arrivals
-  therefore accumulate until a volume wipe or container restart.
+- The demo providers (GreenMail / Radicale) are **this stack's own disposable
+  demo servers**, so resetting them is safe and expected. Clearing happens only
+  through `IntegrationSeedService.clear_demo_data`, which goes through the
+  provider ports (`MailboxProvider.purge`, `CalendarProvider.delete_event`) —
+  never by reaching into a container. A disabled or unreachable provider is
+  skipped, not fatal.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
 
@@ -184,10 +190,12 @@ here. Keep this file current when a durable invariant or boundary changes.
   provider **and** syncs the cache when `calendar_sync_on_startup` is set, so the
   view is populated on first load. Adapter: `CalDavCalendarProvider`
   (stdlib `urllib` + `xml.etree`, zero new dependencies).
-- **Mailbox is read-only.** List/read/capture only — there is **no** send, move,
-  or delete path from the mailbox. `MailSender` (SMTP) is used only to deliver
-  demo data (seeding, and the `POST /api/demo/arrivals` demo action); it never
-  mutates or removes an existing message.
+- **Mailbox is read-only for the operator.** List/read/capture only — there is
+  **no** send, move, or delete path from the mailbox. `MailSender` (SMTP) is used
+  only to deliver demo data (seeding, and the `POST /api/demo/arrivals` demo
+  action); it never mutates or removes an existing message. The one exception is
+  `MailboxProvider.purge()`, which is a **demo-reset-only** capability (used by
+  `clear_demo_data`, D-040) and is never reachable from an operator workflow.
 - **Capture is idempotent.** An event's `calendar_events.task_id` and a message's
   single `email_sources` row record provenance, so recapturing returns/updates the
   existing link instead of duplicating.

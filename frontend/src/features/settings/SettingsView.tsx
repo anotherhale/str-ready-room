@@ -260,8 +260,9 @@ export function SettingsView({
           <span className="panel-title">Demonstration data</span>
         </div>
         <p style={{ color: "var(--text-dim)", marginTop: 0 }}>
-          Reset clears all responsibilities and recurrence rules, then restores the default
-          categories and settings. Use this to return to the demonstration state.
+          Reset clears all responsibilities and recurrence rules, clears the demo mailbox
+          and calendar, then restores the default categories and settings. Use this to
+          return to the demonstration state.
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {onSimulate && (

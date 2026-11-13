@@ -153,6 +153,8 @@ class ResetResponse(BaseModel):
     tasks_deleted: int
     rules_deleted: int
     categories_restored: int
+    mailbox_cleared: int = 0
+    calendar_cleared: int = 0
 
 
 class DemoArrivalResponse(BaseModel):

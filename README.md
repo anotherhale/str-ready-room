@@ -47,7 +47,7 @@ Three ways to return to the demonstration state:
 
 | Method | How | Effect |
 |---|---|---|
-| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; restores default categories and settings; reseeds the demo scenario **and the calendar/mailbox demo data** immediately. |
+| **UI** | Settings -> *Reset demo data* | Clears tasks and recurrence rules; clears the demo mailbox and demo calendar; restores default categories and settings; reseeds the demo scenario **and the calendar/mailbox demo data** immediately. |
 | **API** | `curl -X POST http://localhost:8080/api/demo/reset` | Same as the UI action. |
 | **Volume wipe** (last resort) | `docker compose down -v && docker compose up --build` | Destroys the SQLite volume entirely; a fresh database is initialised and reseeded. |
 
@@ -327,10 +327,14 @@ GreenMail SMTP `localhost:3025` / IMAP `localhost:3143`.
 > for the bare local part, so using `maverick` alone would appear empty.
 
 > **Reset vs. external providers:** `POST /api/demo/reset` clears READY ROOM's
-> own data and cache, then reseeds the demo scenario. It intentionally does not
-> delete messages or events from the external providers (they are not READY
-> ROOM's data to destroy). GreenMail holds mail in memory, so it empties on
-> container restart; the seeder reconciles against the mailbox and repopulates.
+> own data and cache **and** clears the demo providers — it purges the demo
+> mailbox (GreenMail) and deletes the demo calendar's events (Radicale) — then
+> reseeds the demo scenario. This is intentional: both providers are disposable
+> demo servers that this stack creates, so a reset returns the *whole* demo to
+> the baseline and repeated "Simulate arrival" injections do not accumulate.
+> The clear goes through the provider ports (`MailboxProvider.purge`,
+> `CalendarProvider.delete_event`), never by touching a container, and is
+> skipped (not fatal) when a provider is disabled or unreachable (D-040).
 
 [Radicale]: https://radicale.org/
 [GreenMail]: https://greenmail-mail-test.github.io/greenmail/
@@ -363,7 +367,7 @@ Base path: `/api`. Interactive docs at `/api/docs`.
 | POST | `/api/categories` | Create category (normalised, duplicate -> 409) |
 | PATCH | `/api/categories/{id}` | Rename / activate / deactivate |
 | DELETE | `/api/categories/{id}` | Delete category |
-| POST | `/api/demo/reset` | Clear data, restore defaults |
+| POST | `/api/demo/reset` | Clear data (incl. demo mailbox + calendar), restore defaults |
 | POST | `/api/demo/arrivals` | Deliver one demo email + one demo calendar event |
 | GET | `/api/calendar/status` | Calendar provider availability |
 | GET | `/api/calendar/agenda` | Cached events for the agenda window |

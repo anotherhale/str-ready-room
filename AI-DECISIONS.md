@@ -737,3 +737,51 @@ appended as decisions are made. Each entry is tagged with its category:
     provider. It now reconciles against the provider's current events and only
     creates what is missing. Regression test:
     `test_calendar_seed_reconciles_against_persistent_provider`.
+
+## D-040 — Demo reset clears the provider data too, so a reset is a true clean slate (2026-11-13)
+
+- **Category:** ED
+- **Context:** `POST /api/demo/reset` restored the demo state, but it only ever
+  cleared READY ROOM's **own** rows (tasks, rules, the calendar cache, the
+  `email_sources` rows) and then reseeded. It never touched the providers
+  themselves. Reproduced against the live stack: inject five live arrivals, then
+  reset — the mailbox went from 8 back to 8 and the calendar from 9 to 9. Each
+  "Simulate arrival" left a real message in GreenMail and a real event in
+  Radicale, so the two providers grew without bound across a demonstration, and
+  a reset could not return the Calendar/Mailbox views to the demo baseline. The
+  earlier stance ("that data is not READY ROOM's to destroy", D-039) was written
+  for a *production* mailbox/calendar; here both providers are demo servers
+  created and owned by this stack, so leaving injected arrivals behind is a bug,
+  not a safety property.
+- **Decision:** Reset clears the providers before it reseeds.
+  1. `IntegrationSeedService.clear_demo_data(principal)` purges the mailbox and
+     deletes every event in the demo calendar, best-effort and idempotent, and
+     returns `(messages_removed, events_removed)`. A disabled or unreachable
+     provider is skipped (logged), never raised, so the base stack is unaffected.
+  2. `DemoService.reset` calls it between the cache clear and the reseed, so the
+     provider is emptied and then repopulated to the demo baseline (3 messages,
+     4 events). `ResetResultDTO`/`ResetResponse` gain `mailbox_cleared` /
+     `calendar_cleared` counts so the operator can confirm the clear happened.
+  3. The `MailboxProvider` port gains a `purge()` verb. It is explicitly **not**
+     an operator capability — it exists solely for the demo reset and is
+     documented as demo-only; the operator-facing operations
+     (`list_messages`/`get_message`) stay read-only, preserving D-026's intent.
+     The IMAP adapter selects the mailbox writable, flags `\Deleted`, and
+     `EXPUNGE`s.
+- **Alternatives:** (a) Keep the "never destroy provider data" rule and document a
+  volume wipe — rejected: the whole point of a demo reset is to make the demo
+  repeatable, and the demo providers are this stack's own disposable servers.
+  (b) Delete only the *known* demo Message-IDs / event uids — rejected: live
+  arrivals use fresh uids, so a targeted delete would still leave arrivals
+  behind; a full purge of the demo calendar/mailbox is what "clean slate" means.
+  (c) Reach into GreenMail/Radicale from outside the ports — rejected: that
+  breaks the hexagonal boundary; the capability belongs behind the port.
+- **Consequences:** A reset now returns the *entire* demo — tasks, calendar, and
+  mailbox — to the baseline, repeatably and without a volume wipe. The mailbox
+  port is no longer strictly read-only, so `AGENTS.md` and the README were
+  updated to state that the purge is a demo-reset-only capability. The one
+  pre-existing test that asserted reset does *not* re-deliver mail
+  (`test_reset_does_not_duplicate_mail_already_in_server`) was updated to assert
+  the new, stronger invariant (exactly the three demo messages after reset), and
+  new tests cover the clear being idempotent, provider-outage-safe, and
+  arrivals-then-reset returning to baseline.

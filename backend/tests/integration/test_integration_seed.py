@@ -217,10 +217,11 @@ def test_reset_reseeds_mailbox(services):
 
 
 def test_reset_does_not_duplicate_mail_already_in_server(services):
-    """Reset clears the marker but the mail server still holds the messages.
+    """A reset must leave exactly the three demo messages, never duplicates.
 
-    Because the mailbox seeder is idempotent on the demo Message-IDs, a reset
-    must not re-send mail that is already present (the reset+restart defect).
+    Reset now purges the mailbox first (D-040), then reseeds, so the demo
+    messages are re-delivered to a clean mailbox.  The invariant is the mailbox
+    *contents*: exactly the three demo messages, never 3 + 3.
     """
     mailbox = InMemoryMailboxProvider()
     mailer = RecordingMailSender(mailbox=mailbox)
@@ -235,9 +236,10 @@ def test_reset_does_not_duplicate_mail_already_in_server(services):
 
     demo.reset(principal)
 
-    # No duplicates: still exactly the three demo messages.
+    # No duplicates: still exactly the three demo messages, even though the
+    # reset re-delivered them after purging.
     assert len(mailbox.list_messages()) == 3
-    assert len(mailer.sent) == 3
+    assert len(mailer.sent) == 6
 
 
 def test_reset_without_integrations_is_unaffected(services):
@@ -268,4 +270,136 @@ def test_calendar_seed_reconciles_against_persistent_provider(seed, services, ca
 
     assert seed.seed_calendar_if_needed(principal) is True
     # Still exactly the four demo events — no duplicates, no spurious failure.
+    assert len(calendar_provider.list_events("detachment")) == 4
+
+
+# -- clear_demo_data + reset clears the providers (D-040) -------------------
+
+
+def _wired_demo_with_providers(services, calendar_provider, mailbox, mailer):
+    """A DemoService with both providers and the seeder wired, as composition does."""
+    from app.application.services.calendar_service import CalendarService
+
+    calendar = CalendarService(
+        services["database"], services["authorizer"], services["clock"], services["ids"],
+        provider=calendar_provider, default_calendar="detachment",
+    )
+    seed = IntegrationSeedService(
+        services["database"], services["clock"],
+        calendar_provider=calendar_provider, default_calendar="detachment",
+        mail_sender=mailer, mailbox_provider=mailbox,
+    )
+    return _wired_demo(services, seed, calendar), calendar, seed
+
+
+def test_clear_demo_data_empties_both_providers(services, calendar_provider):
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    demo, _calendar, seed = _wired_demo_with_providers(services, calendar_provider, mailbox, mailer)
+    principal = services["principal"]
+
+    seed.seed_calendar_if_needed(principal)
+    seed.seed_mailbox_if_needed(principal)
+    assert len(mailbox.list_messages()) == 3
+    assert len(calendar_provider.list_events("detachment")) == 4
+
+    messages_removed, events_removed = seed.clear_demo_data(principal)
+
+    assert messages_removed == 3
+    assert events_removed == 4
+    assert mailbox.list_messages() == []
+    assert calendar_provider.list_events("detachment") == []
+
+
+def test_clear_demo_data_is_idempotent(services, calendar_provider):
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    _demo, _calendar, seed = _wired_demo_with_providers(services, calendar_provider, mailbox, mailer)
+    principal = services["principal"]
+
+    # Nothing seeded yet: clearing an empty provider is a no-op, not an error.
+    assert seed.clear_demo_data(principal) == (0, 0)
+    assert seed.clear_demo_data(principal) == (0, 0)
+
+
+def test_clear_demo_data_survives_unreachable_providers(services, calendar_provider):
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    _demo, _calendar, seed = _wired_demo_with_providers(services, calendar_provider, mailbox, mailer)
+    principal = services["principal"]
+
+    seed.seed_calendar_if_needed(principal)
+    seed.seed_mailbox_if_needed(principal)
+    calendar_provider.set_reachable(False)
+    mailbox.set_reachable(False)
+
+    # A provider outage must not raise out of a reset: the channel is skipped.
+    assert seed.clear_demo_data(principal) == (0, 0)
+
+
+def test_reset_removes_injected_arrivals_and_restores_demo_state(services, calendar_provider):
+    """The defect this change fixes: injected arrivals must not survive a reset.
+
+    Simulate two live arrivals (two extra messages, two extra events), then
+    reset.  The providers must return to exactly the demo baseline (3 messages,
+    4 events) rather than accumulating the arrivals.
+    """
+    from datetime import datetime
+
+    from app.application.commands import CalendarEventCreateCommand
+
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    demo, calendar, seed = _wired_demo_with_providers(services, calendar_provider, mailbox, mailer)
+    principal = services["principal"]
+
+    # Baseline demo state.
+    demo.reset(principal)
+    assert len(mailbox.list_messages()) == 3
+    assert len(calendar_provider.list_events("detachment")) == 4
+
+    # Two live arrivals: each delivers one message and one event.
+    for i in range(2):
+        mailer.send(
+            sender="ops@detachment.demo", recipient="maverick@detachment.demo",
+            subject=f"arrival {i}", body="b", message_id=f"<arrival-{i}@demo>",
+        )
+        calendar.create_event(
+            principal,
+            CalendarEventCreateCommand(
+                summary=f"arrival {i}",
+                start=datetime(2026, 3, 12, 10, 0),
+                end=datetime(2026, 3, 12, 10, 30),
+            ),
+        )
+    assert len(mailbox.list_messages()) == 5
+    assert len(calendar_provider.list_events("detachment")) == 6
+
+    result = demo.reset(principal)
+
+    # Providers are back to the demo baseline — no accumulated arrivals.
+    assert len(mailbox.list_messages()) == 3
+    assert len(calendar_provider.list_events("detachment")) == 4
+    # The reset reports what it cleared.
+    assert result.mailbox_cleared == 5
+    assert result.calendar_cleared == 6
+
+
+def test_reset_is_stable_across_repeated_resets_with_arrivals(services, calendar_provider):
+    """Repeated reset-with-arrivals cycles must not grow the provider state."""
+    mailbox = InMemoryMailboxProvider()
+    mailer = RecordingMailSender(mailbox=mailbox)
+    demo, _calendar, _seed = _wired_demo_with_providers(services, calendar_provider, mailbox, mailer)
+    principal = services["principal"]
+
+    for cycle in range(3):
+        demo.reset(principal)
+        mailer.send(
+            sender="ops@detachment.demo", recipient="maverick@detachment.demo",
+            subject=f"c{cycle}", body="b", message_id=f"<c{cycle}@demo>",
+        )
+        assert len(mailbox.list_messages()) == 4
+
+    demo.reset(principal)
+    assert len(mailbox.list_messages()) == 3
     assert len(calendar_provider.list_events("detachment")) == 4

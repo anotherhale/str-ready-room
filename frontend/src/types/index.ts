@@ -163,6 +163,8 @@ export interface ResetSummary {
   tasks_deleted: number;
   rules_deleted: number;
   categories_restored: number;
+  mailbox_cleared: number;
+  calendar_cleared: number;
 }
 
 export interface DemoArrival {

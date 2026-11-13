@@ -118,6 +118,14 @@ class DemoService:
 
             uow.commit()
 
+        # Clear the demo messages and events from the providers themselves, so a
+        # reset removes the injected arrivals too instead of letting them pile up
+        # (see DECISIONS D-040).  Best-effort: a disabled or unreachable provider
+        # is left as-is and the reset still completes.
+        mailbox_cleared = calendar_cleared = 0
+        if self._integration_seed is not None:
+            mailbox_cleared, calendar_cleared = self._integration_seed.clear_demo_data(principal)
+
         # Repopulate the demonstration scenario in its own transaction so the
         # reset leaves the board populated, not blank.  Seeding after the clear
         # commit keeps the two steps independent: a seed failure still leaves a
@@ -129,7 +137,11 @@ class DemoService:
         self._reseed_integrations(principal)
 
         return ResetResultDTO(
-            tasks_deleted=len(tasks), rules_deleted=len(rules), categories_restored=restored
+            tasks_deleted=len(tasks),
+            rules_deleted=len(rules),
+            categories_restored=restored,
+            mailbox_cleared=mailbox_cleared,
+            calendar_cleared=calendar_cleared,
         )
 
     def _reseed_integrations(self, principal) -> None:  # noqa: ANN001

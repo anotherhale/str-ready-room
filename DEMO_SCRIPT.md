@@ -209,8 +209,9 @@ Cancel the print dialog.
   generated, next occurrence, active state.
 - **Demonstration data** — **Simulate arrival** and **Reset demo data**.
 
-**Say:** *"Reset clears everything and puts the demo scenario back, so you can
-show this to the next person without a clean database."*
+**Say:** *"Reset clears the responsibilities, the mailbox, and the calendar, then
+puts the demo scenario back — so you can show this to the next person without a
+clean database or a volume wipe."*
 
 ---
 
@@ -257,7 +258,7 @@ show this to the next person without a clean database."*
 | 22 | Print stylesheet + Print action | Briefing → Print briefing | Chrome hidden in print |
 | 23 | Warning window (configurable) | Settings | Relabels and re-buckets Watch |
 | 24 | Operator timezone | Settings | Drives today/greeting/overdue |
-| 25 | Demo reset | Settings / `POST /api/demo/reset` | Restores the scenario |
+| 25 | Demo reset (tasks + mailbox + calendar) | Settings / `POST /api/demo/reset` | Clears the demo providers, then restores the scenario |
 | 26 | Incoming email (capture) | Mailbox | Read-only list/read/capture |
 | 27 | Calendar (cache + capture) | Calendar | Sync, capture, create event |
 | 28 | Live arrival injection | Header **Demo arrivals** | One email + one event on demand |
@@ -278,7 +279,7 @@ show this to the next person without a clean database."*
 
 ## Appendix C — Recovery / troubleshooting
 
-- **Empty or odd numbers:** Settings → **Reset demo data**.
+- **Empty or odd numbers:** Settings → **Reset demo data** (clears tasks, mailbox, and calendar, then restores the demo scenario).
 - **Calendar or Mailbox says "unavailable":** the demo servers are still
   starting — wait ~15s and press **Sync**. They start automatically with the
   stack.

@@ -56,6 +56,45 @@ class IntegrationSeedService:
             settings = uow.settings.get(principal.id)
             return getattr(settings, field, 0) if settings is not None else 0
 
+    # -- clear (demo reset) --------------------------------------------
+    def clear_demo_data(self, principal) -> tuple[int, int]:  # noqa: ANN001
+        """Delete demo messages and events from the providers.
+
+        Called by the demo reset so a reset is a *true* clean slate: the app's
+        cached rows are cleared separately, but without this the injected demo
+        messages (GreenMail) and events (Radicale) would survive and accumulate
+        across resets (see DECISIONS D-040).
+
+        Best-effort and idempotent: a disabled or unreachable provider leaves
+        that channel untouched rather than failing the reset.  Returns
+        ``(messages_removed, events_removed)``.
+        """
+        messages_removed = 0
+        events_removed = 0
+
+        if self._mailbox is not None:
+            try:
+                messages_removed = self._mailbox.purge()
+            except MailboxError as exc:
+                logger.warning("mailbox clear skipped: %s", exc.message)
+
+        if self._calendar is not None:
+            try:
+                calendar_id = self._calendar.resolve_calendar_id(self._default_calendar)
+                for event in self._calendar.list_events(calendar_id):
+                    try:
+                        self._calendar.delete_event(event.calendar_id, event.uid, event.href)
+                        events_removed += 1
+                    except CalendarError as exc:
+                        # A racing delete, or an event that vanished between the
+                        # list and the delete, is not a clear failure.
+                        if exc.code != "not_found":
+                            logger.warning("calendar clear skipped one event: %s", exc.message)
+            except CalendarError as exc:
+                logger.warning("calendar clear skipped: %s", exc.message)
+
+        return messages_removed, events_removed
+
     def _set_marker(self, principal, field: str, value: int) -> None:  # noqa: ANN001
         from ...domain.settings.entities import OperatorSettings
 

@@ -111,6 +111,10 @@ class ResetResultDTO:
     tasks_deleted: int
     rules_deleted: int
     categories_restored: int
+    #: Demo messages/events removed from the providers (0 when a channel is
+    #: disabled or unreachable).  Reported so the UI can confirm a true reset.
+    mailbox_cleared: int = 0
+    calendar_cleared: int = 0
 
 
 @dataclass(frozen=True)

@@ -2,10 +2,15 @@
 
 The application service depends only on this interface.  The IMAP adapter
 implements it today; a Graph, Gmail API, or JMAP adapter would implement the same
-two operations (list recent, read one) and be selected in the registry.
+operations and be selected in the registry.
 
-The port is deliberately **read-only**: there is no send/move/delete verb,
-matching the product's "capture, don't correspond" scope.
+The **operator-facing** operations are deliberately read-only: ``list_messages``
+and ``get_message`` only, with no send/move/delete verb, matching the product's
+"capture, don't correspond" scope (DECISIONS D-026).  ``purge`` is the single
+exception and is **not** an operator capability: it exists solely so the demo
+reset can return the demo mailbox to a clean state (DECISIONS D-040).  A
+production adapter would either not implement it or gate it behind an admin
+credential; it must never be reachable from an operator workflow.
 """
 from __future__ import annotations
 
@@ -26,7 +31,7 @@ class MailboxError(IntegrationError):
 
 
 class MailboxProvider(ABC):
-    """Port: a read-only source of mail messages."""
+    """Port: a source of mail messages (read-only, plus a demo-only purge)."""
 
     @property
     def name(self) -> str:
@@ -42,6 +47,15 @@ class MailboxProvider(ABC):
 
         Implementations should also accept a ``seq-N`` reference as a fallback
         for messages that genuinely lack a ``Message-ID`` (see DECISIONS D-027).
+        """
+
+    @abstractmethod
+    def purge(self) -> int:
+        """Delete every message in the mailbox and return the count removed.
+
+        **Demo reset only** — this is not part of the operator's read-only
+        mailbox workflow.  Implementations must be best-effort and idempotent
+        (an empty mailbox returns ``0``).
         """
 
     def health(self) -> bool:

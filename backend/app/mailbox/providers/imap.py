@@ -67,16 +67,35 @@ class ImapMailboxProvider(MailboxProvider):
                 raise MailboxError(f"Message {message_id!r} could not be read", status=404, code="not_found")
             return parse_message(raw, fallback_id=message_id)
 
+    def purge(self) -> int:
+        """Delete every message in the mailbox; return the count removed.
+
+        Demo reset only (see DECISIONS D-040).  Unlike the read path this selects
+        the mailbox **writable** (``readonly=False``) so ``\\Deleted`` can be set
+        and ``EXPUNGE`` applied.  Idempotent: an empty mailbox returns ``0``.
+        """
+        with self._connected(readonly=False) as client:
+            sequence_numbers = self._all_sequence_numbers(client)
+            if not sequence_numbers:
+                return 0
+            status, _ = client.store("1:*", "+FLAGS", "(\\Deleted)")
+            if status != "OK":
+                raise MailboxError("Mailbox purge failed while flagging messages", status=502)
+            status, _ = client.expunge()
+            if status != "OK":
+                raise MailboxError("Mailbox purge failed while expunging messages", status=502)
+            return len(sequence_numbers)
+
     # -- internals -----------------------------------------------------
     @contextmanager
-    def _connected(self) -> Iterator[imaplib.IMAP4]:
+    def _connected(self, *, readonly: bool = True) -> Iterator[imaplib.IMAP4]:
         try:
             client = imaplib.IMAP4(self._host, self._port, timeout=self._timeout)
         except (OSError, imaplib.IMAP4.error) as exc:
             raise MailboxError(f"Mailbox unreachable: {exc}", status=502) from exc
         try:
             client.login(self._username, self._password)
-            client.select(self._mailbox, readonly=True)
+            client.select(self._mailbox, readonly=readonly)
         except imaplib.IMAP4.error as exc:
             raise MailboxError(f"Mailbox login/select failed: {exc}", status=502) from exc
         try:

@@ -1,122 +1,113 @@
-# PREBRIEF — READY ROOM customer conversation
-
-> **Status: DRAFT — human-owned.** This one-pager is a starting point for the
-> Maverick conversation, not a finished artifact. It was drafted by an AI
-> engineering agent (OpenHands) from the discovery notes and the built product.
-> The reflection and framing below are **AI-generated** and must be reviewed,
-> corrected, and re-voiced by a human before the meeting. Anything in
-> *[square brackets]* is a prompt for that human author.
-
-**Meeting:** STR Mission Applications — first-cut demonstration
-**Product:** READY ROOM
-**Audience:** Maverick, Navy aviation detachment officer
-
----
+# STR MISSION APPLICATIONS - READY ROOM
 
 ## 1. What we heard
 
-- Responsibilities live across sticky notes, email flags, a whiteboard, and
-  memory — there is no single place to look.
-- He wants one place covering flying, administration, maintenance, logistics,
-  and reminders. *Not* an aircraft-control system.
-- Recurring obligations he named: a **Monday morning brief**, a **Friday status
-  roll-up**, and **quarterly currency paperwork**.
-- New work arrives through email and hallway conversations and is easily lost
-  before it is written down.
-- A flat list of hundreds of tasks is overwhelming; he dislikes notifications
-  but does not want important work to go invisible.
-- He framed the desired experience as *scanning aircraft instruments*: know what
-  is now, what is next, and what might sneak up.
-- He floated a printed daily index card or briefing.
-- Day one is one operator; squadron collaboration and delegation come later.
-- Visual polish is secondary to feeling in control.
+- Maverick is overwhelmed with trying to track tasks
+- Trying to track them with sticky notes, email, whiteboard, and memory
+- Tasks are forgotten or overlooked when not captured
+- He dislikes notifications but doesn't want important things to fall off the page
+- Want to know what is due now, what is next, and what is on the horizon
+- Suggested index card or daily brief of the day
+- Start with single operator with plans for squadron
+- Wants to feel in control over having something shiny and sleek.
 
 ## 2. What we built and why
 
-**READY ROOM** is a single-operator operational scan, not a task dump.
-
-- A **dashboard** ordered for the way he described scanning: greeting and date,
-  a one-line readiness summary, compact counts, then **TODAY**, **WATCH**
-  (labelled with the current window, e.g. *3-Day Watch*), and **ON THE HORIZON**.
-- **Urgency is derived on read** — Overdue / Due today / Watch / On the Horizon —
-  so overdue work never falls off the radar and completed work leaves the active
-  sections. Every state carries a text label and a glyph, never colour alone.
-- **Fast capture** on every view: type a title and press Enter; a full dialog
-  (category, priority, due date, notes, recurrence) is one click away and is the
-  *same* dialog used for editing.
-- **Recurrence** preserves history: completing an occurrence keeps the completed
-  record and generates exactly one successor, with no backfill of missed work.
-- A **daily briefing** generated from real data, with a print stylesheet for the
-  printed index card he described.
-- A complete **inventory** (search / filter / sort) exists for completeness, but
-  it is deliberately *not* the default view.
-- **Settings** expose the warning window, timezone, categories, a recurrence
-  overview, and a demo reset.
-
-Why this shape: the customer's pain is *situational awareness under low
-attention*, so the product optimises for a fast, glanceable scan and quiet
-urgency rather than completeness or notification volume.
+- Dashboard that is easily scannable (like an instrument panel)
+  - One line readiness summary
+  - Compact count of 'Overdue', 'Due today', 'Watch', 'On the Horizon', 'Done this week' buckets
+  - Tasks organized by bucket with category, priority and due date visible
+- Fast capture available on every page
+- Support for recurring tasks (Monday morning detachment brief)
+- Daily Briefing
+- Complete inventory of all tasks with support for filter, search, sort (Not the default view)
+- Settings - modify warning window, timezone, categories, recurrence overview, demo reset
 
 ## 3. What we are guessing about
 
-These are **assumptions to validate**, not confirmed requirements:
-
-- The **default category set** (Flight Administration, Maintenance, Detachment
-  Operations, Personnel, Logistics, General) is our invention and may not match
-  how he actually files work.
-- A **3-day default warning window** is a guess; the real answer depends on his
-  planning rhythm.
-- That a **single "urgency" ladder** (Overdue → Due → Watch → Horizon) matches
-  how he prioritises, rather than, say, separating flying from admin.
-- That the **"Monday brief / Friday roll-up / quarterly paperwork"** set is
-  representative of his recurring load.
-- That a **printed daily briefing** is genuinely useful versus a nice-to-have.
-- That **categories** (not free-form tags or projects) are the right
-  organisational axis.
-- That **he wants no notifications at all**, versus a single daily digest.
+- The default categories (Flight Adminstration, Maintenance, Detachment Operations, etc)
+- 3-Day default watch window
+- The buckets for urgency (Overdue, Due today, Watch, On the Horizon) match his priorities
+- That printed daily briefing is useful versus a nice to have
+- That he wants no notifications at all
 
 ## 4. What we want to validate with Maverick
 
-1. **Does the scan match the instrument panel in his head?** Walk the dashboard
-   and ask what is missing, mis-ordered, or noise.
-2. **Category set** — do these six match his world? What would he rename, add,
-   or delete?
-3. **Warning window** — how far ahead does he actually want "Watch" to reach,
-   and should it differ by category?
-4. **Capture friction** — is title-only quick capture fast enough, and what does
-   he wish were captured automatically?
-5. **Recurrence realism** — do the seeded recurring items reflect his real
-   obligations, and does "complete generates the next one" match his mental
-   model?
-6. **Briefing value** — would he print it, and what belongs on it?
-7. **First real workflow** he would move off sticky notes on day one.
+- Does the operational scan match the instrument panel in his head?
+- How far ahead does he actually want "Watch" to reach?
+  - Should it differ by category?
+  - Are some categories more important?
+- For the Quick Capture feature which category and priority should be defaul?
+- Do the prepopulated reccurence match his everyday obligations?
+- Does completing reccuring task match his work flow?
+- Does this workflow match his reality? Would you move off sticky notes and whiteboard?
+- Does the Briefing bring value? Would you print it?
+- Would you use the calendar and email integration?
 
 ## 5. Where AI tooling helped
 
-- Scaffolding the hexagonal backend (domain / application / adapters / API) and
-  the React SPA quickly and consistently.
-- Generating breadth of **tests** — urgency boundaries, month-end/leap-year
-  recurrence arithmetic, idempotent completion, owner scoping, API contracts,
-  and architecture boundary checks.
-- Producing and keeping current the **documentation set** (README, DECISIONS,
-  BUILD_STATUS) and the Docker runtime wiring.
+I used AI extensively throughout the development of READY ROOM, primarily through OpenHands
+as an autonomous software engineering agent, with ChatGPT assisting in product definition,
+architectural planning, and development direction.
+
+Rather than using AI simply to generate isolated code snippets, I used an agent-driven
+development workflow. I established the product objectives, translated the discovery notes
+into functional requirements, defined architectural constraints, and delegated implementation
+tasks to OpenHands.
+
+Development was iterative. I asked ChatGPT to create an implementation plan for OpenHands,
+incorporating my requirements, constraints, and engineering guardrails, including Hexagonal
+Architecture, Domain-Driven Design (DDD), and KISS principles. I reviewed the plan, made
+adjustments, and then provided OpenHands with the implementation instructions.
+
+I used ChatGPT as a thought partner to explore design alternatives, challenge assumptions,
+refine requirements, and evaluate architectural tradeoffs. OpenHands served as the primary
+implementation agent, working across the frontend, backend, persistence, integrations,
+automated testing, Docker configuration, and documentation.
+
+I gave OpenHands implementation objectives and milestones, allowing it to work autonomously
+while reviewing its progress and results. The workflow involved having the agent inspect the
+codebase, implement functionality, execute tests, diagnose failures, and make corrections.
+I provided additional direction when implementation decisions, scope, or complexity needed
+adjustment.
+
+I treated AI-generated implementation as work that required engineering review and independent
+verification. I used automated tests, clean-slate Docker deployment, persistence checks, and
+end-to-end acceptance testing to validate the results rather than relying on successful code
+generation as evidence of correctness.
 
 ## 6. Where engineering judgment overrode AI
 
-- **Derived urgency in the domain, not the UI.** We kept urgency calculation
-  pure and server-authoritative so the frontend cannot drift from the rules.
-- **Recurrence as a chain of ordinary tasks** (shared `series_id`, no separate
-  occurrence table) with **no backfill** and exactly-one-successor semantics —
-  chosen deliberately over a more "complete" but heavier scheduler.
-- **AuthN/AuthZ as real ports with a demo adapter**, rather than hardcoding a
-  single-user shortcut, so a real identity provider attaches without touching
-  the domain.
-- **Persistence as a port** with SQLite as the first adapter — PostgreSQL is a
-  configuration change, not a rewrite.
-- **Scope discipline**: we did *not* build notifications, integrations, AI
-  extraction, or server-side PDF, even though the architecture could host them.
+AI was an implementation accelerator, not the authority on architectural or product decisions.
+I retained ownership of the architecture, technical tradeoffs, scope, and acceptance criteria.
 
----
+I established Hexagonal Architecture, Domain-Driven Design, and KISS as implementation
+guardrails. Rather than hardcoding a single-user shortcut, I required authentication and
+authorization boundaries that would allow a real identity provider to be attached without
+restructuring the application domain.
 
-*Reminder: this document is a draft for human review. Do not present the
-reflection above as independently human-authored.*
+Similarly, I required persistence to be isolated behind an abstraction, with SQLite as the
+initial adapter. This kept the domain independent of the database implementation and provided
+a path to introduce PostgreSQL without rewriting the application.
+
+Scope management was another deliberate engineering decision. I initially directed OpenHands
+to focus on the core READY ROOM experience rather than expand the assignment into an over-
+engineered production system. I deliberately deferred email and calendar integrations during
+the initial prototype, which I completed in approximately one hour.
+
+After testing the prototype, working through defects, and evaluating the remaining time, I
+decided to expand the demonstration. I wanted to show that the architecture could support
+genuine integrations, not just theoretical extension points or mocked services.
+
+I directed OpenHands to implement actual CalDAV and IMAP integrations, using ports and
+adapters to isolate protocol-specific implementation details. I also required the calendar
+service and demonstration mailbox to be deployed as part of the Docker Compose project so
+the experience would be self-contained and reproducible.
+
+The distinction was intentional: deliver the essential product first, then use the remaining
+time to demonstrate extensibility and real-world integration capabilities without sacrificing
+simplicity.
+
+Ultimately, AI performed a substantial portion of the implementation, but I remained responsible
+for deciding what to build, how to structure it, where to simplify, and how to verify that the
+result met the requirements.

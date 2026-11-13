@@ -4,7 +4,7 @@ Truthful milestone tracker. "Verified" means the gate's command/interaction was
 actually executed and its result observed. Timestamps use the local machine
 clock.
 
-Last updated: 2026-11-11
+Last updated: 2026-11-13
 
 | Milestone | Status | Gate evidence |
 |---|---|---|
@@ -20,6 +20,8 @@ Last updated: 2026-11-11
 | M9 Full verification and submission | **verified** | Clean Docker build; backend 120 passed + ruff + mypy clean; frontend 21 passed + typecheck + build; persistence across restart confirmed; live API exercised through the nginx origin |
 | M10 Dev quick-capture "Not Found" fix + timezone/UX polish | **verified** | Root-caused to the Vite dev proxy target (not the capture endpoint); proxy target now configurable + documented; `GET /api/timezones` + Settings drop-down; overdue/due card shading; quick capture captures category/due/priority. Backend **122 passed** + ruff clean; frontend **23 passed** + typecheck + build; live browser E2E on the rebuilt container (capture 201, "Captured.", 18 timezone options) |
 | M11 Calendar + mailbox integrations (optional profile) | **verified** | Optional `integrations` Compose profile (Radicale + GreenMail); CalDAV and IMAP adapters verified against real containers through the nginx origin; capture (event/message -> task) idempotent; no duplication across restart. Backend **183 passed** + ruff + mypy clean; frontend **34 passed** + typecheck + build. See D-025–D-034 |
+| M12 Integrations on by default + live arrival injection | **verified** | `*_PROVIDER` defaults are `caldav`/`imap` and the Compose profile gating is removed; `POST /api/demo/arrivals` delivers one email + one event on demand. Backend **206 passed** + ruff + mypy clean; frontend **39 passed** + build. See D-039 |
+| M13 Delivery preparation (cache clean + cold-start verification) | **verified** | All local caches removed (`node_modules`, `dist`, `.venv`, `__pycache__`, pytest/ruff/mypy caches); `.dockerignore` added to both build contexts; project containers/volumes/images removed (`docker compose down -v --rmi local`). Cold `docker compose up --build` from an empty Docker state: 4 services `healthy`, SPA HTTP 200, `/api/health` ok, fresh volume seeded 3 messages / 4 events, `POST /api/demo/arrivals` -> 200 (email+event), backend restart left counts unchanged (10 tasks / 3 messages), served bundle contains the demo controls |
 
 ## Environment notes
 

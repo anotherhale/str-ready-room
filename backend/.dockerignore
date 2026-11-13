@@ -1,0 +1,27 @@
+# Keep the build context minimal and reproducible.
+# The runtime image installs dependencies from pyproject.toml; nothing here
+# ships local caches, a virtualenv, or test/dev artifacts.
+
+# Local Python state
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local databases (the container uses the /data volume)
+*.db
+*.sqlite
+*.sqlite3
+
+# Tooling / editor / OS
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store

@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 2)
+**Last updated:** 2026-11-24 (session 3)
 
 ## Artifact map
 
@@ -47,6 +47,12 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
+- **ADR-002 accepted** (PR #109, awaiting merge). First mechanism: local
+  credentials plus server-side sessions; OIDC is an extension seam only. stdlib
+  `scrypt` hashing, opaque 256-bit tokens with only the SHA-256 stored, 30-minute
+  idle / 12-hour absolute expiry, nine enumerated revocation triggers, and a
+  fail-closed guard that refuses `SingleUserAuthProvider` outside `demo`/`test`.
+  See `docs/adr/ADR-002-authentication-session.md`.
 - **ADR-001 accepted and merged to `main`** (`90decc5`, PR #105). Target:
   self-hosted single host inside a controlled network. Classification ceiling:
   **unclassified, synthetic data only**. No-egress default. See
@@ -58,6 +64,13 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
+- **ADR-004 accepted, awaiting merge** (PR #108, issue #6). Fixes five roles
+  (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
+  54-permission catalog (20 existing + 34 new), a role x permission grant matrix
+  with an explicit scope ceiling per grant, and an ordered deny-by-default
+  evaluation: membership -> permission -> scope -> relationship -> approval.
+  Agents hold no roles and act only by revocable delegation; they never record
+  human accountability. See `docs/adr/ADR-004-role-permission-matrix.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
   authorizes cloud hosting, default egress, or any compliance claim.
@@ -67,7 +80,8 @@ ADR set is settled; the ADR tickets are the only work in flight.
 | Blocker | Effect | Owner |
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
-| State checkpoint PR unmerged | Coordinator state is not yet on `main`; until merged, a fresh session recovers from GitHub issues | Reviewer |
+| ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
+| ADR-002 (#4) in review as PR #109 (parallel session) | The identity lane (#24-#27, #30, #34) cannot start | Reviewer |
 
 Nothing currently blocks ticket execution.
 
@@ -100,12 +114,18 @@ downstream work.
 
 ## Next recommended ticket
 
-**#4 — ADR-002 (authentication provider, session storage, and cookie strategy).**
-Rationale: ADR-001 §4 already fixes its inputs — a self-contained auth path with
-no assumed IdP, server-side revocable sessions, `HttpOnly`/`SameSite`/`Secure`
-cookies, and a demo provider that startup must refuse outside the demo
-environment. It is P0-critical and gates every identity-dependent ticket, and the
-questions are settled enough to decide in one window.
+**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
+Rationale: highest-priority READY ADR, P0-critical, gates #20-#22 and #32.
+ADR-002 already fixes the session table shape and the membership-active coupling,
+so #7 decides isolation and migration without re-litigating authentication.
 
-Alternative if #4 is already claimed: **#5 — ADR-003**, then **#6 — ADR-004**.
+In flight, awaiting merge — check before starting anything:
+
+| PR | Ticket | Status |
+|---|---|---|
+| #108 | #6 ADR-004 | `verification`; close #6 when merged |
+| #109 | #4 ADR-002 | `in-progress`; close #4 when merged |
+| #110 | coordinator state | session 3 + session 4 log |
+
+Alternative if #7 is claimed: **#8 — ADR-006**, then **#14 — test harness**.
 Do not start #9 (ADR-007) until #8 is closed.

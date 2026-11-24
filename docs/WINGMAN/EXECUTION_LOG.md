@@ -405,8 +405,7 @@ documentation-only change.
 `main` advanced to `4b72868` while the session ran (PRs #108, #109, #110 merged),
 which made PR #111 conflict on `docs/adr/README.md`. Resolved by merging `main`
 into the ADR branch and keeping both accepted rows (ADR-004 and ADR-005); pushed
-as `28155f2`. Re-ran the backend suite at the merged head: 206 tests, exit 0,
-273-test progress dots, ruff clean.
+as `28155f2`. Re-ran the backend suite at the merged head: 206 tests, exit 0, ruff clean.
 
 PR #110 was already merged, so the session-5 state commit was re-applied on top of
 merged `main` and opened as PR #112 (`wingman/state-session-5`).

@@ -1,9 +1,15 @@
 # WINGMAN concurrency: audit, authority, and risks
 
-Status: coordination foundation implemented in `scripts/wingman/coordination.py`
-(ticket [#122](https://github.com/anotherhale/str-ready-room/issues/122)).
-Operating model upgrade is tracked in
-[#121](https://github.com/anotherhale/str-ready-room/issues/121).
+Status: coordination foundation ([#122](https://github.com/anotherhale/str-ready-room/issues/122))
+was hardened to an append-only design in
+[#131](https://github.com/anotherhale/str-ready-room/issues/131) after review found
+that its mutable ref updates were not compare-and-swap. The operating-model upgrade is
+tracked in [#121](https://github.com/anotherhale/str-ready-room/issues/121).
+
+**Layout note.** The pre-hardening refs (`runs/<RUN_ID>`, `claims/issue-<T>`) are still
+read as sequence/epoch 1; the append-only layout uses *separate* namespaces
+(`run-events/`, `claim-epochs/`) because git forbids a ref being both a leaf and a
+directory (incident B-009).
 
 ## 1. Audit of the pre-upgrade system
 
@@ -37,8 +43,8 @@ Two sessions ran against one workspace during session 6 and both selected #8.
   the committed file, one session overwrote the other's uncommitted `STATE.md`, and the
   run workspace directory was deleted twice mid-run.
 - **Prevention now:** exclusive claim before any ticket write
-  (`coordination.py claim`), one run ref per run, per-run worktree (#125), immediate
-  checkpointing (#126).
+  (`coordination.py claim`), one append-only event stream per run, per-run worktree
+  (#125), immediate checkpointing (#126).
 - **Recovery mechanism:** expired claim → recovery inspection (branch, commits, PR)
   before takeover; the reclaimer records `recovered_from`, `previous_branch`,
   `previous_pr`, and bumps `attempt_number`.
@@ -119,7 +125,66 @@ Rejected alternatives:
 
 `refs/wingman/*` is not a branch and is not touched by `delete_branch_on_merge`.
 
-## 3. Lease and recovery protocol
+## 3. Atomicity: verified, not assumed
+
+Only one GitHub write primitive is used for coordination state: **creating** a ref.
+
+| Operation | GitHub semantics (verified live) | Verdict |
+|---|---|---|
+| `POST /git/refs` (create) | `201` once; a second creator gets `422 Reference update failed` | **Atomic** — used for every state write |
+| `PATCH /git/refs/{ref}` (update) | `200`, last-writer-wins; a stale writer silently overwrites a newer payload | **Not atomic** — not used for state |
+| `PATCH` with `If-Match` | `400 Conditional request headers are not allowed in unsafe requests unless supported by the endpoint` | **Unavailable** — no conditional update exists |
+| `DELETE /git/refs/{ref}` | `204`; `422` when absent | Atomic, idempotent |
+
+Evidence (live, this repository, 2026-11-24): writers A and B both observed `seq 1`;
+B wrote `seq 2`; A then wrote `seq 2` with its stale payload → `200`, final payload was
+A's. The same payload sequence with the create-only layout cannot express that write at
+all, because A's target name is already taken.
+
+Therefore each coordination fact is an immutable, uniquely named ref and the current
+state is **derived**:
+
+| Fact | Ref (create-only) | Selection rule |
+|---|---|---|
+| Run state event | `run-events/<RUN_ID>/e<N>` | highest `N` per run |
+| Claim | `claim-epochs/issue-<T>/e<K>` | highest `K` per ticket |
+| Renewal | `leases/issue-<T>/e<K>/<RUN_ID>-<n>` | newest by `renewed_at` within the current `K` |
+| Release | `releases/issue-<T>/e<K>` | a release at the current `K` makes the ticket available |
+| Recovery intent | `recoveries/issue-<T>/e<K+1>/<RUN_ID>-<ts>-<n>` | advisory only; never grants or blocks |
+| Observation | `observations/<RUN_ID>/<TARGET>-<n>` | advisory only; never mutates the target |
+
+Consequences:
+
+- **Competing claims** race on the *same* `e<K>`, so exactly one create wins; the
+  loser gets a typed result and retries nothing.
+- **A superseded owner cannot clobber the new owner.** Its writes land in epoch `K`,
+  and derivation only reads `K+1`. Renew is refused with `ClaimSuperseded`; a late
+  release event for `K` cannot free a ticket held at `K+1`.
+- **A stale observer cannot overwrite a resumed run.** Observations live in the
+  observer's namespace; a run that heartbeats afterwards is simply not stale.
+- **Run events are append-only per sequence number**, so a duplicate writer either
+  takes the next sequence or loses to `422` and re-reads. Nothing is overwritten.
+
+## 4. Interruption matrix
+
+Every write is a single create, except the two-write heartbeat (lease, then run event).
+The order is chosen so a failure is **fail-closed**: it can make a claim look expired,
+never available.
+
+| Operation | Steps | Crash before step 1 | Crash between steps | Resulting state |
+|---|---|---|---|---|
+| `register` | create run event `e1` | no registry entry | n/a | run not discoverable; nothing was claimed |
+| `claim` | derive → create `e<K>` → verify → append run event | no claim | claim exists, run record stale | claim held (authoritative); activity may lag until next heartbeat |
+| `heartbeat` | create lease → create run event | claim keeps its previous expiry | lease landed, run event lost | claim **live**, ticket not available; run activity stale (health tolerates a live lease) |
+| `renew` | create lease → append run event | previous expiry stands | as heartbeat | same |
+| `release` | create release event → append run event | claim still held → recovery path | release landed, run record stale | ticket available; work had already stopped (ordering invariant) |
+| `recover` | create intent → create `e<K+1>` → verify → append run event | nothing happened | intent exists, no ownership | intent is advisory; the next contender wins the epoch create |
+| `observe` | create observation | nothing happened | n/a | no effect on authority |
+
+The heartbeat order (lease first) is deliberate: a lost run event leaves a *live* claim,
+while a lost lease leaves a claim that expires and then requires recovery inspection.
+
+## 5. Lease and recovery protocol
 
 - A claim carries `run_id`, `ticket`, `claimed_at`, `last_heartbeat`, `expires_at`,
   `branch`, `worktree`, `run_status`, `current_activity`, `attempt_number`,
@@ -137,7 +202,7 @@ Rejected alternatives:
 - A run whose ref disappears (workspace/session loss) cannot renew; it must stop
   ticket modifications and checkpoint.
 
-## 4. Run status vocabulary
+## 6. Run status vocabulary
 
 `STARTING`, `RECONCILING`, `CLAIMING`, `EXECUTING`, `VALIDATING`, `CHECKPOINTING`,
 `WAITING`, `RECOVERING`, `COMPLETED`, `BLOCKED`, `ABANDONED`, `FAILED`. Terminal:
@@ -147,7 +212,7 @@ Activity strings must name the work, not the mood: "Writing authorization tests 
 task sharing", not "working". Another session reads them to decide whether a ticket is
 contested.
 
-## 5. Precedence of state
+## 7. Precedence of state
 
 ```
 GitHub issues                  ticket status, dependencies, delivery evidence (PRs, commits)
@@ -159,22 +224,48 @@ STATE.md / CHECKPOINT.json     derived summary, reconciled, never authoritative 
 
 A local workspace file is never authoritative for run ownership.
 
-## 6. Residual risks (open work)
+## 8. Residual risks (open work)
 
 | Risk | Mitigation ticket |
 |---|---|
 | Sessions can still be *started* without following the handshake | #124 — mandatory handshake in the prompt + skill |
-| No worktree isolation yet; sessions share a directory | #125 |
+| No worktree isolation yet; sessions share a directory (B-008) | #125 |
 | State still merged through shared files during the transition | #126 |
-| Recovery is only unit-tested, not yet exercised against a real stale claim in a simulated multi-session run | #127 |
+| Claim/recovery is unit- and fault-tested but not yet exercised by two *live* sessions racing a real ticket | #127 |
 | Concurrency is enabled by scheduler, not earned | #128 gates Phase B/C on #127 |
+| Ref growth is linear in heartbeats (≈10–20 refs/run; no compaction). Discovery reads one payload per run, so cost is O(runs) reads and one listing | #128 adds metrics; revisit if a run routinely exceeds ~100 events |
+| Legacy leaf refs (`runs/<RUN_ID>`, `claims/issue-<N>`) linger read-only until their owners release them | #126 / #124 document the migration; they are never treated as free |
+| Coordination tests are not run by CI | #15 (blocked on the token's Workflows scope) |
 
 Until #127 passes, the rollout stays at **Phase A: one implementation session**.
 
-## 7. Reconciliation log
+## 9. Reconciliation log
 
 - **Run `20261124T1851Z-5efb` (session 9)**: at start, #9 (PR #119) and #14 (PR #117)
   were in progress with state PRs #118/#120 open, so both tickets were excluded. During
   the run all four merged, so at handoff #9 and #14 are done and the READY queue was
   recomputed from live issue state. The registry held only this run's entry; no stale
   claims were found.
+
+- **Run `20261124T1921Z-5d70` (session 11)**: claim for #131 was taken with the
+  pre-hardening layout, then migrated in place — `release` of the legacy epoch, then
+  `claim` at epoch 2 — which also served as the live adapter test. During the
+  migration the first new-layout write failed: git cannot create `runs/<RUN_ID>/e2`
+  while `runs/<RUN_ID>` exists (a ref is either a leaf or a directory), which is why
+  the append-only layout lives in `run-events/` and `claim-epochs/` and legacy refs
+  are read-only. That failure also reproduced the release interrupt: the release event
+  landed and the run event did not, so the ticket read as available while the run
+  record still said EXECUTING — the documented, intended fail-open direction for a
+  clean release.
+
+### Incident B-009 — a ref cannot be both a leaf and a directory
+
+- **Root cause:** the hardened layout nested epoch refs under the legacy leaf refs
+  (`claims/issue-131/e2` while `claims/issue-131` exists).
+- **Impact:** `POST /git/refs` returned `422 Reference update failed` for a ref that
+  did not exist — indistinguishable, by status code alone, from losing a claim race.
+- **Prevention:** disjoint namespaces for legacy and append-only layouts; the store
+  only maps `422`/`409` on create to `RefExists`, so a schema-level failure surfaces
+  as an error rather than a phantom loss.
+- **Lesson:** the in-memory adapter cannot reproduce ref-name constraints. Adapter
+  shape must be exercised against the real protocol (as `AGENTS.md` already warns).

@@ -38,7 +38,9 @@ from wingman.coordination import (
 
 PRIORITY_ORDER = {"P0-critical": 0, "P1-high": 1, "P2-normal": 2, "P3-low": 3}
 DEFAULT_PRIORITY = 9
-BLOCKING_LABELS = frozenset({"blocked"})
+# Labels that make a ticket unavailable regardless of ownership: `blocked` means it
+# cannot start, `verification` means the work is delivered and awaiting review.
+UNAVAILABLE_LABELS = frozenset({"blocked", "verification"})
 DEPENDENCY_PATTERN = re.compile(r"(?:depends on|blocked by|requires)\s+#(\d+)", re.IGNORECASE)
 BRANCH_TICKET_PATTERN = re.compile(r"issue-(\d+)", re.IGNORECASE)
 PR_TICKET_PATTERN = re.compile(r"(?:closes|fixes|resolves|refs?|part of)\s+#(\d+)", re.IGNORECASE)
@@ -68,7 +70,12 @@ class Issue:
         return tuple(sorted({int(match) for match in DEPENDENCY_PATTERN.findall(self.body)}))
 
     def is_blocked(self) -> bool:
-        return bool(BLOCKING_LABELS.intersection(self.labels))
+        return bool(UNAVAILABLE_LABELS.intersection(self.labels))
+
+    def unavailable_reason(self) -> str | None:
+        for label in sorted(UNAVAILABLE_LABELS.intersection(self.labels)):
+            return f"labelled {label}"
+        return None
 
 
 @dataclass(frozen=True)
@@ -226,8 +233,9 @@ def exclusion_set(
     for issue in issues:
         if issue.state != "open":
             continue
-        if issue.is_blocked():
-            excluded.setdefault(issue.number, "labelled blocked")
+        reason = issue.unavailable_reason()
+        if reason is not None:
+            excluded.setdefault(issue.number, reason)
         missing = [number for number in issue.dependencies() if number not in closed]
         if missing:
             excluded.setdefault(issue.number, f"unsatisfied dependencies {missing}")

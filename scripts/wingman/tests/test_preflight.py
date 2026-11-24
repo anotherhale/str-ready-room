@@ -61,11 +61,15 @@ def handshake(store, source, clock: Clock | None = None, run_id: str = "run-a", 
 # ------------------------------------------------------------------- exclusion
 
 
-def test_blocked_label_is_excluded() -> None:
+def test_blocked_and_verification_labels_are_excluded() -> None:
     store = InMemoryRefStore()
-    issues = [Issue(5, "blocked work", labels=("blocked",))]
+    issues = [
+        Issue(5, "blocked work", labels=("blocked",)),
+        Issue(6, "delivered, awaiting review", labels=("verification",)),
+    ]
     excluded = exclusion_set(issues, StaticIssueSource(issues), coordinator(store), run_id="run-a")
     assert excluded[5] == "labelled blocked"
+    assert excluded[6] == "labelled verification"
 
 
 def test_unsatisfied_dependency_is_excluded_and_satisfied_one_is_not() -> None:

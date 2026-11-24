@@ -291,6 +291,136 @@ otherwise have had to decide. Alternatives: #8 (ADR-006), #14 (test harness).
 
 ---
 
+## Session 5 — 2026-11-24
+
+**Selected ticket:** [#7](https://github.com/anotherhale/str-ready-room/issues/7) — ADR-005: squadron data isolation, owner migration, schema evolution (P0-critical, architecture, est 20 min)
+
+### Reorientation
+
+- Local clone at `main` = `6b48e66` (grafted shallow checkout); no working-tree
+  changes. No `wingman/*` ADR branches existed locally at start; PRs #108
+  (ADR-004), #109 (ADR-002), #110 (state) were open on the remote.
+- Read `STATE.md`, `CHECKPOINT.json`, `AGENTS.md`, `WINGMAN.md`, ADR-001/002/004,
+  `REQUIREMENTS_TRACEABILITY.md`, and the permission matrix before selecting.
+- Confirmed #7 was still `ready`/`open` and that no branch or PR had claimed it.
+- Confirmed the instruction's "ADR-1 / Issue #100" pointer remains stale (as
+  recorded in C-001): ADR-005 is #7, and #3 (ADR-001) is merged.
+
+### Survey of the persistence layer (inputs to the decision)
+
+Six tables, all owner-scoped: `tasks`, `recurrence_rules`, `operator_settings`
+(`owner_id` is the PK), `categories`, `calendar_events`, `email_sources`. Every
+repository method takes `owner_id: str` explicitly, and
+`AuthorizationPolicyService` allows a write only when `owner_id == principal.id`.
+Schema evolution is `create_all` plus `run_additive_migrations`, a fixed
+add-only `ALTER TABLE` tuple with no record of what ran (`AI-DECISIONS` D-009).
+
+### Baseline before editing
+
+```text
+backend: uv venv --python 3.12 (fresh) ; uv pip install -e ".[dev]"
+         .venv/bin/python -m pytest -q  -> 206 passed, 0 failed (24.1s)
+         .venv/bin/ruff check app tests -> All checks passed!
+frontend: not run — no frontend file changed, node_modules absent in this workspace
+```
+
+### Work accomplished
+
+- Wrote `docs/adr/ADR-005-data-isolation-migration.md` (accepted). It decides:
+  - `squadron_id` on every squadron-scoped table with `owner_id` retained;
+    every owner-leading index becomes tenant-leading.
+  - Three enforcement layers: ADR-004 authorization, a `ScopeCriteria` built in
+    exactly one place from the resolved principal, tenant-leading DB indexes.
+    Cross-squadron reads return `404`; in-squadron scope denials return `403`.
+  - A versioned, forward-only, idempotent migration runner recorded in
+    `schema_migrations`, replacing the fixed add-only tuple; Alembic deferred
+    with the reasoning recorded.
+  - Expand → backfill → startup guard (fails closed on a null tenant key) →
+    `NOT NULL` contract in a later release.
+  - An explicit per-table backfill mapping, deterministic `uuid5` bootstrap
+    squadron and personal-workspace ids, `scope='personal'` for every existing
+    row (today's exact visibility), one `member` membership per distinct owner
+    and one configurable `squadron_admin`. Nothing is widened.
+  - Demo compatibility (one artifact set, seed writes the new columns, reset
+    preserves squadron/membership rows, volume wipe last resort) and an operator
+    recovery procedure.
+  - A 14-path isolation test matrix covering aggregates, calendar cache, mailbox
+    provenance, turnover packages, and Jev context assembly.
+- Marked ADR-005 Accepted in `docs/adr/README.md`.
+- Recorded the durable persistence invariants in `AGENTS.md` (tenant boundary in
+  queries, cross-squadron `404`, versioned runner, expand/backfill/guard/contract).
+
+### Files changed
+
+- `docs/adr/ADR-005-data-isolation-migration.md` (new)
+- `docs/adr/README.md` (+1/−1)
+- `AGENTS.md` (+13/−1)
+
+### Validation after editing
+
+```text
+.venv/bin/python -m pytest -q  -> 206 passed, 0 failed (identical to baseline)
+.venv/bin/ruff check app tests -> All checks passed!
+git diff --stat                -> 2 files changed, 14 insertions(+), 2 deletions(-)
+                                  plus the new ADR (untracked before commit)
+```
+
+Documentation-only change: no application code, configuration, default,
+dependency, or test was modified.
+
+### Git and GitHub
+
+- Branch `wingman/adr-005-data-isolation-migration`, commit `61c6621`.
+- PR [#111](https://github.com/anotherhale/str-ready-room/pull/111) opened against
+  `main`; issue #7 labelled `in-progress` and commented with the decision summary
+  and validation evidence. #7 closes on merge.
+
+### Dependency reconciliation
+
+- **Unblocked:** #20 (`P1-05` models + migration), #21 (`P1-06` repositories +
+  `DatabasePort`), #32 (`P1-17` backfill) — the tenant key, criteria shape,
+  migration mechanism, and backfill mapping are all decided.
+- **New follow-ups recorded rather than absorbed:** the `NOT NULL` contract step
+  (ADR-005 I1), and the versioned SQL fixtures `#20` must add under
+  `backend/tests/fixtures/schema/`.
+- **R-ARCH-05** in the traceability matrix moved MISSING → PARTIAL with ADR-005
+  as the evidence.
+
+### Queue state
+
+- READY: #8 (ADR-006), #14 (test harness), #5 (ADR-003), #15 (CI), #10, #11, #12,
+  #13. #7 has left the queue.
+- Next recommended: **#8 — ADR-006**; alternative **#14** if #8 is claimed.
+- Environment note: `gh` CLI is not installed here; GitHub operations used the
+  REST API via `curl`/`urllib` with `GITHUB_TOKEN`.
+
+### Coordinator state
+
+`STATE.md`, `DECISIONS.md`, `CHECKPOINT.json`, `REQUIREMENTS_TRACEABILITY.md`, and
+this log updated on the state branch (PR #110), so the ADR branch stays a
+documentation-only change.
+
+### Post-run reconciliation (same session)
+
+`main` advanced to `4b72868` while the session ran (PRs #108, #109, #110 merged),
+which made PR #111 conflict on `docs/adr/README.md`. Resolved by merging `main`
+into the ADR branch and keeping both accepted rows (ADR-004 and ADR-005); pushed
+as `28155f2`. Re-ran the backend suite at the merged head: 206 tests, exit 0, ruff clean.
+
+PR #110 was already merged, so the session-5 state commit was re-applied on top of
+merged `main` and opened as PR #112 (`wingman/state-session-5`).
+
+The workspace directory was deleted mid-session by the runtime. Recovery: re-clone
+from origin, `cherry-pick 65187ce` (the state commit already pushed), redo the
+merge in the ADR branch, and re-run validation. Nothing was lost.
+
+### Merge of PR #111
+
+The owner merged PR #111 at 18:09Z; `main` is now `dc98f8d` and issue #7 closed
+automatically. `ready`/`in-progress` labels removed. ADR-005 is Accepted in the
+repository, so the tenant key and scoping contract are now binding rather than
+proposed. Next READY ticket: #8 (ADR-006 squadron and membership model).
+
 ## Session 6 — 2026-11-24
 
 **Ticket:** #8 `P0-06` — ADR-006: task scope, sharing, and accountable-ownership

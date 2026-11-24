@@ -64,6 +64,9 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
+- **Non-blocking ADR defaults accepted as written** (product owner,
+  2026-11-24): ADR-002 A1–A5, ADR-004 Q1–Q5, ADR-005 I1–I5. Named-owner
+  confirmations remain non-blocking and can amend these defaults later.
 - **ADR-004 accepted and merged** (PR #108, issue #6; now on `main`). Fixes five roles
   (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
   54-permission catalog (20 existing + 34 new), a role x permission grant matrix
@@ -96,7 +99,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 | Blocker | Effect | Owner |
 |---|---|---|
-| Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
+| Formal confirmation of the Q1–Q7 defaults (product owner accepted defaults 2026-11-24; official sign-off outstanding, tracked in [#113](https://github.com/anotherhale/str-ready-room/issues/113)) | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 
 Nothing currently blocks the remaining READY ADRs or the test harness.
 
@@ -136,12 +139,4 @@ Alternatives if #9 is claimed: **#14 — multi-principal test harness**
 (P0-critical; ADR-002 and ADR-004 already give it its contracts), then
 **#15 — CI workflow**, then **#5 — ADR-003**.
 
-In flight, awaiting merge — check before starting anything:
-
-| PR | Ticket | Status |
-|---|---|---|
-| #116 | session-6 checkpoint | open (this branch) |
-| #114 | #8 ADR-006 | **merged** (`3d6efd6`); #8 closed |
-| #111 | #7 ADR-005 | **merged** (`dc98f8d`) |
-| #109 | #4 ADR-002 | merged |
-| #108 | #6 ADR-004 | merged |
+In flight: none.

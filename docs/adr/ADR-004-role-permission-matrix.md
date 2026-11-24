@@ -425,6 +425,10 @@ own work.
 Each default is safe to implement now and cheap to amend; none blocks `P1-03` or
 `P1-04`.
 
+**Confirmation status (2026-11-24):** the product owner accepted Q1–Q5 as
+written. Named-owner confirmations remain non-blocking and can amend these
+defaults later.
+
 ## Validation
 
 Documentation-only change. No application code, configuration, dependency, or

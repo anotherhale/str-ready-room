@@ -36,16 +36,7 @@
     "notes": "Baseline and post-change runs are identical (206 passed), as expected for a docs-only diff.",
     "pr_description": "corrected: the PR #114 body described a section layout (sections 5/6, invariants I1-I9, soft-revoked shares) that the committed ADR does not contain; rewritten to match the file"
   },
-  "open_prs": [
-    {
-      "number": 116,
-      "branch": "wingman/state-session-6",
-      "title": "docs(wingman): session 6 checkpoint - ADR-006 delivered, stale state corrected",
-      "state": "open",
-      "issue": 8,
-      "note": "updated after the run to record the #114 merge and to promote #9"
-    }
-  ],
+  "open_prs": [],
   "blockers": [
     {
       "id": "B-001",
@@ -58,7 +49,9 @@
       "does_not_block": [
         "the unclassified synthetic build",
         "ADR-003, ADR-008..ADR-011"
-      ]
+      ],
+      "tracking_issue": 113,
+      "status": "product owner accepted defaults 2026-11-24; official sign-off outstanding"
     },
     {
       "id": "B-006",

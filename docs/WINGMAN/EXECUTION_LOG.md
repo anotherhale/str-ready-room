@@ -288,3 +288,65 @@ the first action was dependency reconciliation rather than implementation.
 It is the highest-priority READY ADR, P0-critical, and gates #20-#22 and #32.
 ADR-002 §3 (session table) and §8 (membership coupling) give it inputs it would
 otherwise have had to decide. Alternatives: #8 (ADR-006), #14 (test harness).
+
+---
+
+## Session 6 — 2026-11-24
+
+**Ticket:** #8 `P0-06` — ADR-006: task scope, sharing, and accountable-ownership
+semantics (P0-critical, architecture, 20 min).
+
+### Reorientation correction
+
+The checkpoint this session inherited (`session 4`, `main_sha 6b48e66`) was two
+merges stale. `origin/main` was at `dc98f8d` (PR #111) and **ADR-005 was already
+written and merged** (PR #111, issue #7) — the recommended "next ticket" in
+`CHECKPOINT.json` was done. An ADR-005 draft produced before that discovery was
+discarded uncommitted rather than opened as a duplicate.
+
+Lesson applied: verify `git fetch` + `git ls-remote` before trusting a checkpoint
+recommendation. The READY queue in this file is recomputed from live issue state,
+not from the previous checkpoint.
+
+### Work
+
+- `docs/adr/ADR-006-task-scope-sharing.md` — new, 351 lines. Four scopes on a
+  strict ladder with `personal` as the only default; exactly one accountable
+  owner and at most one typed assignee; collaborators and watchers; user-only,
+  additive, non-transitive, soft-revoked shares; a single visibility predicate;
+  a per-scope permission matrix mapped onto ADR-004 permissions and denial codes;
+  occurrence snapshotting for ADR-007.
+- `docs/adr/README.md` — ADR-006 row: Pending -> Accepted.
+- `AGENTS.md` — five durable task-scope invariants added to the Domain section.
+
+### Validation
+
+- Backend `pytest`: **206 passed, 1 warning in 23.93s** (unchanged from baseline).
+- Backend `ruff check app tests`: **All checks passed!**
+- Frontend not run: `node_modules` absent in this workspace and no frontend file
+  changed. No frontend claim is made.
+
+### Git
+
+- Branch `wingman/adr-006-task-scope-sharing` from `dc98f8d`, one commit,
+  pushed. PR **#114**.
+
+### Failure and recovery
+
+- The run workspace directory was **deleted mid-session**, losing the working
+  tree. The same repository contents were found relocated under a new run
+  directory with the changes intact; work resumed there without re-cloning.
+  (Second occurrence of this failure mode — recorded in `CHECKPOINT.json`.)
+
+### Dependency reconciliation
+
+- #9 (ADR-007) stays `blocked` on #8 until PR #114 merges; its dependency is
+  satisfied by decision but not by merge, so no relabel.
+- #35-#39 gain a fixed implementation contract but stay gated on the Phase-1
+  chain (#16-#21), so no relabel.
+- #4, #6, #7 are merged; their issues are ready to close on verification.
+
+### Next
+
+**#14 — multi-principal test harness** (P0-critical). Alternatives: #5 (ADR-003),
+#15 (CI). Do not start #9 before #8 closes.

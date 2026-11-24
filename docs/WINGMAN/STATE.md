@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 3)
+**Last updated:** 2026-11-24 (session 6)
 
 ## Artifact map
 
@@ -47,7 +47,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
-- **ADR-002 accepted** (PR #109, awaiting merge). First mechanism: local
+- **ADR-002 accepted and merged** (PR #109, issue #4; now on `main`). First mechanism: local
   credentials plus server-side sessions; OIDC is an extension seam only. stdlib
   `scrypt` hashing, opaque 256-bit tokens with only the SHA-256 stored, 30-minute
   idle / 12-hour absolute expiry, nine enumerated revocation triggers, and a
@@ -64,13 +64,28 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
-- **ADR-004 accepted, awaiting merge** (PR #108, issue #6). Fixes five roles
+- **ADR-004 accepted and merged** (PR #108, issue #6; now on `main`). Fixes five roles
   (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
   54-permission catalog (20 existing + 34 new), a role x permission grant matrix
   with an explicit scope ceiling per grant, and an ordered deny-by-default
   evaluation: membership -> permission -> scope -> relationship -> approval.
   Agents hold no roles and act only by revocable delegation; they never record
   human accountability. See `docs/adr/ADR-004-role-permission-matrix.md`.
+- **ADR-005 accepted and merged** (PR #111, issue #7, `main` @ `dc98f8d`).
+  `squadron_id` is a required positional argument on every squadron-scoped
+  repository method and is filtered in SQL; repositories never commit; a
+  versioned forward-only migration runner with a `schema_migrations` ledger
+  replaces the additive helper; every existing table backfills to one
+  deterministic bootstrap squadron; Alembic is deferred.
+  See `docs/adr/ADR-005-data-isolation-migration.md`.
+- **ADR-006 accepted, in PR #114** (issue #8, branch
+  `wingman/adr-006-task-scope-sharing`). Four task scopes on a strict ladder
+  (`personal` < `shared` < `team` < `squadron`) with `personal` as the default
+  for every capture path; exactly one accountable owner, at most one typed
+  assignee, many collaborators and watchers; shares are user-only, additive,
+  non-transitive, capped at the grantor's authority, and soft-revoked;
+  occurrences snapshot scope and roles at generation.
+  See `docs/adr/ADR-006-task-scope-sharing.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
   authorizes cloud hosting, default egress, or any compliance claim.
@@ -80,10 +95,10 @@ ADR set is settled; the ADR tickets are the only work in flight.
 | Blocker | Effect | Owner |
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
-| ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
-| ADR-002 (#4) in review as PR #109 (parallel session) | The identity lane (#24-#27, #30, #34) cannot start | Reviewer |
 
-Nothing currently blocks ticket execution.
+| ADR-006 (#8) awaiting merge in PR #114 | #9 (ADR-007) stays `blocked`; #35-#39 stay gated | Reviewer |
+
+Nothing currently blocks the remaining READY ADRs or the test harness.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -93,17 +108,13 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#4](https://github.com/anotherhale/str-ready-room/issues/4) | ADR-002: authentication provider, session storage, cookie strategy | P0-critical | 20 min |
-| 2 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 3 | [#6](https://github.com/anotherhale/str-ready-room/issues/6) | ADR-004: role and scoped-permission matrix | P0-critical | 20 min |
-| 4 | [#7](https://github.com/anotherhale/str-ready-room/issues/7) | ADR-005: data isolation, owner migration, schema evolution | P0-critical | 20 min |
-| 5 | [#8](https://github.com/anotherhale/str-ready-room/issues/8) | ADR-006: task scope, sharing, accountable ownership | P0-critical | 20 min |
-| 6 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
-| 7 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
-| 8 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
-| 9 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
-| 10 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
-| 11 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
+| 1 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
+| 2 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 3 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
+| 4 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
+| 5 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
+| 6 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
+| 7 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
 ## Blocked queue
 
@@ -114,18 +125,22 @@ downstream work.
 
 ## Next recommended ticket
 
-**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
-Rationale: highest-priority READY ADR, P0-critical, gates #20-#22 and #32.
-ADR-002 already fixes the session table shape and the membership-active coupling,
-so #7 decides isolation and migration without re-litigating authentication.
+**#14 — multi-principal test harness and configurable test auth provider**
+(P0-critical). Rationale: it is the only remaining P0-critical READY ticket, and
+every Phase-1/2 implementation ticket (#16-#21, #34, #46) needs a way to act as
+two different principals in one test. ADR-002 (merged) fixed the session shape
+and ADR-004 (merged) fixed the scope model, so #14 has the contracts it needs.
+
+Alternatives if #14 is claimed: **#5 — ADR-003** (P1-high, gates the membership
+lifecycle in #16 and #22), then **#15 — CI workflow**.
+
+Do not start #9 (ADR-007) until PR #114 merges and #8 closes.
 
 In flight, awaiting merge — check before starting anything:
 
 | PR | Ticket | Status |
 |---|---|---|
-| #108 | #6 ADR-004 | `verification`; close #6 when merged |
-| #109 | #4 ADR-002 | `in-progress`; close #4 when merged |
-| #110 | coordinator state | session 3 + session 4 log |
-
-Alternative if #7 is claimed: **#8 — ADR-006**, then **#14 — test harness**.
-Do not start #9 (ADR-007) until #8 is closed.
+| #114 | #8 ADR-006 | open; close #8 when merged |
+| #111 | #7 ADR-005 | **merged** (`dc98f8d`) |
+| #109 | #4 ADR-002 | merged |
+| #108 | #6 ADR-004 | merged |

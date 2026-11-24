@@ -1,0 +1,153 @@
+{
+  "last_run": "2026-11-24T11:05Z",
+  "session": 2,
+  "main_sha_at_start": "1185ce9",
+  "local_clone_sha_at_start": "5fdae63",
+  "branch": "wingman/coordinator-state",
+  "last_ticket": {
+    "issue": 3,
+    "title": "ADR-001: decide deployment, classification, and data-handling constraints",
+    "priority": "P0-critical",
+    "type": "architecture",
+    "status": "done",
+    "issue_state": "closed",
+    "closed_by": "merge commit 90decc5 (PR #105)"
+  },
+  "last_ticket_work_branch": "wingman/adr-001-deployment-classification",
+  "last_commit": "90decc5",
+  "last_commit_message": "docs(adr): add ADR-001 deployment, classification, and data-handling constraints",
+  "changed_files": [
+    "docs/adr/ADR-001-deployment-classification.md",
+    "docs/adr/README.md"
+  ],
+  "validation": {
+    "backend_pytest": "206 passed, 1 warning (session 1; not re-run \u2014 docs-only change, no venv in recreated workspace)",
+    "backend_ruff": "All checks passed! (session 1)",
+    "frontend_tests": "10 files / 39 tests passed (session 1)",
+    "frontend_typecheck": "clean (session 1)",
+    "frontend_build": "succeeded (session 1)",
+    "notes": "Session 2 changed Markdown and JSON only; suites were not re-run because the workspace was recreated and dependencies are not installed."
+  },
+  "open_prs": [
+    {
+      "number": 106,
+      "branch": "wingman/coordinator-state",
+      "title": "WINGMAN: coordinator state, execution log, and architecture map",
+      "state": "open"
+    }
+  ],
+  "blockers": [
+    {
+      "id": "B-001",
+      "description": "Formal confirmation of the adopted Q1-Q7 defaults by the named officials",
+      "effect": "Real operational/personnel data cannot be stored; cloud hosting and default egress remain unauthorized",
+      "blocks_issues": [
+        "real-data deployment",
+        "cloud deployment"
+      ],
+      "does_not_block": [
+        "the unclassified synthetic build",
+        "ADR-002 through ADR-011"
+      ]
+    },
+    {
+      "id": "B-003",
+      "description": "State checkpoint PR #106 unmerged",
+      "effect": "Coordinator state not yet on main; a fresh session recovers from GitHub issues until merged",
+      "unblock_action": "Merge PR #106"
+    }
+  ],
+  "ready_queue": [
+    {
+      "order": 1,
+      "issue": 4,
+      "title": "ADR-002: authentication provider, session storage, cookie strategy",
+      "priority": "P0-critical"
+    },
+    {
+      "order": 2,
+      "issue": 5,
+      "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
+      "priority": "P1-high"
+    },
+    {
+      "order": 3,
+      "issue": 6,
+      "title": "ADR-004: role and scoped-permission matrix",
+      "priority": "P0-critical"
+    },
+    {
+      "order": 4,
+      "issue": 7,
+      "title": "ADR-005: data isolation, owner migration, schema evolution",
+      "priority": "P0-critical"
+    },
+    {
+      "order": 5,
+      "issue": 8,
+      "title": "ADR-006: task scope, sharing, accountable ownership",
+      "priority": "P0-critical"
+    },
+    {
+      "order": 6,
+      "issue": 14,
+      "title": "Multi-principal test harness and configurable test auth provider",
+      "priority": "P0-critical"
+    },
+    {
+      "order": 7,
+      "issue": 15,
+      "title": "CI workflow running backend and frontend verification",
+      "priority": "P1-high"
+    },
+    {
+      "order": 8,
+      "issue": 10,
+      "title": "ADR-008: agent identity, delegation, approval binding",
+      "priority": "P1-high"
+    },
+    {
+      "order": 9,
+      "issue": 11,
+      "title": "ADR-009: Jev provider, context assembly, failure strategy",
+      "priority": "P1-high"
+    },
+    {
+      "order": 10,
+      "issue": 12,
+      "title": "ADR-010: workflow persistence, retries, cancellation, idempotency",
+      "priority": "P1-high"
+    },
+    {
+      "order": 11,
+      "issue": 13,
+      "title": "ADR-011: notification channels/preferences and audit retention",
+      "priority": "P2-normal"
+    }
+  ],
+  "blocked_queue": [
+    {
+      "issue": 9,
+      "title": "ADR-007: shared recurrence, duty routing, occurrence exceptions",
+      "blocked_on": [
+        8
+      ]
+    }
+  ],
+  "recommended_next_ticket": {
+    "issue": 4,
+    "title": "ADR-002: authentication provider, session storage, cookie strategy",
+    "rationale": "Unblocked by #3's closure; ADR-001 \u00a74 already fixes its inputs (self-contained auth, revocable server-side sessions, cookie flags, demo provider refused outside demo). P0-critical and gates every identity-dependent ticket.",
+    "alternatives": [
+      5,
+      6
+    ]
+  },
+  "corrections_recorded": [
+    "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
+    "Local clone was shallow at 5fdae63 while origin/main had advanced to 1185ce9; state work was branched from current origin/main.",
+    "The run workspace was deleted mid-session; the repository was re-cloned and work resumed from origin branches."
+  ],
+  "next_execution_action": "Read docs/WINGMAN/STATE.md, confirm #4 has no open dependency issues, claim it (label in-progress), then write docs/adr/ADR-002-*.md against ADR-001 \u00a74 and append it to docs/adr/README.md.",
+  "main_sha_now": "90decc5"
+}

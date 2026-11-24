@@ -10,6 +10,12 @@ derived and how an autonomous session should consume it.
 
 | File | Purpose |
 |---|---|
+| `STATE.md` | Live status: what is verified, what is blocked, the READY queue, next ticket |
+| `CHECKPOINT.json` | Machine-readable state for a fresh session |
+| `EXECUTION_LOG.md` | Append-only per-session record of ticket, actions, evidence, commits |
+| `DECISIONS.md` | Coordination decisions and the ADR index with status |
+| `ARCHITECTURE_MAP.md` | Architecture as implemented, and the gaps the expansion fills |
+| `AGENT_REGISTRY.md` | Delegable roles, their scope, and current assignment |
 | `BASELINE_ASSESSMENT.md` | What already exists, verified against code and test runs |
 | `REQUIREMENTS_TRACEABILITY.md` | Requirement inventory, status, and requirement → issue mapping |
 | `BACKLOG_DECOMPOSITION.md` | Backlog summary, phases, metrics, critical path, risks, READY queue |
@@ -17,10 +23,9 @@ derived and how an autonomous session should consume it.
 
 ## Source of truth
 
-- Product/architecture requirements: `docs/SQUADRON_PLATFORM_EXPANSION.md` on
-  branch `feature/squadron-platform-expansion` (PR #1). If a session does not
-  see it on its branch, fetch it:
-  `git fetch origin feature/squadron-platform-expansion`.
+- Product/architecture requirements: `docs/SQUADRON_PLATFORM_EXPANSION.md`,
+  merged to `main` (PR #1). A session whose clone predates that merge should
+  `git fetch origin main` before selecting work.
 - Durable repository invariants: `AGENTS.md`.
 - Architecture decisions for the expansion: `docs/adr/ADR-*.md`.
 - Current implementation facts: the repository and its tests, not the roadmap.

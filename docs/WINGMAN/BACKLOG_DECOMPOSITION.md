@@ -2,7 +2,7 @@
 
 **Generated:** 2026-11-24  
 **Repository:** `anotherhale/str-ready-room`  
-**GitHub Issues are authoritative for execution.** This document is a reporting and traceability artifact, synchronized with the issue set at the time of generation.
+**GitHub Issues are authoritative for execution.** This document is a reporting and traceability artifact, synchronized with the issue set at the time of generation. Documentation PR: #103.
 
 ## Source documents reviewed
 
@@ -13,7 +13,7 @@
 - `BUILD_STATUS.md` — verified milestones M0–M13 with evidence.
 - `PREBRIEF.md` — discovery notes, assumptions, validation questions.
 - Backend/frontend source and tests — implementation baseline.
-- GitHub state — 1 open PR (#1), no existing issues, no milestones, default labels only.
+- GitHub state before creation — PR #1 open (the spec), no issues, no milestones, default labels only; the WINGMAN labels, milestones, and 100 issues were then created.
 
 ## Implementation baseline
 

@@ -18,7 +18,7 @@ Status values: **COMPLETE** (implemented and validated), **PARTIAL** (some imple
 | Requirements mapped to issues | 126 |
 | Implementation tickets | 100 |
 
-COMPLETE requirements are already delivered by the pre-expansion application and are not re-ticketed; they are retained here so the inventory is complete. Every non-COMPLETE requirement maps to at least one issue.
+COMPLETE requirements are already delivered by the pre-expansion application and are not re-ticketed; they are retained here so the inventory is complete. A COMPLETE requirement may still be named by a ticket whose job is to preserve it (for example, CI or architecture boundary tests); such a ticket must not re-implement it. Every non-COMPLETE requirement maps to at least one issue.
 
 ## Inventory and traceability
 

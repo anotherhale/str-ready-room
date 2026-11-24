@@ -22,3 +22,17 @@ Durable repository invariants live in [`AGENTS.md`](AGENTS.md). Product
 requirements live in
 [`docs/SQUADRON_PLATFORM_EXPANSION.md`](docs/SQUADRON_PLATFORM_EXPANSION.md).
 Architecture decisions live in [`docs/adr/`](docs/adr/).
+
+## Live coordination state
+
+Before selecting a ticket, read the authoritative registry (requires `GITHUB_TOKEN`):
+
+```bash
+PYTHONPATH=scripts python3 -m wingman.coordination status
+```
+
+Ticket claims live in `refs/wingman/claims/issue-<N>`, run entries in
+`refs/wingman/runs/<RUN_ID>` on GitHub. A ticket with a live claim — or an expired
+claim awaiting recovery — is not available. `docs/WINGMAN/RUNS.md` is a generated
+snapshot; never edit it by hand. Design, audit, and incident record:
+`docs/WINGMAN/CONCURRENCY.md`.

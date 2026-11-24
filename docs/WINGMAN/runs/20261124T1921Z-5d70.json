@@ -1,0 +1,34 @@
+{
+  "run_id": "20261124T1921Z-5d70",
+  "session": 11,
+  "ticket": 131,
+  "ticket_title": "Coordination hardening: append-only ref events, epoch CAS, crash-consistent lifecycle",
+  "run_status": "VALIDATING",
+  "branch": "wingman/issue-131/run-20261124T1921Z-5d70",
+  "worktree": "/work/dev/str-ready-room",
+  "started_at": "2026-11-24T19:21:00Z",
+  "attempt_number": 1,
+  "claim_epoch": 2,
+  "claim_migration": "legacy epoch 1 released, re-claimed at epoch 2 after the namespace fix",
+  "review_findings_addressed": [
+    "ref updates are not CAS (PATCH is last-writer-wins; If-Match refused with 400) -> create-only refs",
+    "heartbeat two-write failure semantics -> fail-closed ordering + fault-injection tests",
+    "release crash consistency -> single atomic release event, stop-work ordering invariant",
+    "recovery lock lifecycle -> no lock; atomic epoch create + advisory intent",
+    "stale-run marking -> observations in the observer's namespace, never target mutation"
+  ],
+  "validation": {
+    "coordination_tests": "30 passed",
+    "ruff": "All checks passed",
+    "live_duplicate_epoch_create": "422, holder unchanged",
+    "live_legacy_claim_read": "epoch 1 detected, held, not free"
+  },
+  "next_recommended_ticket": 124,
+  "incidents": [
+    "B-009 ref cannot be both a leaf and a directory (found live during migration)"
+  ],
+  "claim_status": "RELEASED",
+  "pr": "#132 (stacked on #129)",
+  "release_note": "claim released at handoff; #131 moved to verification so it is not re-selectable",
+  "backend_regression": "215 passed (exit 0)"
+}

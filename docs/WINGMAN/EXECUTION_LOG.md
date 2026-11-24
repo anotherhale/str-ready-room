@@ -672,3 +672,54 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 11 - 2026-11-24
+
+| Field | Value |
+|---|---|
+| Issue | #5 (P0-03) - ADR-003: squadron bootstrap, invitation, membership lifecycle |
+| Priority / type | P1-high / architecture |
+| Estimate | 15 min |
+| Status | In review - PR #133, docs-only, not merged |
+
+**Selection.** `main` @ `b774e224`. #5 was the only genuinely READY ticket: no
+ADR-003 existed, and the whole P1 squadron chain (#16 -> #17/#18/#19 ->
+#20/#21 -> #22-#34) depends on it. #51 looked like the top of the queue but is
+blocked on #35 and was demoted (below).
+
+**Work.** New `docs/adr/ADR-003-squadron-bootstrap-membership.md` covering:
+operator-only idempotent bootstrap for the first administrator (no public admin
+endpoint; `503 not_bootstrapped` when uninitialized); invitations as records with
+hashed, single-use, expiring tokens and inviter-fixed roles; a complete
+`INVITED`/`ACTIVE`/`SUSPENDED`/`REMOVED` transition table with actor and side
+effects, only-`ACTIVE`-authorizes, no self-transition, last-administrator guard,
+and `REMOVED` re-enterable only via a new invitation; and the access effects of
+suspension/removal (sessions revoked, work retained, duty positions vacated,
+shares inert-but-retained, advisory `reassignment_required`, never silent
+reassignment). Plus: ADR index row -> Accepted, seven membership invariants in
+`AGENTS.md`.
+
+**Validation.**
+
+```
+backend/.venv/bin/python -m pytest          -> 215 passed, 1 warning in 71.78s
+backend/.venv/bin/ruff check app tests      -> All checks passed!
+backend/.venv/bin/mypy app                  -> Success: no issues found in 84 source files
+git diff --stat                             -> docs/adr/ + AGENTS.md only
+```
+
+**Git.** Branch `wingman/p0-03-adr-003-bootstrap`, commit `9ef9e31`, pushed and
+verified with `git ls-remote`. PR #133 open.
+
+**Dependency reconciliation.** #5 -> in review (closes on merge). #16 becomes
+READY when #133 merges - ADR-003 was its only dependency. **#51 demoted ready ->
+blocked**: its Dependencies section lists #35 (open, blocked on #16/#17), and the
+fields it must add do not exist yet. New blocker B-008: the #129/#130/#131 PR
+stack needs dispositioning.
+
+**Failures.** `backend/.venv` absent (rebuilt with uv). The run workspace was
+deleted mid-session (B-007); recovered at `~/wingman/session-11` with no loss of
+committed or pushed work.
+
+**Next.** #16 once #133 merges; otherwise #10 (ADR-008), then #11, #12, #13, #15.
+Not #51, not #131.

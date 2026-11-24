@@ -12,7 +12,7 @@ record rather than deleting it.
 | ADR-003 | Squadron bootstrap, invitation, and membership lifecycle | Pending ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
 | [ADR-004](ADR-004-role-permission-matrix.md) | Role and scoped-permission matrix | Accepted 2026-11-24 ([#6](https://github.com/anotherhale/str-ready-room/issues/6)) |
 | [ADR-005](ADR-005-data-isolation-migration.md) | Data isolation, owner migration, and schema evolution | Accepted 2026-11-24 ([#7](https://github.com/anotherhale/str-ready-room/issues/7)) |
-| ADR-006 | Task scope, sharing, and accountable-ownership semantics | Pending ([#8](https://github.com/anotherhale/str-ready-room/issues/8)) |
+| [ADR-006](ADR-006-task-scope-sharing.md) | Task scope, sharing, and accountable-ownership semantics | Accepted 2026-11-24 ([#8](https://github.com/anotherhale/str-ready-room/issues/8)) |
 | ADR-007 | Shared recurrence, duty-position routing, occurrence exceptions | Pending ([#9](https://github.com/anotherhale/str-ready-room/issues/9)) |
 | ADR-008 | Agent identity, delegation, and approval binding | Pending ([#10](https://github.com/anotherhale/str-ready-room/issues/10)) |
 | ADR-009 | Jev AI provider, context assembly, and failure strategy | Pending ([#11](https://github.com/anotherhale/str-ready-room/issues/11)) |

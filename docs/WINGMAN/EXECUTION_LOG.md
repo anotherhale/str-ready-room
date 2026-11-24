@@ -154,3 +154,137 @@ beyond the seven questions already listed in the ADR.
 ### Next
 
 **#4 — ADR-002 (authentication provider, session storage, cookie strategy).**
+
+## 2026-11-24 — ADR-004 role and scoped-permission matrix (#6), session 3
+
+### Ticket
+
+#6, `architecture`, P0-critical, status `verification`, PR #108.
+
+### Work
+
+- `docs/adr/ADR-004-role-permission-matrix.md`: five roles, 54-permission
+  catalog (20 existing + 34 new), full grant matrix with a scope ceiling per
+  grant, ordered evaluation, denial codes, team-lead and duty-position bounds,
+  approval-gated vs agent-delegable classification, and a mapping table from
+  matrix row to owning issue.
+- `AGENTS.md`: nine authorization invariants that survive implementation drift.
+- `docs/adr/README.md`: ADR-004 index row flipped to Accepted.
+
+### Validation
+
+- Backend `pytest`: 206 passed, 1 warning. `ruff check app tests`: clean.
+- Frontend `vitest run`: 10 files / 39 tests passed. `tsc --noEmit`: clean.
+  `vite build`: succeeded (184.64 kB JS, 11.74 kB CSS).
+- ADR self-consistency script: 54 catalog rows, 34 new, 54 matrix rows,
+  identical sets, no malformed cells, no write permission for `read_only`, no
+  `:manage` for `team_lead`, no escalation for `member`, no `demo:*` granted to
+  any role.
+
+### Git
+
+- `2a75665` on `wingman/adr-004-role-permission-matrix`, cut from `main` after
+  ADR-001 merged. PR #108: 3 files, +465/-1.
+
+### Failures and recovery
+
+- PR #107 was opened against the pre-merge ADR-001 branch. #105 merged
+  mid-session, so #107 would have replayed ADR-001. The change was rebuilt on
+  `main` and pushed to the same branch name; #107 closed automatically. No
+  force-push, and nothing from #105 was altered.
+- The run workspace was deleted by the harness mid-session, after the frontend
+  checks and before the checkpoint. The ADR was recreated in a fresh clone and
+  **every** check was re-run on the new base; the numbers above are from the
+  re-run.
+
+### Deviation from the previous plan
+
+Session 2 recommended #4 (ADR-002). Session 3 took #6 instead because #6 was
+already `in-progress` with work to land and it gates #18, #19, #35, and #37.
+#4 remains READY at position 1.
+
+### Dependency reconciliation
+
+- Nothing unblocked yet: #18, #19 stay `blocked` until PR #108 merges.
+- #9 stays `blocked` on #8.
+- #4, #5, #7, #8, #10, #11, #12, #13, #14, #15 remain READY.
+
+### Next
+
+**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
+#4 turned out to be claimed: a parallel session opened PR #109 for ADR-002 while
+this one was running, so the recommendation moved to the next unclaimed
+priority order. Alternatives: #8 (ADR-006), #14 (test harness).
+
+## 2026-11-24 — ADR-002 authentication, session, and cookie strategy (#4), session 4
+
+### Ticket
+
+#4, `architecture`, P0-critical, status `in-progress`, PR #109.
+Recovered as `BLOCKED` with a stale `ready` label even though #3 had closed, so
+the first action was dependency reconciliation rather than implementation.
+
+### Dependency reconciliation at start
+
+- `origin/main` had advanced to `6b48e66`: PR #106 (coordinator state) **merged**,
+  so checkpoint blocker **B-003 is resolved**.
+- #3 closed by PR #105 (`90decc5`); ADR-001 is on `main`. The dependency was
+  therefore satisfied on evidence. #4 moved `BLOCKED` -> `IN PROGRESS` and
+  `ready` -> `in-progress`; the body's status row was corrected.
+- #5 (ADR-003) closed while this session ran; #6 (ADR-004) sits in `verification`
+  with PR #108. Both were left untouched.
+
+### Work
+
+- `docs/adr/ADR-002-authentication-session.md`: local credentials plus
+  server-side sessions as the first mechanism, OIDC as a documented extension
+  seam; stdlib `scrypt` credential hashing with a self-describing hash string;
+  256-bit opaque session tokens with only the SHA-256 persisted; `sessions`
+  table through the persistence port; 30-minute idle and 12-hour absolute
+  expiry; rotation on login, privilege change, and password change; nine
+  enumerated revocation triggers with membership-active coupling; cookie
+  attributes including the `__Host-` prefix when secure; a required custom
+  header plus `Origin` check for CSRF; and a three-point fail-closed guard that
+  makes `SingleUserAuthProvider` unselectable outside `demo`/`test`.
+- `docs/adr/README.md`: ADR-002 index row flipped to Accepted.
+- Five open questions (A1-A5) recorded with defaults so they do not block the
+  Phase 1 tickets.
+
+### Validation
+
+- Backend `pytest`: **206 passed, 1 warning** (68.08s) — run in this session in a
+  freshly created `.venv` (`uv venv --python 3.12`).
+- Backend `ruff check app tests`: **All checks passed!**
+- `git status --porcelain`: only `docs/adr/README.md` (modified) and
+  `docs/adr/ADR-002-authentication-session.md` (added). `git diff --stat`:
+  1 file, +1/-1.
+- Frontend not run: no frontend file or dependency changed, and `node_modules`
+  is absent in this workspace. No frontend claim is made.
+
+### Git
+
+- Branch `wingman/adr-002-authentication-session` cut from `90decc5`, commit
+  `4a6a599`, pushed. PR #109: 2 files, +384/-1.
+- This state entry lands on `wingman/state-session-3` (PR #110), which session 3
+  opened for the same artifact, rather than opening a competing state PR.
+
+### Failures and recovery
+
+- None blocking. The workspace was a shallow graft at `1185ce9`, one commit
+  behind `main`; `git fetch --unshallow` was needed before branch reconciliation
+  could be reasoned about.
+
+### Dependency reconciliation at end
+
+- #24 (P1-09), #25 (P1-10), #26 (P1-11), #27 (P1-12), #30 (P1-15) each had `#4`
+  satisfied in their dependency lists. None were relabelled, because each still
+  carries unmet dependencies (#21, #19, #104) that this session did not touch.
+  Promoting them would have been a false unblock.
+- #9 (ADR-007) stays blocked on #8. #16-#104 stay blocked on their own chains.
+
+### Next
+
+**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
+It is the highest-priority READY ADR, P0-critical, and gates #20-#22 and #32.
+ADR-002 §3 (session table) and §8 (membership coupling) give it inputs it would
+otherwise have had to decide. Alternatives: #8 (ADR-006), #14 (test harness).

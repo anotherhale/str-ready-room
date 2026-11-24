@@ -47,6 +47,12 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
+- **ADR-002 accepted** (PR #109, awaiting merge). First mechanism: local
+  credentials plus server-side sessions; OIDC is an extension seam only. stdlib
+  `scrypt` hashing, opaque 256-bit tokens with only the SHA-256 stored, 30-minute
+  idle / 12-hour absolute expiry, nine enumerated revocation triggers, and a
+  fail-closed guard that refuses `SingleUserAuthProvider` outside `demo`/`test`.
+  See `docs/adr/ADR-002-authentication-session.md`.
 - **ADR-001 accepted and merged to `main`** (`90decc5`, PR #105). Target:
   self-hosted single host inside a controlled network. Classification ceiling:
   **unclassified, synthetic data only**. No-egress default. See
@@ -108,12 +114,18 @@ downstream work.
 
 ## Next recommended ticket
 
-**#4 — ADR-002 (authentication provider, session storage, and cookie strategy).**
-Rationale: ADR-001 §4 already fixes its inputs — a self-contained auth path with
-no assumed IdP, server-side revocable sessions, `HttpOnly`/`SameSite`/`Secure`
-cookies, and a demo provider that startup must refuse outside the demo
-environment. It is P0-critical and gates every identity-dependent ticket, and the
-questions are settled enough to decide in one window.
+**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
+Rationale: highest-priority READY ADR, P0-critical, gates #20-#22 and #32.
+ADR-002 already fixes the session table shape and the membership-active coupling,
+so #7 decides isolation and migration without re-litigating authentication.
 
-Alternative if #4 is already claimed: **#5 — ADR-003**, then **#6 — ADR-004**.
+In flight, awaiting merge — check before starting anything:
+
+| PR | Ticket | Status |
+|---|---|---|
+| #108 | #6 ADR-004 | `verification`; close #6 when merged |
+| #109 | #4 ADR-002 | `in-progress`; close #4 when merged |
+| #110 | coordinator state | session 3 + session 4 log |
+
+Alternative if #7 is claimed: **#8 — ADR-006**, then **#14 — test harness**.
 Do not start #9 (ADR-007) until #8 is closed.

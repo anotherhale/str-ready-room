@@ -1,51 +1,61 @@
 {
-  "last_run": "2026-11-24T18:20Z",
-  "session": 3,
-  "main_sha_at_start": "90decc5",
-  "local_clone_sha_at_start": "5fdae63",
-  "branch": "wingman/coordinator-state",
+  "last_run": "2026-11-24T19:20Z",
+  "session": 4,
+  "main_sha_at_start": "6b48e66",
+  "local_clone_sha_at_start": "1185ce9",
+  "branch": "wingman/state-session-3",
   "last_ticket": {
-    "issue": 6,
-    "title": "ADR-004: Define the role and scoped-permission matrix",
+    "issue": 4,
+    "title": "ADR-002: authentication provider, session storage, and cookie strategy",
     "priority": "P0-critical",
     "type": "architecture",
-    "status": "verification",
+    "status": "in-progress",
     "issue_state": "open",
-    "pr": 108,
+    "pr": 109,
     "pr_base": "main",
     "pr_state": "open",
-    "closes_on": "merge of PR #108"
+    "closes_on": "merge of PR #109"
   },
-  "last_ticket_work_branch": "wingman/adr-004-role-permission-matrix",
-  "last_commit": "2a75665",
-  "last_commit_message": "docs(adr): add ADR-001 deployment, classification, and data-handling constraints",
+  "last_ticket_work_branch": "wingman/adr-002-authentication-session",
+  "last_commit": "4a6a599",
+  "last_commit_message": "docs(adr): add ADR-002 authentication, session, and cookie strategy",
   "changed_files": [
-    "docs/adr/ADR-004-role-permission-matrix.md",
-    "docs/adr/README.md",
-    "AGENTS.md"
+    "docs/adr/ADR-002-authentication-session.md",
+    "docs/adr/README.md"
   ],
   "validation": {
-    "backend_pytest": "206 passed, 1 warning (re-run on post-#105 main)",
-    "backend_ruff": "All checks passed",
-    "frontend_tests": "10 files / 39 tests passed",
-    "frontend_typecheck": "clean",
-    "frontend_build": "succeeded",
-    "adr_consistency": "54 catalog rows, 34 new, 54 matrix rows, identical sets, no malformed cells, negative assertions hold"
+    "backend_pytest": "206 passed, 1 warning in 68.08s (session 4, fresh .venv with uv --python 3.12)",
+    "backend_ruff": "All checks passed! (session 4)",
+    "frontend_tests": "not run \u2014 no frontend file changed; node_modules absent in this workspace",
+    "frontend_typecheck": "not run \u2014 same reason",
+    "frontend_build": "not run \u2014 same reason",
+    "diff_scope": "git status: only docs/adr/README.md modified and ADR-002 added; git diff --stat 1 file, +1/-1",
+    "notes": "Documentation-only change. Frontend claims from session 3 are not restated as session-4 evidence."
   },
   "open_prs": [
-    {
-      "number": 108,
-      "branch": "wingman/adr-004-role-permission-matrix",
-      "title": "docs(adr): ADR-004 role and scoped-permission matrix",
-      "state": "open",
-      "mergeable_state": "clean"
-    },
     {
       "number": 109,
       "branch": "wingman/adr-002-authentication-session",
       "title": "ADR-002: authentication provider, session storage, and cookie strategy",
       "state": "open",
-      "note": "opened by a parallel session; #4 is in review"
+      "issue": 4
+    },
+    {
+      "number": 108,
+      "branch": "wingman/adr-004-role-permission-matrix",
+      "title": "docs(adr): ADR-004 role and scoped-permission matrix",
+      "state": "open",
+      "issue": 6
+    },
+    {
+      "number": 110,
+      "branch": "wingman/state-session-3",
+      "title": "docs(wingman): record session 3 (ADR-004) in coordinator state",
+      "state": "open",
+      "carries": [
+        "session 3 log",
+        "session 4 log (this file)"
+      ]
     }
   ],
   "blockers": [
@@ -67,73 +77,59 @@
       "description": "ADR-004 (#6) awaiting merge in PR #108",
       "effect": "#18 and #19 stay blocked; the Phase 2/3 domain lanes cannot start",
       "unblock_action": "Merge PR #108"
+    },
+    {
+      "id": "B-004",
+      "description": "PR #109 (ADR-002) unmerged",
+      "effect": "#24 (P1-09) cannot start on its #4 dependency; #4 stays in-progress",
+      "unblock_action": "Review and merge PR #109"
     }
   ],
   "ready_queue": [
     {
       "order": 1,
-      "issue": 4,
-      "title": "ADR-002: authentication provider, session storage, cookie strategy",
-      "priority": "P0-critical",
-      "note": "in review (PR #109, opened by a parallel session)"
-    },
-    {
-      "order": 2,
-      "issue": 5,
-      "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
-      "priority": "P1-high"
-    },
-    {
-      "order": 3,
-      "issue": 6,
-      "title": "ADR-004: role and scoped-permission matrix",
-      "priority": "P0-critical",
-      "note": "in review (PR #108); remove from the ready queue on merge"
-    },
-    {
-      "order": 4,
       "issue": 7,
-      "title": "ADR-005: data isolation, owner migration, schema evolution",
+      "title": "ADR-005: squadron data isolation, owner migration, schema evolution",
       "priority": "P0-critical"
     },
     {
-      "order": 5,
+      "order": 2,
       "issue": 8,
       "title": "ADR-006: task scope, sharing, accountable ownership",
       "priority": "P0-critical"
     },
     {
-      "order": 6,
+      "order": 3,
       "issue": 14,
       "title": "Multi-principal test harness and configurable test auth provider",
       "priority": "P0-critical"
     },
     {
-      "order": 7,
+      "order": 4,
       "issue": 15,
       "title": "CI workflow running backend and frontend verification",
       "priority": "P1-high"
     },
     {
-      "order": 8,
+      "order": 5,
       "issue": 10,
       "title": "ADR-008: agent identity, delegation, approval binding",
       "priority": "P1-high"
     },
     {
-      "order": 9,
+      "order": 6,
       "issue": 11,
       "title": "ADR-009: Jev provider, context assembly, failure strategy",
       "priority": "P1-high"
     },
     {
-      "order": 10,
+      "order": 7,
       "issue": 12,
       "title": "ADR-010: workflow persistence, retries, cancellation, idempotency",
       "priority": "P1-high"
     },
     {
-      "order": 11,
+      "order": 8,
       "issue": 13,
       "title": "ADR-011: notification channels/preferences and audit retention",
       "priority": "P2-normal"
@@ -146,12 +142,24 @@
       "blocked_on": [
         8
       ]
+    },
+    {
+      "issue": 4,
+      "title": "ADR-002 (this session)",
+      "blocked_on": [],
+      "note": "awaiting PR #109 merge, not blocked on another ticket"
+    },
+    {
+      "issue": 6,
+      "title": "ADR-004",
+      "blocked_on": [],
+      "note": "awaiting PR #108 merge"
     }
   ],
   "recommended_next_ticket": {
     "issue": 7,
-    "title": "ADR-005: squadron data isolation, owner migration, and schema evolution",
-    "rationale": "The highest-priority ADR that is READY and not already claimed: #6 is in review (#108), #4 is in review (#109). ADR-005 fixes the ownership and schema-evolution model that #8, #20-#21, and #32 all build on.",
+    "title": "ADR-005: Decide squadron data isolation, owner migration, and schema evolution",
+    "rationale": "Highest-priority READY ADR and P0-critical. Gates #20-#22 and #32. ADR-002 already fixes the session table shape and membership coupling, so #7 can decide isolation and migration without re-litigating authentication.",
     "alternatives": [
       8,
       14
@@ -162,8 +170,11 @@
     "Local clone was shallow at 5fdae63 while origin/main had advanced to 1185ce9; state work was branched from current origin/main.",
     "The run workspace was deleted mid-session; the repository was re-cloned and work resumed from origin branches.",
     "PR #107 was superseded by PR #108 (rebuilt on main after #105 merged).",
-    "Session 3 took #6 rather than session 2's recommendation #4 because #6 was already in progress and gates more downstream work."
+    "Session 3 took #6 rather than session 2's recommendation #4 because #6 was already in progress and gates more downstream work.",
+    "Session 4: #4 was still labelled `blocked`/`ready` after #3 closed. Reconciled to `in-progress` on evidence (ADR-001 on main at 90decc5) before doing any work.",
+    "Session 4: PR #106 merged into main as 6b48e66, resolving checkpoint blocker B-003.",
+    "Session 4: health/status claims in the ticket body ('BLOCKED') were stale and were corrected in place rather than left to mislead the next reader."
   ],
-  "next_execution_action": "Read docs/WINGMAN/STATE.md and CHECKPOINT.json. Recheck PRs #108 and #109: on merge, close #6/#4 and unblock their dependents (#18, #19, #24-#27, #30, #34). Then claim #7 (ADR-005) unless a parallel session already has it.",
+  "next_execution_action": "Read docs/WINGMAN/STATE.md. Check whether PR #109 and PR #108 merged. If #109 merged, close #4; if #108 merged, close #6. Then claim #7 (ADR-005): label in-progress, read docs/adr/ADR-001 and ADR-002 plus issue #7, write docs/adr/ADR-005-*.md, flip its index row to Accepted, run pytest and ruff, open one PR, and append a session 5 log entry.",
   "main_sha_now": "6b48e66"
 }

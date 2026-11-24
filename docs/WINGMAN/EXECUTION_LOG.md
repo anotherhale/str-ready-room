@@ -672,3 +672,57 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 14 — 2026-11-24 — #137 main-red fix (run `20261124T2032Z-ed6f`)
+
+**Selected:** #137 — *Fix InMemoryMailboxProvider missing purge()* (P1-high, backend,
+est. 10 min). `main` was red at `a99f2dc`: 13 failed, 185 passed, 22 errors.
+
+### Work
+
+- Added `InMemoryMailboxProvider.purge()` to `backend/tests/doubles.py` (8 lines):
+  fail closed with `MailboxError(status=502)` when unreachable, otherwise clear the
+  message list and return the count removed.
+- No production file touched. `InMemoryCalendarProvider` already satisfied every
+  `CalendarProvider` abstract method.
+
+### Validation
+
+| Command | Result |
+|---|---|
+| `backend/.venv/bin/python -m pytest` | **220 passed**, 1 warning (19.00 s); before: 13 failed / 185 passed / 22 errors |
+| `backend/.venv/bin/ruff check app tests` | All checks passed |
+| `backend/.venv/bin/mypy app` | Success: no issues found in 84 source files |
+| `git diff --stat` | `backend/tests/doubles.py | 8 ++++` |
+
+Frontend not run: no frontend file changed. Dev environment had to be rebuilt
+(`uv venv --python 3.12`, `uv pip install -e '.[dev]'`) — the run workspace ships
+without pytest.
+
+### Git
+
+- Branch `wingman/issue-137/mailbox-provider-purge`, commit `b719216`.
+- PR **#138** → `main`, open, not merged.
+
+### Dependency reconciliation
+
+- **#137 → in review** (PR #138); the issue now carries `verification`, not `ready`.
+- **#11 / #12 / #13 remain READY** and are the next candidates; #11 (ADR-009) is highest value.
+- **#15 stays blocked** — the token cannot write `.github/workflows`; the workflow
+  content is already authored in the issue trail.
+- **#51 stays blocked** on ADR-003 (#5, PR #133).
+- **#131 has a live claim** on `refs/wingman/claims/issue-131` (session 11 never released);
+  it must be inspected/released before anyone selects it.
+- Discovered: `refs/wingman/claim-epochs/issue-137/e1` exists with **no** matching
+  `claims/issue-137` ref — the claim-create path can leave a dangling epoch. Evidence for #124/#131.
+
+### Next
+
+**#11 — ADR-009** (P1-high, no dependencies). Alternatives: #12, #13, or land the
+open review queue (#136, #138, #135, #134, #133, #130).
+
+### State persistence
+
+Run record written: `docs/WINGMAN/runs/20261124T2032Z-ed6f.{json,md}`. `STATE.md`
+and `CHECKPOINT.json` were intentionally left to the open state PRs (#130, #134, #135)
+rather than adding a fifth conflicting snapshot; #126 is the durable fix.

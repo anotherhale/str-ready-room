@@ -555,6 +555,10 @@ class Coordinator:
         self._stale_after = stale_after
         self._clock = clock
 
+    def now(self) -> datetime:
+        """The coordinator's clock — use this instead of `datetime.now()`."""
+        return self._clock()
+
     # ---------------------------------------------------------------- registry
 
     def register(
@@ -792,6 +796,9 @@ class Coordinator:
         if effective is not None and not released_at:
             moments = [_parse(effective.expires_at)] + [_parse(lease.expires_at) for lease in leases]
             expires_at = _iso(max(moments))
+            # The derived claim must carry the live lease expiry, so `claim.expired()`
+            # agrees with `TicketState.expires_at` for every consumer.
+            effective = replace(effective, expires_at=expires_at)
         intents = [
             payload
             for payload in self._store.list(f"{RECOVERY_INTENT_PREFIX}{ticket}/").values()

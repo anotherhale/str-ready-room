@@ -171,6 +171,36 @@ here. Keep this file current when a durable invariant or boundary changes.
 - Seed data is **synthetic** (fictional detachment, made-up names). Never use
   real classified, sensitive, or operational military information.
 
+## Notifications and audit
+
+- **Audit is written in the state change's transaction; notifications are
+  written after it commits.** Audit failure rolls the action back
+  (`503 audit_unavailable`); notification failure is logged, counted, and
+  dropped. Never emit a notification inside the mutating transaction, and never
+  let a notification adapter error roll back a completion or approval.
+- **Nothing derives state from notifications.** "Acknowledged", "approved", and
+  "complete" come from their own columns, never from `read_at`. A lost or
+  delayed notification cannot change work state (ADR-011 §8).
+- **Audit entries are append-only** (`AuditEntry` + `AuditWriter` port, no update
+  or delete method). `action` reuses the ADR-004 permission verb so the audit and
+  authorization vocabularies cannot drift. Every denied write is audited; reads
+  are not, except reads of the audit log itself.
+- **Neither table stores payloads.** Identifiers, enums, dates, and booleans
+  only — never a description, comment, email/calendar body, Jev prompt, or
+  credential. `changes` is an allowlisted field delta; a title change is recorded
+  as `{"title": "changed"}` (ADR-011 §9).
+- **Recipients are a subset of readers.** Resolve candidates from the resource,
+  then drop anyone who cannot read it, drop the actor, and drop non-`ACTIVE`
+  memberships — using the same visibility policy as every other read path. A
+  watcher (read share) never receives an event that implies a duty.
+- **Notifications are personal-scope rows** (`recipient_id` is the boundary);
+  `notifications:read` alone does not authorize reading someone else's row.
+  `audit:read` is `squadron_admin` only, squadron-scoped, and never delegable to
+  an agent.
+- **In-app is the only channel.** Adding a channel means a new
+  `NotificationChannel` adapter plus a tested preference field, never a change
+  to recipient resolution or the event catalog.
+
 ## Integrations (calendar + mailbox)
 
 - Both integrations are **on by default** (`READY_ROOM_CALENDAR_PROVIDER=caldav`,

@@ -785,3 +785,38 @@ appended as decisions are made. Each entry is tagged with its category:
   the new, stronger invariant (exactly the three demo messages after reset), and
   new tests cover the clear being idempotent, provider-outage-safe, and
   arrivals-then-reset returning to baseline.
+
+## D-041 — The type gate covers the test tree, so a drifted test double cannot merge (2026-11-24)
+
+- **Category:** ED
+- **Context:** D-040 added `purge()` to the `MailboxProvider` port and updated
+  the IMAP adapter, but not `tests/doubles.py::InMemoryMailboxProvider`. `main`
+  went red — 35 integration tests error at collection with
+  `TypeError: Can't instantiate abstract class ... with abstract method purge`
+  (issue #137) — while every documented gate stayed green, because the type gate
+  was `mypy app`. The drift *was* a type error; nothing was looking at it. A test
+  double is a second implementation of a port, so it carries exactly the same
+  obligation to satisfy the port, and it is invisible to a gate that only reads
+  the application package.
+- **Decision:** `[tool.mypy]` in `backend/pyproject.toml` sets
+  `files = ["app", "tests"]`. The gate that runs in CI and in every WINGMAN
+  validation step now type-checks the doubles against their ports, and the
+  documented commands (`README.md`, `BUILD_STATUS.md`, `AGENTS.md`) match it. The
+  two pre-existing `[arg-type]` errors that blocked the wider scope — the
+  `make_task`/`make_rule` factories splatting `dict[str, object]` — were fixed by
+  typing the override mapping as `dict[str, Any]`; no assertion changed.
+- **Alternatives:** (a) Leave the gate on `app` and rely on someone running the
+  suite before merge — rejected: that is the failure that produced #137, and
+  `main` has no automatic gate yet (#15 is blocked on token scope). (b) Add a
+  separate `mypy tests` invocation in a hand-written script — rejected: two
+  commands drift, and a plain `mypy` would still tell the truth only about the
+  application. (c) Suppress the factory errors with `# type: ignore` — rejected:
+  the factories are correct, their annotations were not.
+- **Consequences:** The stale-double failure mode is now caught statically and
+  before merge: on unfixed `main` the widened gate reports exactly one error,
+  `Cannot instantiate abstract class "InMemoryMailboxProvider" with abstract
+  attribute "purge"`, and zero once #137 lands. `mypy` now checks 115 source
+  files instead of 84, so test-only typing slack is gone; the suite still runs
+  220 tests and `ruff check app tests` stays clean. Test doubles remain genuine
+  second adapters and must keep up with their ports — the same rule `AGENTS.md`
+  already states for exercising adapters against real protocols.

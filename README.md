@@ -395,7 +395,7 @@ Backend (from `backend/`, with a virtualenv):
 ```bash
 python -m pytest                 # unit + integration + architecture
 ruff check .
-mypy app
+mypy                            # app + tests (see [tool.mypy] files)
 ```
 
 Run the same persistence/service suite against PostgreSQL (optional; needs a

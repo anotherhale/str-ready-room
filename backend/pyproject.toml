@@ -48,6 +48,9 @@ ignore = ["B008", "UP042"]
 "tests/**" = ["E501"]
 
 [tool.mypy]
+# The test tree is in scope on purpose: a test double that drifts from its
+# port is a type error, and this gate must report it before merge (see #137).
+files = ["app", "tests"]
 python_version = "3.12"
 warn_unused_ignores = false
 ignore_missing_imports = true

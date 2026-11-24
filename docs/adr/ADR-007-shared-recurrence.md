@@ -266,8 +266,9 @@ occurrences generated after it; an occurrence edit affects only that occurrence.
 
 `escalation_policy_id` is stored and surfaced but has no first-cut behaviour.
 Escalation rules (reminders, reassignment after N days, notification escalation)
-are `P3-11`/`#63`; they must be implemented as a policy evaluated on read or by a
-scheduler, never as extra columns on the chain and never as a second generator
+have no ticket yet; the scan's duty-routing and at-risk visibility land in
+`P3-11`/`#61`. When prioritised, escalation must be a policy evaluated on read or
+by a scheduler — never extra columns on the chain and never a second generator
 competing with completion.
 
 ### 11. Migration and compatibility

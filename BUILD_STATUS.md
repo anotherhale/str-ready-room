@@ -36,6 +36,7 @@ Last updated: 2026-11-13
 
 ## Verification log
 
+- 2026-11-24 — type gate widened to the test tree (`[tool.mypy] files = ["app", "tests"]`); `mypy` -> **Success: no issues found in 115 source files**, `pytest` -> **220 passed**, `ruff check app tests` -> clean. Negative control on unfixed `main`: the gate reports `error: Cannot instantiate abstract class "InMemoryMailboxProvider" with abstract attribute "purge"  [abstract]` — the stale test double cannot reach `main` again (D-041).
 - 2026-11-11 — `pytest tests/unit -q` -> **59 passed** (M1 gate).
 - 2026-11-11 — `pytest` (full) -> **120 passed, 1 warning** (M2–M4, M6, M7).
 - 2026-11-11 — `ruff check .` -> **All checks passed**; `mypy app` ->

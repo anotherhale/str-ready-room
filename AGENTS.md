@@ -272,7 +272,7 @@ here. Keep this file current when a durable invariant or boundary changes.
 
 ```bash
 # backend
-cd backend && python -m pytest -q
+cd backend && python -m pytest -q && ruff check app tests && mypy
 # frontend
 cd frontend && npm test -- --run && npm run build
 ```

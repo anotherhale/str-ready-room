@@ -3,6 +3,7 @@ conditions, bounded no-backfill, and preview."""
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 import pytest
 
@@ -20,8 +21,8 @@ from app.domain.tasks.recurrence import (
 CREATED = datetime(2026, 1, 1, 12, 0, 0)
 
 
-def make_rule(**overrides) -> RecurrenceRule:
-    base = {
+def make_rule(**overrides: Any) -> RecurrenceRule:
+    base: dict[str, Any] = {
         "id": "rule-1",
         "owner_id": "op-1",
         "name": "Test rule",

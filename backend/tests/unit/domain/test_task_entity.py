@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 import pytest
 
@@ -13,8 +14,8 @@ NOW = datetime(2026, 3, 10, 9, 0, 0)
 LATER = datetime(2026, 3, 10, 17, 0, 0)
 
 
-def make_task(**overrides) -> Task:
-    base = {
+def make_task(**overrides: Any) -> Task:
+    base: dict[str, Any] = {
         "id": "t1",
         "owner_id": "op-1",
         "title": "Review maintenance documentation",

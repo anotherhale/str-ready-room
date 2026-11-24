@@ -9,7 +9,7 @@ record rather than deleting it.
 |---|---|---|
 | [ADR-001](ADR-001-deployment-classification.md) | Deployment, classification, and data-handling constraints | Accepted; working defaults adopted for Q1-Q7, formal authorization for real data outstanding ([#113](https://github.com/anotherhale/str-ready-room/issues/113)) |
 | [ADR-002](ADR-002-authentication-session.md) | Authentication provider, session storage, and cookie strategy | Accepted 2026-11-24 ([#4](https://github.com/anotherhale/str-ready-room/issues/4)) |
-| ADR-003 | Squadron bootstrap, invitation, and membership lifecycle | Pending ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
+| [ADR-003](ADR-003-squadron-bootstrap-membership.md) | Squadron bootstrap, invitation, and membership lifecycle | Accepted 2026-11-24 ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
 | [ADR-004](ADR-004-role-permission-matrix.md) | Role and scoped-permission matrix | Accepted 2026-11-24 ([#6](https://github.com/anotherhale/str-ready-room/issues/6)) |
 | [ADR-005](ADR-005-data-isolation-migration.md) | Data isolation, owner migration, and schema evolution | Accepted 2026-11-24 ([#7](https://github.com/anotherhale/str-ready-room/issues/7)) |
 | [ADR-006](ADR-006-task-scope-sharing.md) | Task scope, sharing, and accountable-ownership semantics | Accepted 2026-11-24 ([#8](https://github.com/anotherhale/str-ready-room/issues/8)) |

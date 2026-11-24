@@ -128,6 +128,34 @@ here. Keep this file current when a durable invariant or boundary changes.
 - `SingleUserAuthProvider` is a demo/development identity adapter. There is
   **no** login, session, or token flow, and the demo is **not** production
   security.
+
+## Squadron bootstrap and membership (ADR-003)
+
+- **One squadron per installation.** The squadron is a security boundary, not a
+  tenant selector: it is resolved from the principal's membership, never from a
+  request field, and a second squadron is never creatable through the API.
+- **The first administrator exists only through operator bootstrap** (a CLI
+  command run inside the deployment) or the demo seed, which calls the same
+  function. There is no public admin endpoint and no "first user becomes admin"
+  rule. Bootstrap is idempotent: restarting must not create a second squadron or
+  a second bootstrap administrator.
+- An uninitialized deployment answers `503 not_bootstrapped` and never degrades
+  into permissive behaviour.
+- Membership states are `INVITED`, `ACTIVE`, `SUSPENDED`, `REMOVED`; **only
+  `ACTIVE` authorizes**, and state is evaluated before any permission.
+- **Removal is terminal for access.** Re-entry requires a new invitation and
+  acceptance — there is no direct `REMOVED → ACTIVE` action. The membership row
+  and history are reused so shares and accountability stay attached.
+- No one may change their own membership, and the last `ACTIVE`
+  `squadron_admin` cannot be suspended or removed.
+- Invitation tokens are random, stored only as a hash, single-use, and expiring
+  (default 7 days); acceptance returns one uniform error for unknown, expired,
+  revoked, and already-accepted tokens. An invitee never chooses its role,
+  squadron, or team.
+- **Suspension and removal revoke every session** and never delete or silently
+  reassign owned work. Affected tasks report "no accountable owner", duty
+  positions are vacated, shares become inert (retained), and a
+  `reassignment_required` attention item asks a human to hand the work over.
 - Authorization is **deny-by-default and scope-aware** (ADR-004). Evaluation is
   ordered and short-circuiting: `ACTIVE` membership, then the role permission,
   then the resource scope (`personal`/`shared`/`team`/`squadron`/

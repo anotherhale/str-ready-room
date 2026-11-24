@@ -11,7 +11,7 @@ record rather than deleting it.
 | ADR-002 | Authentication provider, session storage, and cookie strategy | Pending ([#4](https://github.com/anotherhale/str-ready-room/issues/4)) |
 | ADR-003 | Squadron bootstrap, invitation, and membership lifecycle | Pending ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
 | ADR-004 | Role and scoped-permission matrix | Pending ([#6](https://github.com/anotherhale/str-ready-room/issues/6)) |
-| ADR-005 | Data isolation, owner migration, and schema evolution | Pending ([#7](https://github.com/anotherhale/str-ready-room/issues/7)) |
+| [ADR-005](ADR-005-data-isolation-migration.md) | Data isolation, owner migration, and schema evolution | Accepted ([#7](https://github.com/anotherhale/str-ready-room/issues/7)) |
 | ADR-006 | Task scope, sharing, and accountable-ownership semantics | Pending ([#8](https://github.com/anotherhale/str-ready-room/issues/8)) |
 | ADR-007 | Shared recurrence, duty-position routing, occurrence exceptions | Pending ([#9](https://github.com/anotherhale/str-ready-room/issues/9)) |
 | ADR-008 | Agent identity, delegation, and approval binding | Pending ([#10](https://github.com/anotherhale/str-ready-room/issues/10)) |

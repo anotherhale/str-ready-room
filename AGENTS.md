@@ -63,7 +63,19 @@ here. Keep this file current when a durable invariant or boundary changes.
 - Dialect is chosen from `READY_ROOM_DATABASE_URL`; the SQLAlchemy adapter must
   stay portable (no SQLite-only assumptions). `READY_ROOM_TEST_DATABASE_URL`
   lets the same suite run against PostgreSQL.
-- The additive schema-evolution helper is idempotent and never destroys data.
+- **Squadron scope is a data-access boundary, not a route-handler check** (ADR-005).
+  Every squadron-scoped table carries `squadron_id` **and** keeps `owner_id`
+  ("whose record" is not "which tenant"). Indexes lead with `squadron_id`, and
+  every repository read takes a `ScopeCriteria` built in one place from the
+  resolved principal — never from a request field. Cross-squadron reads return
+  `404` (do not confirm existence); an in-squadron scope denial returns `403`.
+  Aggregate/summary reads go through scoped repository methods, never ad-hoc SQL.
+- **Schema evolution is a versioned, forward-only runner**, not a fixed
+  column-add tuple. Migrations are ordered, recorded in `schema_migrations`,
+  idempotent, and data-preserving — they never drop or rewrite rows. Tenant
+  columns land as expand → backfill → startup guard (fails closed on any null
+  tenant key) → contract in a later release. Every step ships with a fixture test
+  that asserts row-for-row survival plus idempotency.
 - **Repositories must persist every mapped field on update.** `save` copies all
   columns via the single mapper, never a hand-written field list — a hand-written
   list silently drops newly added fields (this broke `demo_arrival_seq`).

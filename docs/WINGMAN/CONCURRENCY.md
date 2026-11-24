@@ -50,9 +50,10 @@ Two sessions ran against one workspace during session 6 and both selected #8.
 
 ### Observed failure B-007 (new, session 9)
 
-Two open coordinator-state PRs (#118, #120) from concurrent sessions edit the same
-three files (`STATE.md`, `CHECKPOINT.json`, `EXECUTION_LOG.md`) from the same base.
-They conflict with each other, and any third session's state PR conflicts with both.
+Two coordinator-state PRs (#118 from session 7, #120 from session 8) were open at the
+same time and edited the same three files (`STATE.md`, `CHECKPOINT.json`,
+`EXECUTION_LOG.md`). They could not both merge unreconciled, so the owner resolved them
+by hand. With three or more sessions the same pattern guarantees repeated conflicts.
 
 - **Root cause:** state persisted by appending to shared mutable files at end of run.
 - **Impact:** state merges are serialised by hand and can be dropped; the recovery
@@ -60,6 +61,24 @@ They conflict with each other, and any third session's state PR conflicts with b
 - **Prevention:** run-scoped artifacts `docs/WINGMAN/runs/<RUN_ID>.json`, a generated
   `RUNS.md`, and registry refs as the source of truth (#126). This session already
   writes only run-scoped files for its own state.
+
+### Observed failure B-008 (new, session 9)
+
+The run workspace was shared with another session, which fetched and checked `main`
+out under this run mid-execution. The next commit therefore landed on `main` instead of
+the ticket branch and was pushed there before the branch state was re-checked.
+
+- **Root cause:** one working directory shared by independent runs; `HEAD` is workspace
+  state, not run state.
+- **Contributing factors:** branch identity was never *verified* before committing, and
+  the run had no dedicated worktree (the isolation ticket, #125, was still open).
+- **Impact:** one unreviewed commit reached `main`; no other session's work was lost.
+  Remediated by reverting it on `main` and re-applying the same tree on
+  `wingman/issue-122/run-<RUN_ID>` for review.
+- **Prevention:** one worktree per run (#125), plus a pre-commit check that the current
+  branch matches the claimed branch and that `origin/main` is untouched.
+- **Recovery mechanism:** revert on `main` (never force-push), re-apply on the ticket
+  branch, disclose in the PR.
 
 ## 2. Coordination authority
 
@@ -151,3 +170,11 @@ A local workspace file is never authoritative for run ownership.
 | Concurrency is enabled by scheduler, not earned | #128 gates Phase B/C on #127 |
 
 Until #127 passes, the rollout stays at **Phase A: one implementation session**.
+
+## 7. Reconciliation log
+
+- **Run `20261124T1851Z-5efb` (session 9)**: at start, #9 (PR #119) and #14 (PR #117)
+  were in progress with state PRs #118/#120 open, so both tickets were excluded. During
+  the run all four merged, so at handoff #9 and #14 are done and the READY queue was
+  recomputed from live issue state. The registry held only this run's entry; no stale
+  claims were found.

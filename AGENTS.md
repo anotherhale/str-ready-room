@@ -42,6 +42,28 @@ here. Keep this file current when a durable invariant or boundary changes.
   it** — completed history keeps its linkage.
 - **Overdue tasks never disappear.** Completed tasks never appear in active
   operational sections.
+- **A task has four visibility scopes** — `personal`, `shared`, `team`,
+  `squadron` — and exactly one **accountable owner** (a human user). A duty
+  position is an *assignee kind*, never a fifth task scope (ADR-006).
+- **Ownership roles are distinct, not interchangeable** (ADR-006). Accountable
+  owner (1, user), assignee (0..1: user/team/duty position), collaborators
+  (many, write), watchers (many, read). Shared work never implies every member is
+  responsible, and a watcher never gains a mutating verb.
+- **Shares are one table with two levels.** `task_shares(task_id, squadron_id,
+  user_id, access ∈ {read, write})`: a `write` share *is* a collaborator, a
+  `read` share *is* a watcher. A read share never authorizes a write. Do not add
+  a second collaborator table — two sources of truth drift from the policy.
+- **"No accountable owner" means the owner's membership is not `ACTIVE`**, not a
+  null column. Such tasks are surfaced for reassignment and stay reachable by
+  `squadron_admin` and the owning team lead; shares held by non-active members
+  are inert but retained, and restored on reactivation.
+- **A task's visibility is computed once** by a single pure policy that also
+  emits the repository filter keys (ADR-006 §8). List paths filter in SQL, never
+  post-fetch — post-filtering leaks through counts, pagination, and timing.
+  Every read path (scan, briefing, search, notifications, turnover, Jev context)
+  uses the same policy.
+- **Reassignment clears acknowledgment**; acknowledging never changes status and
+  never implies completion. An agent may never acknowledge a task.
 
 ## Time
 

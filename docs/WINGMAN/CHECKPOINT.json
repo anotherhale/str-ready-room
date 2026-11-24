@@ -45,46 +45,12 @@
     "backend_ruff_at_merged_head": "All checks passed!",
     "issue_7": "closed automatically by the merge of PR #111; labels ready/in-progress removed"
   },
-  "open_prs": [
-    {
-      "number": 111,
-      "branch": "wingman/adr-005-data-isolation-migration",
-      "title": "docs(adr): ADR-005 - squadron data isolation, owner migration, and schema evolution",
-      "state": "open",
-      "issue": 7
-    },
-    {
-      "number": 109,
-      "branch": "wingman/adr-002-authentication-session",
-      "title": "ADR-002: authentication provider, session storage, and cookie strategy",
-      "state": "open",
-      "issue": 4
-    },
-    {
-      "number": 108,
-      "branch": "wingman/adr-004-role-permission-matrix",
-      "title": "docs(adr): ADR-004 role and scoped-permission matrix",
-      "state": "open",
-      "issue": 6
-    },
-    {
-      "number": 110,
-      "branch": "wingman/state-session-3",
-      "title": "docs(wingman): coordinator state",
-      "state": "open",
-      "issue": null
-    }
-  ],
+  "open_prs": [],
   "blockers": [
     {
       "blocker": "Formal confirmation of the Q1-Q7 defaults",
       "effect": "Real operation/personnel data cannot be stored; does not block the unclassified synthetic build",
       "owner": "Authorizing Official et al."
-    },
-    {
-      "blocker": "ADR-002 PR #109, ADR-004 PR #108, ADR-005 PR #111 awaiting merge",
-      "effect": "Dependent implementation tickets can be planned but not closed against them",
-      "owner": "Reviewer"
     }
   ],
   "ready_queue": [

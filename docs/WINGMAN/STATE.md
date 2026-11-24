@@ -57,17 +57,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
   `schema_migrations` (Alembic deferred), rolled out expand → backfill → startup
   guard → `NOT NULL` contract. See
   `docs/adr/ADR-005-data-isolation-migration.md`.
-- **ADR-005 accepted and merged** (PR #111, `main` `dc98f8d`). Every squadron-scoped table
-  carries `squadron_id` **and** keeps `owner_id`; indexes lead with the tenant
-  key; the tenant is derived from the resolved membership and never from a
-  request. Isolation is enforced in three layers (ADR-004 authorization → a
-  `ScopeCriteria` built in one place → tenant-leading DB indexes); cross-squadron
-  reads return `404`, in-squadron scope denials `403`. Schema evolution becomes a
-  versioned, forward-only, data-preserving runner recorded in
-  `schema_migrations` (Alembic deferred), rolled out expand → backfill → startup
-  guard → `NOT NULL` contract. See
-  `docs/adr/ADR-005-data-isolation-migration.md`.
-- **ADR-002 accepted** (PR #109, awaiting merge). First mechanism: local
+- **ADR-002 accepted and merged** (PR #109, `main` `f594bb7`). First mechanism: local
   credentials plus server-side sessions; OIDC is an extension seam only. stdlib
   `scrypt` hashing, opaque 256-bit tokens with only the SHA-256 stored, 30-minute
   idle / 12-hour absolute expiry, nine enumerated revocation triggers, and a
@@ -84,7 +74,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
-- **ADR-004 accepted, awaiting merge** (PR #108, issue #6). Fixes five roles
+- **ADR-004 accepted and merged** (PR #108, `main` `af31b65`; issue #6). Fixes five roles
   (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
   54-permission catalog (20 existing + 34 new), a role x permission grant matrix
   with an explicit scope ceiling per grant, and an ordered deny-by-default
@@ -100,9 +90,6 @@ ADR set is settled; the ADR tickets are the only work in flight.
 | Blocker | Effect | Owner |
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
-| ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
-| ADR-002 (#4) in review as PR #109 (parallel session) | The identity lane (#24-#27, #30, #34) cannot start | Reviewer |
-| None — #7 merged in PR #111 | — | — |
 
 Nothing currently blocks ticket execution.
 
@@ -146,11 +133,4 @@ the cheapest way to make the ADR-005 isolation matrix executable, then **#5 —
 ADR-003**.
 Do not start #9 (ADR-007) until #8 is closed.
 
-In flight, awaiting merge — check before starting anything:
-
-| PR | Ticket | Status |
-|---|---|---|
-| #108 | #6 ADR-004 | `verification`; close #6 when merged |
-| #109 | #4 ADR-002 | `verification`; close #4 when merged |
-| #110 | coordinator state | sessions 3–5 |
-| #111 | #7 ADR-005 | merged (`dc98f8d`); #7 closed |
+In flight: none. All session 3-5 PRs (#108, #109, #110, #111) are merged.

@@ -1,0 +1,30 @@
+{
+  "run_id": "20261124T1949Z-6ca7",
+  "session": 12,
+  "ticket": 124,
+  "ticket_title": "Mandatory startup handshake, heartbeat, and claim-aware ticket selection",
+  "run_status": "VALIDATING",
+  "claim_status": "RELEASED",
+  "claim_epoch": 1,
+  "branch": "wingman/issue-124/run-20261124T1949Z-6ca7",
+  "worktree": "/tmp/wm/issue-124",
+  "pr": "#135 (draft)",
+  "started_at": "2026-11-24T19:49:00Z",
+  "predecessor": "integrated #129+#132 as 7af1ca7 (squash), closed #129 as superseded",
+  "delivered": [
+    "scripts/wingman/preflight.py - fail-closed handshake (register..EXECUTING)",
+    ".agents/skills/wingman-multi-session/SKILL.md - full procedure",
+    "WINGMAN.md - mandatory handshake table + rules",
+    "docs/WINGMAN/README.md - claim-aware selection, timebox table",
+    "coordination.now() and derived claim carries the live lease expiry"
+  ],
+  "validation": {
+    "coordination_and_preflight_tests": "50 passed",
+    "ruff": "All checks passed",
+    "live_dry_run": "selected P0 ticket, 96 excluded, no claim created",
+    "live_loser_path": "throwaway run claim #124 -> HELD_BY_OTHER (exit 3), holder unchanged",
+    "ci": "not run in CI - workflow push blocked by token scope (#15); local runs only"
+  },
+  "next_recommended_ticket": 125,
+  "rollout": "Phase A - single implementation worker; multi-worker gate (#127) not passed"
+}

@@ -672,3 +672,47 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 13 — 2026-11-24T20:04Z — ADR-008 (issue #10)
+
+- **Run:** `20261124T2005Z-249c`, claim epoch 1, isolated clone `/tmp/wm/issue-10`
+  (B-006/B-007 mitigation: never work in the shared run workspace).
+- **Selected:** #10 — ADR-008 agent identity, delegation, and approval binding
+  (P1-high, architecture, 25 min).
+- **Branch:** `wingman/issue-10/adr-008-agent-identity-delegation`, commit `a398b02`.
+- **PR:** #136 (open, not merged; issue #10 stays open until merge).
+
+### Work
+
+`docs/adr/ADR-008-agent-identity-delegation-approval.md` (new, 363 lines),
+ADR index row → Accepted, and a new `## Agent runtime (ADR-008)` section in
+`AGENTS.md`. Four decisions: an agent is a principal kind and never a role or a
+session; authority is an intersection recomputed per call; approval binds to a
+SHA-256 of a canonical parameter encoding; confirmation (the requesting human
+accepting their own draft) is distinct from approval (a different human holding
+`approvals:decide`).
+
+### Validation
+
+- `cd backend && python -m pytest tests/unit` → **85 passed**
+- full suite → **13 failed, 185 passed, 22 errors**, every one traced to #137
+- all ADR relative links resolve; `git show --stat` confirms documentation only
+
+### Discovery → #137
+
+`InMemoryMailboxProvider` in `backend/tests/doubles.py` was not updated when
+a99f2dc added `purge()` to the `MailboxProvider` port, so 35 integration tests
+fail or error at collection. Filed with the exact traceback, sized XS, labelled
+`ready`.
+
+### Dependency reconciliation
+
+- **#10 → in review** (PR #136).
+- `P5-01`..`P5-04`, `P5-08` and ADR-009 may now cite ADR-008 for identifiers and
+  hashes; `P5-03`/`P5-04` still wait on ADR-010 for run persistence.
+- **#137 added to READY at position 1** (restores the integration signal).
+- #51, #15, #5, #11, #12, #13 unchanged and still unblocked.
+
+### Next
+
+**#137** (XS, ~10 min), then **#51** (P3-01).

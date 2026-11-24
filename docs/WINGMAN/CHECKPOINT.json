@@ -2,8 +2,8 @@
   "last_run": "2026-11-24T11:45Z",
   "session": 5,
   "main_sha_at_start": "6b48e66",
-  "main_sha_now": "6b48e66",
-  "branch": "wingman/state-session-3",
+  "main_sha_now": "4b72868",
+  "branch": "wingman/state-session-5",
   "last_ticket": {
     "issue": 7,
     "title": "ADR-005: squadron data isolation, owner migration, schema evolution",
@@ -39,7 +39,9 @@
     "backend_ruff": "All checks passed!",
     "frontend_tests": "not run - no frontend file changed",
     "diff_scope": "3 files: ADR-005 added (+333), docs/adr/README.md +1/-1, AGENTS.md +13/-1; no app code, config, dependency, or test",
-    "notes": "Documentation-only change. Node modules absent in this workspace, so frontend claims from earlier sessions are not restated."
+    "notes": "Documentation-only change. Node modules absent in this workspace, so frontend claims from earlier sessions are not restated.",
+    "backend_pytest_at_merged_head": "206 tests, exit 0 (fresh uv venv, python 3.12, run at the merge commit on wingman/adr-005-data-isolation-migration)",
+    "backend_ruff_at_merged_head": "All checks passed!"
   },
   "open_prs": [
     {
@@ -143,6 +145,12 @@
     "ADR-005 is documentation only; implementation of the tenant column, ScopeCriteria, and the runner belongs to #20/#21/#32.",
     "Follow-up I1: schedule the NOT NULL contract migration one release after expand/backfill soaks.",
     "P1-05 (#20) must add versioned SQL fixtures under backend/tests/fixtures/schema/ as ADR-005 section 3 requires.",
-    "gh CLI is not installed in this workspace; GitHub operations use the REST API with GITHUB_TOKEN."
-  ]
+    "gh CLI is not installed in this workspace; GitHub operations use the REST API with GITHUB_TOKEN.",
+    "The workspace directory was deleted mid-session; recovered by re-cloning and cherry-picking the already-pushed state commit (65187ce). No work was lost besides an unpushed local merge commit, which was redone."
+  ],
+  "state_pr": 112,
+  "main_advanced_during_session": {
+    "detail": "PRs #108 (ADR-004), #109 (ADR-002), #110 (state) merged while session 5 ran; main moved 6b48e66 -> 4b72868",
+    "action": "ADR-005 branch merged main (only docs/adr/README.md conflicted; ADR-004 and ADR-005 both accepted, both rows kept); state commit re-applied on top of merged main as wingman/state-session-5 / PR #112"
+  }
 }

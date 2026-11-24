@@ -399,3 +399,18 @@ dependency, or test was modified.
 `STATE.md`, `DECISIONS.md`, `CHECKPOINT.json`, `REQUIREMENTS_TRACEABILITY.md`, and
 this log updated on the state branch (PR #110), so the ADR branch stays a
 documentation-only change.
+
+### Post-run reconciliation (same session)
+
+`main` advanced to `4b72868` while the session ran (PRs #108, #109, #110 merged),
+which made PR #111 conflict on `docs/adr/README.md`. Resolved by merging `main`
+into the ADR branch and keeping both accepted rows (ADR-004 and ADR-005); pushed
+as `28155f2`. Re-ran the backend suite at the merged head: 206 tests, exit 0,
+273-test progress dots, ruff clean.
+
+PR #110 was already merged, so the session-5 state commit was re-applied on top of
+merged `main` and opened as PR #112 (`wingman/state-session-5`).
+
+The workspace directory was deleted mid-session by the runtime. Recovery: re-clone
+from origin, `cherry-pick 65187ce` (the state commit already pushed), redo the
+merge in the ADR branch, and re-run validation. Nothing was lost.

@@ -111,3 +111,25 @@ and overturning one is an amendment to ADR-001 — not silent configuration drif
 **Consequences:** #4 (ADR-002) unblocked and promoted to the front of the queue;
 #11 (ADR-009) must default to a local/internal provider; #13 (ADR-011) can close
 on Q5's basis; #104's profile fields are bounded by Q4.
+
+### C-007 — The test harness must not pre-authorize the ADR-004 role matrix
+
+**Context.** P0-12 (#14) introduces a multi-principal test harness while the
+ADR-004 permission matrix is still unimplemented: today's `PolicyAuthorizer`
+knows only the demo grants for `operator` and `viewer`.
+
+**Decision.** `TestMember.principal()` maps only roles that have a live grant
+(`squadron_admin` → `operator`, `read_only` → `viewer`). `member`, `officer`
+and `team_lead` resolve as their pure ADR-004 roles and therefore hold no
+permission yet.
+
+**Why.** Mapping a future role onto `operator` would let tests pass against
+permissions the role will never have, and would make the ADR-004 implementation
+look complete before it exists. A red test that says "this role has no grant
+yet" is truthful; a green test built on a borrowed grant is not.
+
+**Consequence.** Feature tickets that need a `member` or `team_lead` grant
+(#19, #34, #37, #46) become executable when #18 lands the matrix; the fixtures
+inherit it with no change. `test_team_lead_has_no_demo_grant_until_adr_004_lands`
+pins this and must be deleted by #18.
+

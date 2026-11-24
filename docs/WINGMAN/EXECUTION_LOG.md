@@ -533,3 +533,58 @@ the end of the run.
 
 **#9 — ADR-007** (P1-high, 20 min): the last unmerged ADR that gates a whole
 implementation lane. Alternatives: #14 (P0-critical test harness), #15 (CI).
+
+## Session 7 — 2026-11-24
+
+**Selected ticket:** #14 / P0-12 — multi-principal test harness and
+configurable test auth provider (P0-critical, ~25 min, no open dependencies).
+
+**Starting state:** `main` @ `4e0abbd` (PR #116 merged); clean tree; #14 carried
+`ready, in-progress`; the only other READY tickets were ADRs #5, #9–#13 and #15.
+
+**Actions**
+
+1. Read the P0-12 ticket, `STATE.md`, and decisions C-001–C-006; inspected
+   `composition.py`, `api/dependencies/__init__.py`, `error_handlers.py`,
+   `tests/conftest.py`, `tests/doubles.py`.
+2. The run workspace directory was deleted mid-session and the validated,
+   uncommitted implementation was lost with it. Re-implemented from scratch in
+   the relocated workspace, then committed and pushed **before** writing docs.
+3. Implemented the harness: `MembershipState` / `TestMember` / `TestAuthProvider`
+   in `tests/doubles.py`; `squadron_roster`, `test_auth_provider`,
+   `test_container` fixtures; `AuthenticationError` (`unauthenticated`) in the
+   domain with a 401 mapping in `api/error_handlers.py`.
+4. Wrote nine tests covering roster shape, two principals in one test,
+   per-request selection, refusal of unselected and suspended identities, the
+   401-vs-403 split, read-only denial, and ownership-isolated task lists.
+5. Recorded DECISIONS C-007 (do not pre-authorize the ADR-004 matrix).
+
+**Validation**
+
+| Command | Result |
+|---|---|
+| `python -m pytest -q` | 215 passed, 0 failed, 0 errors (206 baseline + 9 new) |
+| `ruff check app tests` | All checks passed |
+| `mypy app` | Success: no issues found in 84 source files |
+
+**Git:** branch `wingman/p0-12-multi-principal-test-harness`, commit `e42f06a`,
+PR [#117](https://github.com/anotherhale/str-ready-room/pull/117) open against
+`main`. Not merged — WINGMAN does not self-merge.
+
+**GitHub:** #14 commented with implementation and validation evidence;
+`ready` removed, `in-progress` retained; ticket closes on merge.
+
+**Dependency reconciliation**
+
+- #34 (two-user isolation tests) now has a concrete prerequisite artifact; it
+  becomes READY when PR #117 merges (fixtures must exist on `main`).
+- #16 remains blocked on #5 only (#7 merged) — so #5 is now the highest-value
+  READY ticket.
+- No ticket was closed to unblock anything.
+
+**Failures:** one test failed on first run —
+`test_two_principals_get_isolated_task_lists` used `viper` (`member`), who holds
+no `tasks:read` grant under C-007. Fixed by asserting the empty list with
+`iceman` (`read_only`, which does hold `tasks:read`), so the assertion proves
+ownership filtering rather than a permission denial.
+

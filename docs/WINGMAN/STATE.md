@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 6)
+**Last updated:** 2026-11-24 (session 7)
 
 ## Artifact map
 
@@ -32,10 +32,10 @@ containerized. It has **no authentication**, **no squadron/membership model**, a
 
 | Area | State | Evidence |
 |---|---|---|
-| Backend (FastAPI, DDD + hexagonal) | Working | 206 tests pass, ruff clean |
+| Backend (FastAPI, DDD + hexagonal) | Working | 215 tests pass, ruff clean |
 | Frontend (React/TS SPA) | Working | 39 tests pass, typecheck clean, build succeeds |
 | Deployment | Single-host Docker Compose, SQLite volume, Radicale + GreenMail | `docker-compose.yml` |
-| Identity | `single_user` demo adapter only — no login, no session | `backend/app/adapters/identity/` |
+| Identity | `single_user` demo adapter only — no login, no session; a **test-only** multi-principal provider exists (P0-12, PR #117) | `backend/app/adapters/identity/`, `backend/tests/doubles.py` |
 | Authorization | Permission checks exist; no scope/ownership model for multiple principals | `backend/app/domain/authorization/` |
 | Squadron / membership | Absent | — |
 | Jev / agent runtime | Absent | — |
@@ -101,7 +101,12 @@ ADR set is settled; the ADR tickets are the only work in flight.
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults (product owner accepted defaults 2026-11-24; official sign-off outstanding, tracked in [#113](https://github.com/anotherhale/str-ready-room/issues/113)) | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 
-Nothing currently blocks the remaining READY ADRs or the test harness.
+Nothing currently blocks the remaining READY ADRs.
+
+**In review:** #14 (P0-12) — PR
+[#117](https://github.com/anotherhale/str-ready-room/pull/117), branch
+`wingman/p0-12-multi-principal-test-harness`, base `4e0abbd`. Implementation and
+validation are complete; the ticket closes on merge.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -111,32 +116,46 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) | ADR-007: shared recurrence, duty-position routing, occurrence exceptions | P1-high | 20 min |
-| 2 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
-| 3 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
-| 4 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 5 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
-| 6 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
-| 7 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
-| 8 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
+| 1 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
+| 2 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) | ADR-007: shared recurrence, duty-position routing, occurrence exceptions | P1-high | 20 min |
+| 3 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
+| 4 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 5 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
+| 6 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
+| 7 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
+
+#14 (multi-principal test harness) is **in review** on PR #117 and leaves this
+queue on merge.
 
 ## Blocked queue
 
 | Issue | Blocked on |
 |---|---|
-| #16–#104 (implementation tickets) | Their ADR and foundation dependencies; see each issue |
+| #16 (squadron aggregate) | #5 (ADR-003) — #7 already merged |
+| #34 (two-user isolation tests) | #14 (PR #117) merge — the harness exists but is not on `main` |
+| #18–#21, #32, #35–#41, #46, #49 (squadron foundation chain) | #16, and their ADRs |
+| #50, #71, #86, #90, #94, #97, #98, #101 (frontend/docs) | Their backend and ADR dependencies |
 
 ## Next recommended ticket
 
-**#9 — ADR-007: shared recurrence, duty-position routing, occurrence exceptions**
-(P1-high). Rationale: its only dependency (#8, ADR-006) merged in `3d6efd6`, so
-it is newly READY, and it is the last unmerged ADR that gates a whole
-implementation lane (#38 recurrence). ADR-006 fixed the two inputs it needs:
-occurrences inherit the series scope, and `duty_position` is an assignee kind
-rather than a task scope.
+**#5 — ADR-003: squadron bootstrap, invitation, and membership lifecycle**
+(P1-high, architecture). Rationale: it is the highest-value READY ticket. #16
+(squadron aggregate, P0-critical) lists #5 and #7 as its dependencies; #7 is
+merged, so #5 is the only remaining gate. #16 in turn gates the whole squadron
+foundation chain (#18–#21, #32, #35–#41, #46, #49) and the frontend tickets
+behind them. Nothing else in the READY queue unblocks as much downstream work.
 
-Alternatives if #9 is claimed: **#14 — multi-principal test harness**
-(P0-critical; ADR-002 and ADR-004 already give it its contracts), then
-**#15 — CI workflow**, then **#5 — ADR-003**.
+Alternatives if #5 is claimed: **#9 — ADR-007** (gates the recurrence lane),
+**#15 — CI workflow** (independent, prevents silent regressions), then
+**#10 — ADR-008**.
 
-In flight: none.
+## Session 7 notes (operational)
+
+- The run workspace directory was deleted mid-session (third occurrence). Work
+  that had been validated but not committed was lost with it and was
+  re-implemented from scratch in the relocated workspace. Lesson applied:
+  commit and push as soon as a slice validates, before writing documentation.
+- Only today's live demo grants are mapped in the test harness (`squadron_admin`
+  → `operator`, `read_only` → `viewer`). `member` and `team_lead` deliberately
+  hold no permission until ADR-004's matrix is implemented (DECISIONS C-007), so
+  no test can pass against grants the role will never have.

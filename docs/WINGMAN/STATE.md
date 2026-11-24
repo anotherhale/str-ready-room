@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 1)
+**Last updated:** 2026-11-24 (session 2)
 
 ## Artifact map
 
@@ -47,21 +47,29 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
-- **ADR-001 accepted** (deployment, classification, data handling). Chosen first
-  target: self-hosted single host, controlled network. Classification ceiling:
+- **ADR-001 accepted and merged to `main`** (`90decc5`, PR #105). Target:
+  self-hosted single host inside a controlled network. Classification ceiling:
   **unclassified, synthetic data only**. No-egress default. See
   `docs/adr/ADR-001-deployment-classification.md`.
-- Seven organizational questions (Q1–Q7 in ADR-001) remain unanswered. They block
-  *real data*, not the remaining ADRs, which decide an unclassified synthetic
-  build.
+- **Q1–Q7 answered with adopted working defaults** (product-owner decision,
+  2026-11-24): controlled-network single host; UNCLASSIFIED ceiling; no internet
+  egress by default, with an internal controlled-network endpoint allowed per
+  integration; minimal personnel fields only; retain indefinitely with explicit
+  authorized deletion; operator nightly backups with 30-day retention
+  (RPO 24h / RTO 4h); secrets injected as environment variables from an
+  operator-managed store.
+- Those defaults are **project decisions, not accreditation**. The named official
+  must still confirm each one before real data is stored, and none of them
+  authorizes cloud hosting, default egress, or any compliance claim.
 
 ## Blockers
 
 | Blocker | Effect | Owner |
 |---|---|---|
-| ADR-001 organizational questions Q1–Q7 | Real operational/personnel data cannot be stored; cloud hosting unauthorized; retention/backup/secret policy undefined | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
-| PR #105 unmerged | Issue #3 stays in `verification`; **#4 (ADR-002) stays `blocked`** because #3 is not closed | Reviewer |
-| PR for this state checkpoint unmerged | Coordinator state is not yet on `main`; the next session must read GitHub issues and this PR until merged | Reviewer |
+| Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
+| State checkpoint PR unmerged | Coordinator state is not yet on `main`; until merged, a fresh session recovers from GitHub issues | Reviewer |
+
+Nothing currently blocks ticket execution.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -71,33 +79,33 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 2 | [#6](https://github.com/anotherhale/str-ready-room/issues/6) | ADR-004: role and scoped-permission matrix | P0-critical | 20 min |
-| 3 | [#7](https://github.com/anotherhale/str-ready-room/issues/7) | ADR-005: data isolation, owner migration, schema evolution | P0-critical | 20 min |
-| 4 | [#8](https://github.com/anotherhale/str-ready-room/issues/8) | ADR-006: task scope, sharing, accountable ownership | P0-critical | 20 min |
-| 5 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
-| 6 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
-| 7 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
-| 8 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
-| 9 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
-| 10 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
+| 1 | [#4](https://github.com/anotherhale/str-ready-room/issues/4) | ADR-002: authentication provider, session storage, cookie strategy | P0-critical | 20 min |
+| 2 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
+| 3 | [#6](https://github.com/anotherhale/str-ready-room/issues/6) | ADR-004: role and scoped-permission matrix | P0-critical | 20 min |
+| 4 | [#7](https://github.com/anotherhale/str-ready-room/issues/7) | ADR-005: data isolation, owner migration, schema evolution | P0-critical | 20 min |
+| 5 | [#8](https://github.com/anotherhale/str-ready-room/issues/8) | ADR-006: task scope, sharing, accountable ownership | P0-critical | 20 min |
+| 6 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
+| 7 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 8 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
+| 9 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
+| 10 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
+| 11 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
 ## Blocked queue
 
 | Issue | Blocked on |
 |---|---|
-| [#4](https://github.com/anotherhale/str-ready-room/issues/4) ADR-002 | #3 (open until PR #105 merges) |
 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) ADR-007 | #8 |
 | #16–#104 (implementation tickets) | Their ADR and foundation dependencies; see each issue |
 
 ## Next recommended ticket
 
-**#5 — ADR-003 (squadron bootstrap, invitation, and membership lifecycle).**
-Rationale: it is dependency-free, sized for one window, and defines the
-membership record and lifecycle that ADR-004's role grants bind to. Doing it first
-keeps ADR-004 from inventing membership states that ADR-003 then contradicts.
+**#4 — ADR-002 (authentication provider, session storage, and cookie strategy).**
+Rationale: ADR-001 §4 already fixes its inputs — a self-contained auth path with
+no assumed IdP, server-side revocable sessions, `HttpOnly`/`SameSite`/`Secure`
+cookies, and a demo provider that startup must refuse outside the demo
+environment. It is P0-critical and gates every identity-dependent ticket, and the
+questions are settled enough to decide in one window.
 
-Alternative if #5 is already claimed: **#6 — ADR-004**, then **#7 — ADR-005**.
-
-Do not start #4 (ADR-002) until #3 is closed, even though ADR-001's content is
-final and validated on branch `wingman/adr-001-deployment-classification`.
+Alternative if #4 is already claimed: **#5 — ADR-003**, then **#6 — ADR-004**.
+Do not start #9 (ADR-007) until #8 is closed.

@@ -93,3 +93,64 @@ git diff --name-only vs main: docs/adr/ADR-001-deployment-classification.md, doc
 ### Next
 
 **#5 — ADR-003 (squadron bootstrap, invitation, membership lifecycle).**
+
+---
+
+## Session 2 — 2026-11-24
+
+**Selected ticket:** [#3](https://github.com/anotherhale/str-ready-room/issues/3) —
+close ADR-001 by answering its organizational questions (P0-critical,
+architecture, est 15 min)
+
+### Trigger
+
+The product owner directed that all open ADR-001 questions be answered with
+recommended defaults and the tickets updated. Scope was limited to recording those
+decisions and reconciling the queue — no new architecture decisions were invented
+beyond the seven questions already listed in the ADR.
+
+### Work
+
+- ADR-001: replaced "Unresolved questions requiring organizational input" with
+  "Organizational questions and adopted defaults" — a default, the confirming
+  official, and the consequence for each of Q1–Q7, plus an explicit
+  "What these defaults do not authorize" section (no real data, no cloud, no
+  default egress, no compliance claim).
+- Consistency edits in the same ADR: §2 now blocks real data on "organizational
+  confirmations" rather than "open questions"; §3's retention bullet and the
+  Consequences risk paragraph now reflect the adopted retain-indefinitely default.
+- `docs/adr/README.md`: ADR-001 status and a stale spec-branch pointer corrected.
+- Ticket updates: resolution record on #3; constraint notes on #11 (ADR-009
+  egress), #13 (ADR-011 retention), #104 (profile field boundary); #4 relabelled
+  `blocked` → `ready`.
+- Merged PR #105 (merge commit `90decc5`), which closed #3 by its `Closes #3`
+  reference. Verified #3 `state=closed` afterwards.
+
+### Validation
+
+- Documentation-only change: `git diff --stat` limited to `docs/adr/` and
+  `docs/WINGMAN/`.
+- The backend and frontend suites were **not** re-run this session. The workspace
+  was recreated from scratch mid-session (the original run directory was removed),
+  so neither `backend/.venv` nor `frontend/node_modules` exists here. The green
+  baseline from session 1 (206 backend tests, 39 frontend tests, ruff, typecheck,
+  build) remains the evidence for the code, and no code file changed in this
+  session or the last one.
+
+### Git
+
+- Branch `wingman/adr-001-deployment-classification` — commit `e125a71`, merged
+  as `90decc5`.
+- `origin/main` now at `90decc5`.
+
+### Dependency reconciliation
+
+- **#4 (ADR-002) unblocked** and promoted to READY position 1: #3 is closed and
+  ADR-001 §4 supplies its constraints.
+- **#11 and #13** gained recorded input constraints, so they need no further
+  discovery before implementation.
+- **#9 (ADR-007)** still blocked on #8.
+
+### Next
+
+**#4 — ADR-002 (authentication provider, session storage, cookie strategy).**

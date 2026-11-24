@@ -8,8 +8,8 @@ invariants. This file records *how the coordinator works* and *why*.
 
 | ADR | Title | Status | Issue |
 |---|---|---|---|
-| [ADR-001](../adr/ADR-001-deployment-classification.md) | Deployment, classification, data handling | **Accepted** (engineering defaults); Q1–Q7 open | #3 |
-| ADR-002 | Authentication provider, session storage, cookies | Blocked on #3 closure | #4 |
+| [ADR-001](../adr/ADR-001-deployment-classification.md) | Deployment, classification, data handling | **Accepted and merged** (`90decc5`); Q1–Q7 defaults adopted, formal confirmation outstanding | #3 |
+| ADR-002 | Authentication provider, session storage, cookies | READY | #4 |
 | ADR-003 | Squadron bootstrap, invitation, membership lifecycle | READY | #5 |
 | ADR-004 | Role and scoped-permission matrix | READY | #6 |
 | ADR-005 | Data isolation, owner migration, schema evolution | READY | #7 |
@@ -80,3 +80,34 @@ file is a check on false claims of progress.
 
 **Consequence:** until the state PR merges, GitHub issues are the recovery source
 of truth. `CHECKPOINT.json` is written to be self-sufficient for that case.
+
+### C-006 — Answer the ADR-001 organizational questions with adopted defaults
+
+**Decision:** on 2026-11-24 the product owner directed that every open ADR-001
+question be answered with a recommended default rather than left open. The
+defaults adopted are:
+
+| # | Default |
+|---|---|
+| Q1 | Controlled-network single host administered by unit IT; accreditation via the unit's existing security review; cloud out of scope |
+| Q2 | UNCLASSIFIED only for the first release; synthetic data until confirmed |
+| Q3 | No internet egress by default; internal controlled-network endpoint allowed per integration |
+| Q4 | Minimal personnel fields: display name, membership, duty position, one optional work contact |
+| Q5 | Retain indefinitely; explicit authorized deletion only; audit outlives its subject |
+| Q6 | Operator nightly snapshot, 30-day retention, quarterly restore drill; RPO 24h / RTO 4h |
+| Q7 | Env-injected secrets from an operator-managed store; never committed, logged, or returned by API |
+
+**Why:** leaving all seven open kept the ADR in a permanent "unresolved" state and
+made every downstream ADR argue from uncertainty. A recorded default gives
+engineering a position to build against and gives each official a concrete
+proposal to accept or overturn, which is faster than an open question.
+
+**Boundary this decision does not cross:** these are project decisions, **not**
+accreditation. No real operational or personnel data may be stored, no cloud
+hosting is authorized, no default egress is permitted, and nothing here may be
+cited as an authorization to operate. Each row is reversible by its named owner,
+and overturning one is an amendment to ADR-001 — not silent configuration drift.
+
+**Consequences:** #4 (ADR-002) unblocked and promoted to the front of the queue;
+#11 (ADR-009) must default to a local/internal provider; #13 (ADR-011) can close
+on Q5's basis; #104's profile fields are bounded by Q4.

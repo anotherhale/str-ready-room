@@ -34,11 +34,11 @@
 
 | Metric | Value |
 |---|---:|
-| Implementation tickets created | 100 |
-| Tickets updated/reused | 0 |
+| Implementation tickets created | 101 |
+| Tickets updated/reused | 100 |
 | Initially READY (zero dependencies) | 11 |
-| Initially BLOCKED | 89 |
-| Total estimated agent minutes | 2290 |
+| Initially BLOCKED | 90 |
+| Total estimated agent minutes | 2310 |
 | Average estimate | 22.9 minutes |
 | Maximum estimate | 25 minutes |
 
@@ -47,7 +47,7 @@
 | Phase | Tickets | Estimated minutes |
 |---|---:|---:|
 | Phase 0 — Discovery & Engineering Foundation | 13 | 265 |
-| Phase 1 — Squadron Foundation | 19 | 430 |
+| Phase 1 — Squadron Foundation | 20 | 450 |
 | Phase 2 — Shared Task Platform | 16 | 370 |
 | Phase 3 — Recurring Responsibilities | 13 | 305 |
 | Phase 4 — Jev Assistant | 10 | 235 |
@@ -59,7 +59,7 @@
 | Priority | Tickets |
 |---|---:|
 | P0 | 27 |
-| P1 | 60 |
+| P1 | 61 |
 | P2 | 9 |
 | P3 | 4 |
 
@@ -67,7 +67,7 @@
 
 | Type | Tickets |
 |---|---:|
-| Backend | 51 |
+| Backend | 52 |
 | Frontend | 12 |
 | Architecture | 11 |
 | Security | 11 |
@@ -78,7 +78,7 @@
 
 ## Dependency overview
 
-- Dependency links recorded: **173**.
+- Dependency links recorded: **177**.
 - Tickets with no dependencies: **11**.
 - Longest dependency chain (by estimated time): **470 minutes** across 20 tickets.
 - Dependency cycles: **none** (validated before creation).
@@ -189,15 +189,16 @@ Every non-COMPLETE requirement maps to at least one issue, and every issue maps 
 | P1-08 | #23 | P1 | P1 | Backend | 25 | #21, #19 | Application: TeamService and DutyPositionService |
 | P1-09 | #24 | P1 | P0 | Security | 25 | #4, #21 | Identity: Credential store and password hashing for local authentication |
 | P1-10 | #25 | P1 | P0 | Security | 25 | #4, #21, #24 | Identity: Server-side session entity, repository, and token lifecycle |
-| P1-11 | #26 | P1 | P0 | Security | 20 | #25, #19 | Identity: SessionAuthProvider adapter and registry wiring |
+| P1-11 | #26 | P1 | P0 | Security | 20 | #25, #19, #104 | Identity: SessionAuthProvider adapter and registry wiring |
 | P1-12 | #27 | P1 | P0 | Backend | 20 | #26 | API: Authentication endpoints and secure session cookie |
 | P1-13 | #28 | P1 | P1 | Backend | 20 | #22, #26 | API: Squadron and membership administration endpoints |
 | P1-14 | #29 | P1 | P1 | Backend | 20 | #23, #26 | API: Team and duty-position administration endpoints |
 | P1-15 | #30 | P1 | P0 | Frontend | 25 | #27 | Frontend: Login, logout, and session-aware API client |
-| P1-16 | #31 | P1 | P1 | Frontend | 25 | #28, #29, #30 | Frontend: Squadron, team, membership, duty-position administration and profile |
+| P1-16 | #31 | P1 | P1 | Frontend | 25 | #28, #29, #30, #104 | Frontend: Squadron, team, membership, duty-position administration and profile |
 | P1-17 | #32 | P1 | P0 | Backend | 25 | #20, #21, #22 | Migration: Map existing owner-scoped data into the bootstrap squadron and personal workspace |
 | P1-18 | #33 | P1 | P1 | Backend | 20 | #22, #23, #32 | Seed and reset the squadron demo with a second member |
 | P1-19 | #34 | P1 | P0 | QA | 20 | #27, #28, #29, #32 | Integration tests: two-user isolation and access denial across the API |
+| P1-20 | #104 | P1 | P1 | Backend | 20 | #20, #21 | User profile: per-user timezone, display name, and preferences |
 | P2-01 | #35 | P2 | P0 | Backend | 25 | #8, #16, #17 | Domain: Task scope and distinct accountable-owner, assignee, collaborator, and watcher roles |
 | P2-02 | #36 | P2 | P1 | Backend | 20 | #35 | Domain: Assignment acknowledgment state machine separate from completion |
 | P2-03 | #37 | P2 | P0 | Security | 25 | #19, #35 | Domain: Task visibility and sharing authorization rules |

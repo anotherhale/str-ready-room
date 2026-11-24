@@ -365,6 +365,7 @@ def test_heartbeat_renews_lease_and_preserves_activity() -> None:
     after = run.ticket_state(5)
 
     assert after.expires_at > before
+    assert after.claim.expires_at == after.expires_at
     # The live view follows the newest lease; the epoch event stays immutable.
     assert after.claim.current_activity == "Validating backend task endpoints"
     assert after.leases[-1].current_activity == "Validating backend task endpoints"

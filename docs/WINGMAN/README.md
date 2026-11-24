@@ -66,16 +66,40 @@ Transitions are made by the executing session and the reviewer. Never close an
 issue without validation evidence. Never mark a ticket `ready` by hand while a
 dependency is open.
 
-## How a scheduled session selects work
+## How a session selects work
 
-1. List open issues with label `ready` (oldest/highest priority first).
-2. Prefer `P0-critical`, then `P1-high`, then `P2-normal`, then `P3-low`.
-3. Verify every listed dependency is closed. If not, remove `ready`, add
-   `blocked`, and select the next ticket.
-4. Read the issue body completely; it is self-contained and includes the
-   objective, scope, out-of-scope, guidance, files, acceptance criteria,
-   validation, and handoff notes.
-5. Execute exactly one primary ticket. Do not pull in another ticket's scope.
+Selection is **claim-aware**, not label-aware. The mandatory handshake
+(`WINGMAN.md`, enforced by `scripts/wingman/preflight.py`) does this in order:
+
+1. Register the run in the shared registry (GitHub refs, `run-events/<RUN_ID>/e<N>`).
+2. Discover every other run: its ticket, status, activity, branch, PR, heartbeat,
+   and claim expiry.
+3. Reconcile the registry against GitHub — claims without a live run, claims whose
+   ticket already has a PR, PRs the registry does not know about. Discrepancies are
+   recorded, never "fixed" by writing into another run's state.
+4. Build the exclusion set: `blocked`, unsatisfied dependency, live claim, expired
+   claim (recovery inspection first), open PR, foreign branch, `verification`.
+5. From the remaining open tickets, pick the highest value: priority, then how many
+   open tickets depend on it, then age. Roadmap phases are informational.
+6. Claim atomically and verify ownership by read-back. Refused or unverified means
+   **do not implement** — go back to step 4.
+7. Verify the isolated worktree, mark `EXECUTING`, and only then write code.
+
+Never treat a claim as advisory, and never assume the previous session finished.
+
+## Session timebox (30 minutes hard limit)
+
+| Window | Budget | Work |
+|---|---|---|
+| 0–4 min | recovery & reconciliation | handshake steps 1–4; inspect the registry and any expired claim |
+| 4–6 min | selection & claim | steps 5–7; claim + verify + worktree |
+| 6–21 min | engineering | the ticket's scope only |
+| 21–26 min | validation & persistence | tests, lint, checkpoint, issue comment |
+| 26–30 min | handoff | PR, release claim, next-ticket recommendation |
+
+Recovery is bounded: if the workspace or coordination state cannot be reconstructed
+by minute 4, stop, record the blocker, release or keep the claim deliberately, and
+leave the work for the next run. Never exceed the box to "finish" a ticket.
 
 ## Execution protocol for one ticket
 
@@ -116,16 +140,28 @@ dependency is open.
 - PR reviewed and merged; issue closed.
 - Head branch deleted after merge; no merged branch left on `origin`.
 
-## Concurrency and conflicts
+## Concurrency
 
-- Assume **one active implementation session** at a time. If two run, they must
-  choose tickets with disjoint file sets and must not both edit the same
-  migration.
-- Explicit dependencies encode integration order. Do not parallelize dependent
-  tickets.
-- ADR tickets are intentionally unblocked and can be parallelized, but each
-  writes one file and appends to the ADR index; coordinate the index edit.
-- A migration ticket must land before any ticket that depends on its schema.
+Multiple WINGMAN runs may be active at once; the 10-minute stagger is a scheduling
+target, **not** a safety mechanism.
+
+- **Authority:** ticket claims are exclusive leases stored as immutable git refs.
+  Only `claim-epochs/issue-<T>/e<K>` creation grants ownership, and only one creator
+  can win epoch `K`. See `docs/WINGMAN/CONCURRENCY.md`.
+- **Exclusion:** claimed, expired-but-unrecovered, in-progress, blocked, and
+  `verification` tickets are unavailable. So is any ticket with an open PR or a
+  foreign branch: the work is already delivered or in flight.
+- **Isolation:** one worktree and one branch per run (`wingman/issue-<T>/run-<RUN_ID>`).
+  A shared checkout is not a workspace; sharing one is how a run's HEAD, uncommitted
+  changes, and branch were destroyed (incident B-008).
+- **Recovery:** an expired claim is inspected, not reassigned. The recovering run
+  records `recovered_from`, an incremented attempt number, and what it inspected.
+- **Evidence:** PRs and git history are the delivery record; the registry is the
+  ownership record. Neither replaces the other.
+- **Rollout:** one implementation run at a time until the two-machine gate in #127
+  passes. Concurrency is earned by validation, not enabled by a prompt change.
+- Explicit dependencies still encode integration order; never parallelize dependent
+  tickets, and never let two runs edit the same migration.
 
 ## Replenishment
 

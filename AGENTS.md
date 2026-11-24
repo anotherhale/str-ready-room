@@ -148,6 +148,41 @@ here. Keep this file current when a durable invariant or boundary changes.
   and may never perform a human-accountability action (`tasks:acknowledge`,
   `turnover:acknowledge`, `approvals:decide`).
 
+## Agent runtime (ADR-008)
+
+- **An agent is a principal kind, never a role or a session.** `Principal.kind`
+  is `human` or `agent`; `permissions_for(agent)` is always empty. Agent
+  authority is read only from a delegation, never from a role grant or a copied
+  human token.
+- **Agent authority is an intersection, recomputed on every tool call:**
+  `delegation.capabilities ∩ agent.declared_capabilities ∩ delegator's current
+  effective permissions`, with `scope = min(delegation ceiling, delegator
+  ceiling)`. Revocation and expiry are checked per call, so a suspended delegator
+  cannot leave a live grant behind.
+- **Agent identity is versioned by row.** A version bump is a new
+  `agent_identities` row (`(squadron_id, agent_id, version)` unique) and a
+  delegation pins the version it was granted against; capability changes can
+  never silently widen an existing grant.
+- **Approval binds to a canonical parameter hash**, not to prose or a summary.
+  The executor recomputes the hash of the action it is about to run; a mismatch
+  is `approval_invalid` and the approval is invalidated. Approvals are
+  single-use and expire. Nothing — timeout, notification failure, model output —
+  produces an implicit approval.
+- **Confirmation and approval are different gates.** The human who requested a
+  draft confirms it; a *different* human holding `approvals:decide` approves a
+  consequential action. An agent can never approve, and `approver_id ≠
+  proposer_id` holds even between humans.
+- **A scheduled run with no initiating human may read and propose, never
+  execute.** A proposal becomes a pending approval and stops there.
+- **Tools are a typed allow-list.** No shell, filesystem, direct SQL, generic
+  HTTP, or generic CRUD tool exists. Every tool declares one capability and one
+  risk class, calls an application use case, and is bounded by per-run call,
+  result-size, context, and wall-clock budgets.
+- **Denial codes extend ADR-004's contract:** `forbidden_agent`,
+  `forbidden_delegation`, `forbidden_capability`, `approval_invalid` join
+  `forbidden`, `forbidden_membership`, `forbidden_scope`,
+  `forbidden_ownership`, and `approval_required`.
+
 ## Seed and reset
 
 - Seeding is guarded by a `seed_version` marker **and** an "any tasks exist?"

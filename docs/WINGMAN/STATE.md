@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 9 — coordination upgrade foundation, PR #129)
+**Last updated:** 2026-11-24 (session 13 — ADR-008 agent runtime contract, PR #136)
 
 ## Artifact map
 
@@ -21,6 +21,18 @@ uses. Do not create duplicate sources of truth.
 | `ARCHITECTURE_MAP.md` | `ARCHITECTURE_MAP.md` |
 | `AGENT_REGISTRY.md` | `AGENT_REGISTRY.md` |
 | `CHECKPOINT.json` | `CHECKPOINT.json` |
+
+## Session 13 snapshot (2026-11-24)
+
+- **ADR-008 accepted** in PR #136: agent identity, delegation, and approval
+  binding. Docs only — no code, schema, or migration.
+- Phase 5 is now contractually unblocked: `P5-01`..`P5-04` and `P5-08` have fixed
+  records, a fixed check order, a fixed hash, and fixed denial codes.
+- **The backend integration suite is red on `main`** (13 failed, 22 errors) for a
+  reason unrelated to that PR: `tests/doubles.py::InMemoryMailboxProvider` is
+  missing `purge()`, added to the `MailboxProvider` ABC in a99f2dc. Tracked as
+  **#137** (XS, ready) and recommended as the next ticket, because it restores the
+  only integration regression signal.
 
 ## Multi-session coordination (upgrade in progress)
 

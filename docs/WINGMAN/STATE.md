@@ -74,6 +74,9 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
+- **Non-blocking ADR defaults accepted as written** (product owner,
+  2026-11-24): ADR-002 A1–A5, ADR-004 Q1–Q5, ADR-005 I1–I5. Named-owner
+  confirmations remain non-blocking and can amend these defaults later.
 - **ADR-004 accepted and merged** (PR #108, `main` `af31b65`; issue #6). Fixes five roles
   (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
   54-permission catalog (20 existing + 34 new), a role x permission grant matrix
@@ -89,7 +92,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 | Blocker | Effect | Owner |
 |---|---|---|
-| Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
+| Formal confirmation of the Q1–Q7 defaults (product owner accepted defaults 2026-11-24; official sign-off outstanding, tracked in [#113](https://github.com/anotherhale/str-ready-room/issues/113)) | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 
 Nothing currently blocks ticket execution.
 

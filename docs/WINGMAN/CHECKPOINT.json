@@ -50,7 +50,9 @@
     {
       "blocker": "Formal confirmation of the Q1-Q7 defaults",
       "effect": "Real operation/personnel data cannot be stored; does not block the unclassified synthetic build",
-      "owner": "Authorizing Official et al."
+      "owner": "Authorizing Official et al.",
+      "tracking_issue": 113,
+      "status": "product owner accepted defaults 2026-11-24; official sign-off outstanding"
     }
   ],
   "ready_queue": [

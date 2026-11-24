@@ -26,5 +26,9 @@
   "next_recommended_ticket": 124,
   "incidents": [
     "B-009 ref cannot be both a leaf and a directory (found live during migration)"
-  ]
+  ],
+  "claim_status": "RELEASED",
+  "pr": "#132 (stacked on #129)",
+  "release_note": "claim released at handoff; #131 moved to verification so it is not re-selectable",
+  "backend_regression": "215 passed (exit 0)"
 }

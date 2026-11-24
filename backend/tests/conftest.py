@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import uuid
+from dataclasses import dataclass
 from datetime import date, datetime
 
 import pytest
@@ -15,6 +16,7 @@ import pytest
 from app.adapters.authorization.registry import build_authorizer
 from app.adapters.ids import SequentialIdGenerator
 from app.adapters.persistence.sqlalchemy.database import SqlAlchemyDatabaseFactory
+from app.application.ports.identity import AuthorizationPort
 from app.application.services.briefing_service import BriefingService
 from app.application.services.category_service import CategoryService
 from app.application.services.dashboard_service import DashboardService
@@ -24,6 +26,7 @@ from app.application.services.settings_service import SettingsService
 from app.application.services.task_service import TaskService
 from app.domain.identity.principal import Principal
 from app.domain.shared.clock import FixedClock
+from tests.doubles import MembershipState, TestAuthProvider, TestMember
 
 #: A fixed "now" so tests are deterministic.  Chosen mid-morning UTC so the
 #: operator's New York local date is unambiguous.
@@ -136,4 +139,86 @@ def viewer() -> Principal:
         display_name="Observer",
         timezone="America/New_York",
         roles=frozenset({"viewer"}),
+    )
+
+
+# -- multi-principal identity harness -------------------------------------
+#
+# Issue #14 / P0-12.  These fixtures are the supported way to act as more than
+# one person in one test before real login exists:
+#
+#   squadron_roster         dict[user_id, TestMember] — five synthetic members
+#   test_auth_provider      TestAuthProvider over that roster
+#   test_container          services wired to the test provider + isolated SQLite
+#   error_mapping_client    TestClient over a throwaway app, for error-shape tests
+#
+# Members: ``maverick`` (squadron_admin, also the demo operator), ``viper``
+# (member), ``goose`` (team_lead), ``iceman`` (read_only), ``slider`` (member
+# whose membership is SUSPENDED — it has no usable identity).
+
+
+@dataclass
+class TestContainer:
+    """A minimal container for tests: real adapters, test identity."""
+
+    database: SqlAlchemyDatabaseFactory
+    auth_provider: TestAuthProvider
+    authorizer: AuthorizationPort
+    clock: FixedClock
+    ids: SequentialIdGenerator
+    tasks: TaskService
+    settings: SettingsService
+
+
+@pytest.fixture
+def squadron_roster() -> dict[str, TestMember]:
+    return {
+        "maverick": TestMember(
+            user_id="maverick",
+            display_name="Maverick Mitchell",
+            role="squadron_admin",
+            duty_position="Commander",
+        ),
+        "viper": TestMember(user_id="viper", display_name="Viper Metcalf", role="member"),
+        "goose": TestMember(
+            user_id="goose",
+            display_name="Goose Bradshaw",
+            role="team_lead",
+            duty_position="Ops Officer",
+        ),
+        "iceman": TestMember(
+            user_id="iceman",
+            display_name="Iceman Kazansky",
+            role="read_only",
+            team_id=None,
+        ),
+        "slider": TestMember(
+            user_id="slider",
+            display_name="Slider Kerner",
+            role="member",
+            membership_state=MembershipState.SUSPENDED,
+        ),
+    }
+
+
+@pytest.fixture
+def test_auth_provider(squadron_roster) -> TestAuthProvider:
+    return TestAuthProvider(squadron_roster)
+
+
+@pytest.fixture
+def test_container(database, clock, test_auth_provider) -> TestContainer:
+    authorizer = build_authorizer(type("S", (), {"authorization_engine": "policy"})())
+    ids = SequentialIdGenerator()
+    tasks = TaskService(database, authorizer, clock, ids)
+    settings = SettingsService(database, authorizer, clock, ids)
+    settings.get_settings(test_auth_provider.select("maverick"))
+    return TestContainer(
+        database=database,
+        auth_provider=test_auth_provider,
+        authorizer=authorizer,
+        clock=clock,
+        ids=ids,
+        tasks=tasks,
+        settings=settings,
     )

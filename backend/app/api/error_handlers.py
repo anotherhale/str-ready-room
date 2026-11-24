@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 
 from ..application.ports.persistence import PersistenceError
 from ..domain.shared.errors import (
+    AuthenticationError,
     AuthorizationError,
     ConflictError,
     DomainError,
@@ -21,6 +22,7 @@ from ..domain.shared.errors import (
 )
 
 _STATUS_BY_ERROR: dict[type[DomainError], int] = {
+    AuthenticationError: 401,
     ValidationError: 400,
     NotFoundError: 404,
     ConflictError: 409,

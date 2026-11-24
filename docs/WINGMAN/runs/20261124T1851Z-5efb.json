@@ -10,15 +10,39 @@
   "last_heartbeat": "2026-11-24T18:55:17Z",
   "attempt_number": 1,
   "recovery_status": "none",
-  "claim": {"ticket": 122, "status": "RELEASED_AT_HANDOFF", "note": "released cleanly at handoff; no recovery inspection needed"},
-  "reconciled": ["#9 merged (PR #119) during this run", "#14 merged (PR #117) during this run", "state PRs #118/#120 merged during this run"],
-  "incidents": ["B-008 shared-workspace HEAD switch: accidental commit on main, reverted and re-applied on branch"],
-  "tickets_created": {"tracking": 121, "tickets": [122, 123, 124, 125, 126, 127, 128]},
+  "claim": {
+    "ticket": 122,
+    "status": "RELEASED",
+    "released_at": "2026-11-24T18:58:16Z",
+    "note": "clean handoff at PR-open; issue moved to verification so it is not selectable"
+  },
+  "reconciled": [
+    "#9 merged (PR #119) during this run",
+    "#14 merged (PR #117) during this run",
+    "state PRs #118/#120 merged during this run"
+  ],
+  "incidents": [
+    "B-008 shared-workspace HEAD switch: accidental commit on main, reverted and re-applied on branch"
+  ],
+  "tickets_created": {
+    "tracking": 121,
+    "tickets": [
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128
+    ]
+  },
   "validation": {
     "coordination_tests": "16 passed",
     "ruff": "All checks passed",
     "live_claim_cas": "POST /git/refs 201 for owner, 422 for second run",
     "live_adapter": "heartbeat + status executed against refs/wingman/* on github.com"
   },
-  "next_recommended_ticket": 124
+  "next_recommended_ticket": 124,
+  "pr": 129,
+  "commit_sha": "8e3fe73"
 }

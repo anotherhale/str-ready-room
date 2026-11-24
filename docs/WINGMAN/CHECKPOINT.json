@@ -1,40 +1,60 @@
 {
-  "last_run": "2026-11-24T19:15Z",
-  "session": 8,
-  "main_sha_at_start": "4e0abbd",
-  "local_clone_sha_at_start": "4e0abbd",
-  "branch": "wingman/state-session-8",
+  "last_run": "2026-11-24T20:45Z",
+  "session": 11,
+  "main_sha_at_start": "b774e224",
+  "local_clone_sha_at_start": "b774e224",
+  "branch": "wingman/p0-03-adr-003-bootstrap",
   "last_ticket": {
-    "issue": 9,
-    "title": "ADR-007: shared recurrence, duty-position routing, occurrence exceptions",
+    "issue": 5,
+    "title": "ADR-003: define squadron bootstrap, invitation, and membership lifecycle",
     "priority": "P1-high",
     "type": "architecture",
-    "status": "merged",
-    "issue_state": "closed by PR #119",
-    "pr": 119,
+    "status": "in_review",
+    "issue_state": "open; labeled in-progress; closes on merge of PR #133",
+    "pr": 133,
     "pr_base": "main",
-    "pr_state": "merged",
-    "merge_commit": "4c413a8",
-    "commit": "e5ff56f + reference fix"
+    "pr_state": "open, not merged",
+    "commit": "9ef9e31"
   },
-  "last_ticket_work_branch": "wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit": "e5ff56f (ADR-007) on wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit_message": "docs(adr): ADR-007 shared recurrence, duty-position routing, exceptions",
+  "last_ticket_work_branch": "wingman/p0-03-adr-003-bootstrap",
+  "last_commit": "9ef9e31 on wingman/p0-03-adr-003-bootstrap",
+  "last_commit_message": "docs(adr): ADR-003 squadron bootstrap, invitation, and membership lifecycle",
   "changed_files": [
-    "docs/adr/ADR-007-shared-recurrence.md",
+    "docs/adr/ADR-003-squadron-bootstrap-membership.md",
     "docs/adr/README.md",
     "AGENTS.md"
   ],
   "validation": {
-    "backend_pytest": "206 passed, 1 warning in 17.85s (session 8, identical to baseline)",
-    "backend_pytest_post_merge": "215 passed, 0 failed, 0 errors on main @ 937a899 after PR #117 merged",
+    "backend_pytest": "215 passed, 1 warning in 71.78s (identical to the session-8 baseline)",
     "backend_ruff": "All checks passed!",
     "backend_mypy": "Success: no issues found in 84 source files",
     "frontend_tests": "not run - no frontend file changed",
     "frontend_build": "not run - same reason",
-    "diff_scope": "documentation only: one new ADR, one index row, five AGENTS.md invariants"
+    "diff_scope": "documentation only: one new ADR, one index row, seven AGENTS.md invariants",
+    "environment": "backend/.venv rebuilt locally with uv; not committed"
   },
-  "open_prs": [],
+  "open_prs": [
+    {
+      "pr": 133,
+      "title": "docs(adr): ADR-003 squadron bootstrap, invitation, membership lifecycle",
+      "state": "open, docs-only, validation green"
+    },
+    {
+      "pr": 130,
+      "title": "docs(wingman) session 10 state",
+      "state": "open; edits the same state files, additive rebase needed"
+    },
+    {
+      "pr": 129,
+      "title": "WINGMAN coordination: shared run registry and atomic claims",
+      "state": "open but its feature was reverted on main (b774e224) - close or rework"
+    },
+    {
+      "pr": 131,
+      "title": "Coordination hardening (issue #131)",
+      "state": "open, in-progress, needs re-scoping after the revert"
+    }
+  ],
   "blockers": [
     {
       "id": "B-001",
@@ -46,7 +66,7 @@
       ],
       "does_not_block": [
         "the unclassified synthetic build",
-        "ADR-003, ADR-008..ADR-011"
+        "the remaining ADRs (#10-#13)"
       ],
       "tracking_issue": 113,
       "status": "product owner accepted defaults 2026-11-24; official sign-off outstanding"
@@ -54,85 +74,95 @@
     {
       "id": "B-006",
       "description": "Concurrent WINGMAN sessions sharing one workspace / repository",
-      "effect": "Session 8 saw two sibling sessions (#117, #118) and a deleted run workspace; #14 was correctly left to its owner.",
-      "mitigation": "At run start, check for a sibling branch/PR for the selected ticket and for open PRs before writing; use an isolated clone with an explicit GitHub remote.",
+      "effect": "Session 11 found #129/#130/#131 open, a reverted feature on main, and wingman ref leases held for #131",
+      "mitigation": "At run start check sibling branches, PRs and refs/wingman/* for the selected ticket before writing; use an isolated clone with an explicit GitHub remote",
       "does_not_block": [
-        "#51",
-        "#15",
-        "#5",
+        "#16 after #133 merges",
         "#10",
         "#11",
         "#12",
-        "#13"
+        "#13",
+        "#15"
       ]
     },
     {
       "id": "B-007",
-      "description": "The automation run workspace directory is deleted mid-session and recreated empty",
-      "effect": "Uncommitted work is lost. Observed in sessions 6, 7 and 8 (session 7 lost a validated implementation).",
-      "mitigation": "Commit and push as soon as a slice validates; never defer git to the end of the run.",
+      "description": "The automation run workspace directory is deleted mid-session",
+      "effect": "Uncommitted work is lost (observed in sessions 6, 7, 8 and 11)",
+      "mitigation": "Commit and push as soon as a slice validates; verify with git ls-remote; keep a recovery clone at ~/wingman/<session>",
       "does_not_block": [
         "any ticket"
+      ]
+    },
+    {
+      "id": "B-008",
+      "description": "Open PR stack (#129 reverted, #130 state docs, #131 in-progress) has not been dispositioned",
+      "effect": "#130 conflicts additively with any new state PR; #129 must be closed or reworked; #131 needs re-scoping before execution",
+      "mitigation": "Next session: close or rework #129, rebase #130 additively, re-scope #131",
+      "does_not_block": [
+        "#16 after #133 merges",
+        "#10",
+        "#11",
+        "#12",
+        "#13",
+        "#15"
       ]
     }
   ],
   "ready_queue": [
     {
       "order": 1,
-      "issue": 51,
-      "title": "P3-01: extend RecurrenceRule (scope, duty position, default assignment, due time, pause/resume)",
-      "priority": "P1-high"
-    },
-    {
-      "order": 2,
-      "issue": 15,
-      "title": "CI workflow for backend and frontend verification",
-      "priority": "P1-high"
-    },
-    {
-      "order": 3,
-      "issue": 5,
-      "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
-      "priority": "P1-high"
-    },
-    {
-      "order": 4,
       "issue": 10,
       "title": "ADR-008: agent identity, delegation, approval binding",
       "priority": "P1-high"
     },
     {
-      "order": 5,
+      "order": 2,
       "issue": 11,
       "title": "ADR-009: Jev provider, context assembly, failure strategy",
       "priority": "P1-high"
     },
     {
-      "order": 6,
+      "order": 3,
       "issue": 12,
       "title": "ADR-010: workflow persistence, retries, cancellation, idempotency",
       "priority": "P1-high"
     },
     {
-      "order": 7,
+      "order": 4,
       "issue": 13,
       "title": "ADR-011: notification channels and audit retention",
       "priority": "P2-normal"
+    },
+    {
+      "order": 5,
+      "issue": 15,
+      "title": "CI workflow for backend and frontend verification",
+      "priority": "P1-high"
     }
   ],
   "blocked_queue": [
+    {
+      "issue": 16,
+      "title": "Squadron aggregate and membership persistence",
+      "blocked_on": [
+        5
+      ],
+      "note": "READY the moment PR #133 merges"
+    },
+    {
+      "issue": 51,
+      "title": "P3-01: extend RecurrenceRule",
+      "blocked_on": [
+        35
+      ],
+      "note": "corrected in session 11: #35 (task scope / role model) is open and blocked on #16/#17"
+    },
     {
       "issue": "52-54",
       "title": "P3-02..P3-04 domain tickets",
       "blocked_on": [
         51
-      ]
-    },
-    {
-      "issue": 16,
-      "title": "Squadron aggregate",
-      "blocked_on": [
-        5
       ]
     },
     {
@@ -146,7 +176,7 @@
       ]
     },
     {
-      "issue": "18-21,32,35-41,46,49",
+      "issue": "17-21,32,35-41,46,49",
       "title": "Squadron foundation chain",
       "blocked_on": [
         "#16 and their ADRs"
@@ -161,23 +191,29 @@
     }
   ],
   "recommended_next_ticket": {
-    "issue": 51,
-    "title": "P3-01: extend RecurrenceRule with scope, duty position, default assignment, due time, pause/resume",
+    "issue": 16,
+    "title": "P1-01: squadron aggregate and membership persistence",
     "priority": "P1-high",
-    "why": "ADR-007 (merged in PR #119) specifies every field and invariant it needs; it unblocks #52-#54 and the persistence/API lane #55-#62."
+    "condition": "only after PR #133 merges; verify with git log origin/main",
+    "fallback_if_133_open": [
+      10,
+      11,
+      12,
+      13,
+      15
+    ],
+    "do_not_take": [
+      51,
+      131
+    ]
   },
   "corrections_recorded": [
-    "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
-    "Session 6: inherited checkpoint (session 4) was two merges stale; ADR-005 was already merged in PR #111. A duplicate ADR-005 draft was discarded uncommitted instead of being opened as a second PR.",
-    "Session 6: the run workspace directory was deleted mid-session; contents were found relocated to a new run directory with changes intact and work resumed there. Second occurrence of this failure mode.",
-    "Session 6: STATE.md still described ADR-002/ADR-004 as 'awaiting merge' and listed merged ADRs in the READY queue; corrected against live GitHub state.",
-    "Session 7: STATE.md listed #14 in the READY queue and 206 tests; corrected to in-review, 215 tests.",
-    "Session 8: run workspace deleted mid-session (third occurrence); a clone's `origin` pointed at the deleted path so `git push origin` reported success against a dead remote. Always add an explicit GitHub remote and verify with `git ls-remote`.",
-    "Session 8: the local clone at ~/wingman/adr-007 was created from the run workspace, not from GitHub; treat its `origin` as untrusted.",
-    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected)."
+    "Session 8 promoted #51 to ready claiming ADR-007 was its only dependency; #35 is also in the ticket's Dependencies section and is still blocked. #51 demoted to blocked with evidence.",
+    "ADR-003 was the only genuinely READY ticket; the whole P1 squadron chain depends on it.",
+    "The session-11 run workspace was deleted mid-session; state files were re-applied from a fresh clone at ~/wingman/session-11."
   ],
-  "next_execution_action": "Read #51 plus docs/adr/ADR-007 sections 1/5/9, extend RecurrenceRule in backend/app/domain/tasks/recurrence.py, add domain unit tests, run pytest + ruff. First confirm no sibling holds #51.",
-  "main_sha_now": "4c413a8",
+  "next_execution_action": "Check whether PR #133 merged. If merged: start #16 (squadron aggregate + membership persistence) per ADR-003. If not: take #10 (ADR-008), or #11/#12/#13/#15 if #10 is claimed. Do not take #51 (blocked on #35) or #131 (needs re-scoping after the revert).",
+  "main_sha_now": "b774e224",
   "merged_prs": [
     {
       "number": 119,
@@ -223,6 +259,12 @@
       "title": "ADR-001 deployment classification"
     }
   ],
-  "main_sha": "4c413a8",
-  "in_review_queue": []
+  "main_sha": "b774e224",
+  "in_review_queue": [
+    {
+      "issue": 5,
+      "pr": 133,
+      "title": "ADR-003"
+    }
+  ]
 }

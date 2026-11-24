@@ -4,7 +4,8 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 8, reconciled when PR #120 merged)
+**Last updated:** 2026-11-24 (session 11). Sessions 9-10 state is in PR #130,
+still open; this file was edited from `main` @ `b774e224`.
 
 ## Artifact map
 
@@ -178,3 +179,48 @@ it makes every later validation trustworthy), then **#5 — ADR-003**.
   explicitly and verify with `git ls-remote`.**
 - Two sibling sessions were live (`#117`, `#118`). Check for a sibling branch/PR
   for the selected ticket before writing (B-006).
+
+## Session 11 checkpoint (2026-11-24)
+
+**Ticket:** #5 (P0-03) - ADR-003, written and in review as PR #133 (docs-only,
+not merged). Branch `wingman/p0-03-adr-003-bootstrap`, commit `9ef9e31`.
+
+**What ADR-003 now fixes:** one squadron per installation resolved from the
+principal's membership; first administrator only via an idempotent operator CLI
+bootstrap (or the demo seed calling it) with no public admin endpoint and a
+`503 not_bootstrapped` state; invitations with a 256-bit token stored only as
+SHA-256, single-use, expiring (default 7 days), role fixed by the inviter;
+membership `INVITED`/`ACTIVE`/`SUSPENDED`/`REMOVED` with only `ACTIVE`
+authorizing, no self-transition, a last-administrator guard, and `REMOVED`
+re-enterable only by a new invitation; suspension and removal revoke sessions
+and never delete or silently reassign owned work (advisory
+`reassignment_required` instead).
+
+**Validation:** `pytest` 215 passed (71.78s), `ruff` clean, `mypy` clean on 84
+files, diff limited to `docs/adr/` and `AGENTS.md`.
+
+**Queue after this session**
+
+| Queue | Issues |
+|---|---|
+| In review | #5 (PR #133) |
+| READY | #10, #11, #12, #13, #15 |
+| Blocked | #16 (on #5 - READY when #133 merges), #51 (on #35), #52-#54 (on #51), #17-#21/#32/#35-#41/#46/#49 (on #16), #34 (on #27-#29/#32), frontend/docs tickets |
+
+**#51 correction.** Session 8 promoted #51 to `ready` claiming ADR-007 was its
+only dependency. Its own Dependencies section also lists **#35** (task scope /
+assignee / collaborator / watcher), which is open and blocked on #16/#17.
+`RecurrenceRule` cannot gain `scope`, `duty_position_id`, or `default_assignee`
+before that domain model exists, so #51 is `blocked` again, with file-level
+evidence recorded on the issue. Read a ticket's Dependencies section, not just
+its labels.
+
+**Next:** #16 once #133 merges; otherwise #10 (ADR-008), then #11, #12, #13,
+#15. Do not take #51 (blocked on #35) or #131 (needs re-scoping after its
+predecessor was reverted in `b774e224`).
+
+**Operational:** the run workspace was deleted mid-session again (B-007, fourth
+occurrence). Everything of value was already pushed and verified with
+`git ls-remote`; only these state files were re-applied from a fresh clone at
+`~/wingman/session-11`. `backend/.venv` must be rebuilt each session with
+`uv venv` + `uv pip install -e ".[dev]"`.

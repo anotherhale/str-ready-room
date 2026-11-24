@@ -1,9 +1,9 @@
 # ADR-001: Deployment, classification, and data-handling constraints
 
-- **Status:** Accepted (engineering defaults), with organizational questions unresolved
+- **Status:** Accepted — deployment and data-handling defaults adopted 2026-11-24; formal authorization to hold real data still outstanding
 - **Date:** 2026-11-24
 - **Ticket:** [#3](https://github.com/anotherhale/str-ready-room/issues/3) (`P0-01`)
-- **Deciders:** READY ROOM engineering; see [Unresolved questions](#unresolved-questions-requiring-organizational-input) for the stakeholder each open item belongs to
+- **Deciders:** READY ROOM engineering; product owner for the working defaults; see [Organizational questions and adopted defaults](#organizational-questions-and-adopted-defaults) for the official who must confirm each one
 - **Supersedes:** none
 - **Constrains:** ADR-002 (authentication provider, session storage, cookies), ADR-009 (Jev provider and egress), and the data model
 
@@ -105,7 +105,7 @@ design, and `AGENTS.md` already requires seed data to stay synthetic.
    configuration, so a build cannot be silently promoted by configuration alone.
 
 Until then, "higher classification" is out of scope, and any ticket that would
-introduce real data is blocked on this ADR's open questions.
+introduce real data is blocked on the organizational confirmations listed below.
 
 ### 3. Hosting, backup, retention, and residency constraints affecting design
 
@@ -121,10 +121,10 @@ introduce real data is blocked on this ADR's open questions.
   application containers. Backup is an operator action on the host; the
   application does not implement a backup service. Restore must be testable
   against the demo profile.
-- **Retention:** no retention schedule is approved yet, so the application must
-  not silently discard records. Deletion is explicit and authorized, never
-  time-based by default. Audit and notification retention is decided in ADR-011,
-  which depends on this ADR's retention question.
+- **Retention:** no retention schedule is formally approved yet, so the
+  application must not silently discard records. Deletion is explicit and
+  authorized, never time-based by default. The working default is to retain
+  indefinitely (Q5 below); ADR-011 fixes the audit and notification detail.
 - **Secrets:** secrets come from environment configuration today. That is
   acceptable for the demo profile only. A real deployment requires an
   operator-managed secret source; secrets must never be committed, logged,
@@ -195,8 +195,9 @@ introduce real data is blocked on this ADR's open questions.
   (particularly egress and secret management) will need revisiting. They are
   written so that change is a deliberate ADR amendment, not silent configuration
   drift.
-- An unapproved retention default means data accumulates. That is intentional:
-  accumulating is recoverable, silently deleting operational records is not.
+- The adopted retention default means data accumulates until a schedule is
+  confirmed. That is intentional: accumulating is recoverable, silently deleting
+  operational records is not.
 
 ## Alternatives considered
 
@@ -208,19 +209,36 @@ introduce real data is blocked on this ADR's open questions.
 | Store real data in the demo to "prove" the product | Violates the classification ceiling and the synthetic-data invariant in `AGENTS.md` |
 | Defer this decision and start implementation | The spec makes classification and hosting a hard prerequisite; deferral would force ADR-002 and the data model to guess |
 
-## Unresolved questions requiring organizational input
+## Organizational questions and adopted defaults
 
-These are **not** engineering decisions. Each one blocks work while it stays open.
+The seven items below need organizational confirmation before this product may hold
+real data. On 2026-11-24 the product owner adopted the middle column as the working
+position for engineering (coordination decision C-006). These are project
+decisions, not accreditations: the official named in the third column must still
+confirm or overturn each one before real data is stored, and until then the
+classification ceiling in §2 stands — synthetic data only.
 
-| # | Question | Owner | Impact while unresolved |
-|---|---|---|---|
-| Q1 | Which environment is authorized to hold operational data, and what is its accreditation path? | Authorizing Official / Security Officer | Real-data use blocked; cloud stays unauthorized; ADR-002 must stay self-contained |
-| Q2 | What is the maximum classification this product is permitted to hold? | Authorizing Official | Ceiling stays "synthetic only"; encryption and retention requirements cannot be finalized |
-| Q3 | Is any internet egress permitted, and for which components? | Authorizing Official / Network owner | Jev is limited to a local provider; hosted AI, email, and webhook delivery stay out of scope (ADR-009) |
-| Q4 | May the system store personnel data (names, duty rosters, contact details)? | Privacy / HR owner | User profile fields ([#104](https://github.com/anotherhale/str-ready-room/issues/104)) and membership records stay minimal and synthetic |
-| Q5 | What retention schedule applies to tasks, briefings, notifications, and audit records? | Records Manager | No time-based deletion is implemented; ADR-011 cannot close |
-| Q6 | What backup, restore, and disaster-recovery objectives apply? | Operations owner | Backup stays a manual host procedure; recovery testing stays demo-scoped |
-| Q7 | Which secret-management mechanism is approved for a real deployment? | Security Officer / Operations | Environment-variable secrets remain demo-only |
+| # | Question | Adopted default (working position) | Formal confirmation required from | Consequence of the default |
+|---|---|---|---|---|
+| Q1 | Which environment is authorized to hold operational data, and what is its accreditation path? | A single host inside a controlled network, administered by the unit's own IT/communications staff; accreditation follows the unit's existing security review before any real data is loaded. Cloud remains out of scope. | Authorizing Official / Security Officer | ADR-002 stays self-contained with no cloud identity dependency. Real-data use stays blocked until confirmation. |
+| Q2 | What is the maximum classification this product is permitted to hold? | UNCLASSIFIED only for the first release — no CUI or equivalent controlled marking, nothing classified. Synthetic data until confirmation. | Authorizing Official | Encryption and retention stay at a commercial-unclassified baseline. Raising the ceiling requires §2's four conditions, never a configuration change. |
+| Q3 | Is any internet egress permitted, and for which components? | None by default. An internal endpoint reachable on the controlled network (for example a unit-hosted model gateway) may be enabled per integration by an operator and recorded in configuration. Hosted SaaS AI, outbound email, and webhook delivery stay disabled. | Authorizing Official / Network owner | ADR-009 must define a local or internal provider as the default and treat any hosted provider as an explicitly enabled exception. |
+| Q4 | May the system store personnel data (names, duty rosters, contact details)? | Yes, but only the minimum a workflow needs: display name, squadron/team membership, duty-position assignment, and one optional work contact method. No medical, performance, evaluation, disciplinary, or family data. Real values only after Q1 and Q2 are confirmed; synthetic until then. | Privacy / HR owner | User profile ([#104](https://github.com/anotherhale/str-ready-room/issues/104)) and membership records are limited to those fields; any added field needs a workflow justification. |
+| Q5 | What retention schedule applies to tasks, briefings, notifications, and audit records? | Retain indefinitely for the first release. No time-based deletion; deletion is explicit and authorized only. Audit records outlive the records they describe. Revisit before real data. | Records Manager | ADR-011 can close on "retain indefinitely, explicit deletion only"; no TTL job is built. |
+| Q6 | What backup, restore, and disaster-recovery objectives apply? | Operator-run nightly snapshot of the database volume plus configuration, retained 30 days, restored quarterly against the demo profile. Targets for the single-host profile: RPO 24 hours, RTO 4 hours. | Operations owner | Backup stays an operator procedure and the application ships no backup service; the restore drill becomes a recurring operational check. |
+| Q7 | Which secret-management mechanism is approved for a real deployment? | Secrets injected as environment variables at deploy time from an operator-managed store (Docker secrets, systemd credentials, or a Kubernetes Secret). Never committed, logged, or returned by an API. `.env` files remain demo-only. | Security Officer / Operations | No vault integration is required for the first release; revisit if Q1 or Q2 raise the ceiling. |
+
+### What these defaults do not authorize
+
+- They do **not** authorize real operational, mission, or personnel data. The
+  ceiling in §2 stands until the named officials confirm.
+- They do **not** authorize cloud hosting, and they do not permit internet egress
+  by default.
+- They are **not** an accreditation, an authorization to operate, or a compliance
+  claim, and nothing here may be cited as one.
+- They are **reversible**. Each row is a product decision the named owner can
+  overturn; overturning one is an amendment to this ADR, not silent configuration
+  drift.
 
 ## Validation
 

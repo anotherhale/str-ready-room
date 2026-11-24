@@ -7,7 +7,7 @@ record rather than deleting it.
 
 | ADR | Title | Status |
 |---|---|---|
-| [ADR-001](ADR-001-deployment-classification.md) | Deployment, classification, and data-handling constraints | Accepted (engineering defaults); organizational questions open |
+| [ADR-001](ADR-001-deployment-classification.md) | Deployment, classification, and data-handling constraints | Accepted; working defaults adopted for Q1-Q7, formal authorization for real data outstanding |
 | ADR-002 | Authentication provider, session storage, and cookie strategy | Pending ([#4](https://github.com/anotherhale/str-ready-room/issues/4)) |
 | ADR-003 | Squadron bootstrap, invitation, and membership lifecycle | Pending ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
 | ADR-004 | Role and scoped-permission matrix | Pending ([#6](https://github.com/anotherhale/str-ready-room/issues/6)) |
@@ -19,6 +19,5 @@ record rather than deleting it.
 | ADR-010 | Workflow persistence, retries, cancellation, and idempotency | Pending ([#12](https://github.com/anotherhale/str-ready-room/issues/12)) |
 | ADR-011 | Notification channels/preferences and audit retention | Pending ([#13](https://github.com/anotherhale/str-ready-room/issues/13)) |
 
-Product requirements live in `docs/SQUADRON_PLATFORM_EXPANSION.md` on branch
-`feature/squadron-platform-expansion` (PR #1). Durable repository invariants live
-in `AGENTS.md`.
+Product requirements live in `docs/SQUADRON_PLATFORM_EXPANSION.md` (merged to
+`main` by PR #1). Durable repository invariants live in `AGENTS.md`.

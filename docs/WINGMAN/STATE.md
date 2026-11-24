@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 8, reconciled when PR #120 merged)
+**Last updated:** 2026-11-24 (session 9 — coordination upgrade foundation, PR #129)
 
 ## Artifact map
 
@@ -21,6 +21,31 @@ uses. Do not create duplicate sources of truth.
 | `ARCHITECTURE_MAP.md` | `ARCHITECTURE_MAP.md` |
 | `AGENT_REGISTRY.md` | `AGENT_REGISTRY.md` |
 | `CHECKPOINT.json` | `CHECKPOINT.json` |
+
+## Multi-session coordination (upgrade in progress)
+
+Run identity, exclusive ticket claims, and run discovery now live in the GitHub
+repository itself. No workspace file is authoritative for run ownership.
+
+```bash
+PYTHONPATH=scripts python3 -m wingman.coordination status
+```
+
+| Artifact | Purpose |
+|---|---|
+| `refs/wingman/claims/issue-<N>` | exclusive lease on a ticket (atomic create = lock) |
+| `refs/wingman/runs/<RUN_ID>` | one registry entry per run, written only by its owner |
+| `docs/WINGMAN/runs/<RUN_ID>.{json,md}` | one run's own record (no shared mutable file) |
+| `docs/WINGMAN/RUNS.md` | generated snapshot of the registry — never hand-edited |
+| `docs/WINGMAN/CONCURRENCY.md` | audit, authority decision, incidents, residual risks |
+
+A ticket with a live claim — or an expired claim awaiting recovery — is **not**
+available. Expired claims require inspection (branch, commits, PR) before takeover.
+
+Upgrade backlog: #121 (tracking), #122 (implemented, PR #129) -> #124 (handshake) ->
+#125 (worktrees) -> #126 (run-scoped state) -> #127 (validation suite) -> #128
+(scheduler). **Rollout stays at Phase A (one implementation session) until #127
+passes.**
 
 ## Current product status
 
@@ -178,3 +203,21 @@ it makes every later validation trustworthy), then **#5 — ADR-003**.
   explicitly and verify with `git ls-remote`.**
 - Two sibling sessions were live (`#117`, `#118`). Check for a sibling branch/PR
   for the selected ticket before writing (B-006).
+
+## Session 9 notes (operational)
+
+- Ran while sessions 7 and 8 were live (#9 / PR #119, #14 / PR #117, state PRs
+  #118/#120): excluded both tickets and selected coordination work instead. All four
+  merged during this run, so the exclusion set was recomputed at handoff from live
+  issue state rather than from the inherited checkpoint.
+- Claimed #122 through the new ref-CAS primitive **before** writing code, and verified
+  the live race on github.com (owner `201`, second run `422`).
+- `STATE.md` / `CHECKPOINT.json` / `EXECUTION_LOG.md` were deliberately not touched
+  while #118/#120 were open; this run's state lives in `docs/WINGMAN/runs/20261124T1851Z-5efb.json`
+  and `refs/wingman/runs/20261124T1851Z-5efb`.
+- **B-008:** a sibling session checked `main` out in this shared working directory
+  mid-run, so one commit landed on `main` and was pushed. It was reverted on `main`
+  (`b774e22`, no force-push) and re-applied on the ticket branch for review. Durable
+  fix: worktree isolation (#125).
+- **Next recommended ticket: #124** (mandatory handshake + skill), then #125, then
+  #127. Product-lane next recommendation is unchanged from session 8 (#51).

@@ -78,6 +78,25 @@ here. Keep this file current when a durable invariant or boundary changes.
 - `SingleUserAuthProvider` is a demo/development identity adapter. There is
   **no** login, session, or token flow, and the demo is **not** production
   security.
+- Authorization is **deny-by-default and scope-aware** (ADR-004). Evaluation is
+  ordered and short-circuiting: `ACTIVE` membership, then the role permission,
+  then the resource scope (`personal`/`shared`/`team`/`squadron`/
+  `duty_position`), then resource relationship, then any approval gate. A
+  permission is valid only inside its grant's scope ceiling; scope never widens
+  a grant.
+- Roles are `squadron_admin`, `officer`, `team_lead`, `member`, `read_only`.
+  `operator`/`viewer` survive as demo-only aliases in `default_policy()`, and no
+  production role grant contains a `demo:*` permission.
+- Denial codes are a stable API contract: `forbidden`, `forbidden_membership`,
+  `forbidden_scope`, `forbidden_ownership` (personal scope, kept for
+  compatibility), `approval_required`.
+- A duty position confers only its non-administrative capability set at duty
+  scope; it can never confer `*:manage`, `approvals:decide`, `audit:read`,
+  delegation, or `demo:*`. Nobody may change their own role or membership, and a
+  delegation can never exceed the delegator's permissions or scope.
+- Agents hold **no** roles. They act only through explicit, revocable delegation
+  and may never perform a human-accountability action (`tasks:acknowledge`,
+  `turnover:acknowledge`, `approvals:decide`).
 
 ## Seed and reset
 

@@ -672,3 +672,55 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 15 — 2026-11-24T21:37Z (run `20261124T2137Z-6a24`)
+
+**Ticket:** #142 — type gate over `backend/tests` (PR #143, stacked on #138).
+**Secondary:** #137 — expired-lease recovery + independent verification of PR #138.
+
+### Actions
+
+- Recovered state: `main` at `a99f2dc` (red), registry showed #137's lease expired
+  at 20:59:51Z from run `20261124T2032Z-ed6f`, #142 free.
+- Reproduced the failure on a clean worktree of `main`: 35 integration tests error
+  at collection (`tests/integration/test_email_service.py:21`).
+- Confirmed the negative control: at `main`, `mypy app tests` fails with
+  `Cannot instantiate abstract class "InMemoryMailboxProvider" with abstract
+  attribute "purge" [abstract]`, while the shipped gate (`mypy app`, 84 files) is
+  green — the gate was structurally unable to see it.
+- Implemented #142: `files = ["app", "tests"]`; typed the two test-double factory
+  override maps; aligned README, AGENTS.md and BUILD_STATUS to `mypy` (app+tests);
+  recorded **D-041**.
+- Verified PR #138 on its own branch (`b719216`): 220 passed, `mypy` clean.
+- Claim hygiene: registered the run, recovered #137 to epoch 2 after inspection,
+  released it as `VALIDATING` (PR #138), released #142 as `CHECKPOINTING` (PR #143).
+
+### Validation evidence
+
+| Command | Result |
+|---|---|
+| `cd backend && mypy` | Success: no issues found in **115** source files |
+| `cd backend && python -m pytest -o addopts=""` | **220 passed**, 1 warning |
+| `cd backend && ruff check app tests` | All checks passed |
+| `mypy` on unfixed `main` | exactly **1** error — the `[abstract]` drift |
+
+Frontend suites not run: no frontend file changed.
+
+### Reconciliation
+
+- #137 → `verification`; verification table posted; **not merged** by this run.
+- #142 → `in-progress`; closes when #143 lands **after** #138.
+- No ticket promoted to READY by this run; #15 (CI gate) remains blocked on token
+  scope, which is the reason the gate is still manual.
+
+### Incident — B-010
+
+The session workspace directory was deleted externally mid-run, after the branch
+push and PR creation. Claim hygiene and the state record were completed from a
+fresh clone at `/tmp/wm15`. Nothing uncommitted was lost and no evidence was
+fabricated; recorded because state checkpointing must survive workspace loss.
+
+### Next
+
+Land **#138**, then **#143**. Independent implementation work: **#16** (PR #141) and
+**#21**.

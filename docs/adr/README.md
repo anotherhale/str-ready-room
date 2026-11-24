@@ -8,7 +8,7 @@ record rather than deleting it.
 | ADR | Title | Status |
 |---|---|---|
 | [ADR-001](ADR-001-deployment-classification.md) | Deployment, classification, and data-handling constraints | Accepted; working defaults adopted for Q1-Q7, formal authorization for real data outstanding |
-| ADR-002 | Authentication provider, session storage, and cookie strategy | Pending ([#4](https://github.com/anotherhale/str-ready-room/issues/4)) |
+| [ADR-002](ADR-002-authentication-session.md) | Authentication provider, session storage, and cookie strategy | Accepted 2026-11-24 ([#4](https://github.com/anotherhale/str-ready-room/issues/4)) |
 | ADR-003 | Squadron bootstrap, invitation, and membership lifecycle | Pending ([#5](https://github.com/anotherhale/str-ready-room/issues/5)) |
 | ADR-004 | Role and scoped-permission matrix | Pending ([#6](https://github.com/anotherhale/str-ready-room/issues/6)) |
 | ADR-005 | Data isolation, owner migration, and schema evolution | Pending ([#7](https://github.com/anotherhale/str-ready-room/issues/7)) |

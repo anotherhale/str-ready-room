@@ -148,6 +148,28 @@ here. Keep this file current when a durable invariant or boundary changes.
   and may never perform a human-accountability action (`tasks:acknowledge`,
   `turnover:acknowledge`, `approvals:decide`).
 
+## Jev and AI (ADR-009)
+
+- **The model is untrusted.** Model output is data: it never selects a tool, a
+  query, a filter, or an identity. The only structured output accepted is a tool
+  call, which is schema-validated and re-authorised server-side on the trusted
+  actor context.
+- **The provider port carries no authority.** `application/ports/ai.py` receives
+  message text, tool *specs*, and a timeout — never a principal, session, token,
+  repository, or connection string.
+- **Provider selection is registry-only, and the default is offline.** `fake`
+  (deterministic, credential-free) is the default; `none` disables Jev without
+  affecting the app; an unknown name is a configuration error; a network provider
+  with missing credentials fails closed at construction.
+- **Context assembly is a scoped read path.** It builds one `ScopeCriteria` from
+  the resolved principal and calls the same scoped repository methods as the API,
+  so post-filtering, unscoped queries, and leaking counts are not possible.
+- **Every context item carries a stable citation id and answers must cite them.**
+  Citations outside the assembled set are stripped; answers with claims and no
+  citation are marked `ungrounded` — provenance is checked, truth is not claimed.
+- **An unavailable provider degrades only Jev.** No provider failure may change
+  task, series, approval, or notification state.
+
 ## Seed and reset
 
 - Seeding is guarded by a `seed_version` marker **and** an "any tasks exist?"

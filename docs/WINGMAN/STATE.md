@@ -221,3 +221,25 @@ it makes every later validation trustworthy), then **#5 — ADR-003**.
   fix: worktree isolation (#125).
 - **Next recommended ticket: #124** (mandatory handshake + skill), then #125, then
   #127. Product-lane next recommendation is unchanged from session 8 (#51).
+
+## Session 16 notes (2026-11-24T22:33Z)
+
+- **ADR-010 decided** (#12) and open for review in PR #147: runs are rows
+  (`workflow_runs` + append-only `workflow_run_events` + `workflow_run_steps`), the
+  catalog is a fixed seven-type enum, and every guarantee is a database constraint
+  or a conditional update rather than runner discipline. Terminal states never
+  reopen; retry is a new run.
+- **Approval is durable and digest-bound.** `waiting_approval` survives restarts, an
+  `approved` row only executes while `action_digest` still matches, and expiry fails
+  the run — silence never becomes authority.
+- **`main` was red at session start.** `a99f2dc` added abstract
+  `MailboxProvider.purge()` without updating the in-memory double, so 11 integration
+  tests errored at setup. Fixed under new ticket #146 in the same branch; backend is
+  now **223 passed** and ruff clean.
+- `CHECKPOINT.json` had been stale since session 8; it was rewritten this session.
+- ADR lane status: ADR-001/002/004/005/006/007/010 accepted or merged; ADR-003 (#133),
+  ADR-008 (#136), ADR-009 (#145) in review; **ADR-011 (#13) is the only unclaimed
+  decision left**.
+- **Next recommended ticket: #13** (ADR-011: notification channels/preferences and
+  audit retention), which unblocks the notification lane and the run-retention
+  default left open as W5 in ADR-010.

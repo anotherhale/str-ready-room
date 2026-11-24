@@ -1,40 +1,51 @@
 {
-  "last_run": "2026-11-24T19:15Z",
-  "session": 8,
-  "main_sha_at_start": "4e0abbd",
+  "last_run": "2026-11-24T22:33Z",
+  "session": 16,
+  "main_sha_at_start": "a99f2dc",
   "local_clone_sha_at_start": "4e0abbd",
-  "branch": "wingman/state-session-8",
+  "branch": "wingman/issue-12/adr-010-workflow-persistence",
   "last_ticket": {
-    "issue": 9,
-    "title": "ADR-007: shared recurrence, duty-position routing, occurrence exceptions",
+    "issue": 12,
+    "title": "ADR-010: workflow persistence, durable workflows, retries, cancellation, idempotency",
     "priority": "P1-high",
     "type": "architecture",
-    "status": "merged",
-    "issue_state": "closed by PR #119",
-    "pr": 119,
+    "status": "in review",
+    "issue_state": "open, progress comment posted",
+    "pr": 147,
     "pr_base": "main",
-    "pr_state": "merged",
-    "merge_commit": "4c413a8",
-    "commit": "e5ff56f + reference fix"
+    "pr_state": "open, not merged"
   },
-  "last_ticket_work_branch": "wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit": "e5ff56f (ADR-007) on wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit_message": "docs(adr): ADR-007 shared recurrence, duty-position routing, exceptions",
+  "last_ticket_work_branch": "wingman/issue-12/adr-010-workflow-persistence",
+  "last_commit": "8f20394",
+  "last_commit_message": "test(double): implement MailboxProvider.purge in the in-memory mailbox (#146)",
   "changed_files": [
-    "docs/adr/ADR-007-shared-recurrence.md",
+    "docs/adr/ADR-010-workflow-persistence.md",
     "docs/adr/README.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "backend/tests/doubles.py",
+    "backend/tests/unit/adapters/test_mailbox_double.py"
   ],
   "validation": {
-    "backend_pytest": "206 passed, 1 warning in 17.85s (session 8, identical to baseline)",
-    "backend_pytest_post_merge": "215 passed, 0 failed, 0 errors on main @ 937a899 after PR #117 merged",
+    "backend_pytest": "223 passed, 1 warning in 14.98s (main @ a99f2dc was red: 11 setup errors from the missing double.purge)",
     "backend_ruff": "All checks passed!",
-    "backend_mypy": "Success: no issues found in 84 source files",
     "frontend_tests": "not run - no frontend file changed",
     "frontend_build": "not run - same reason",
-    "diff_scope": "documentation only: one new ADR, one index row, five AGENTS.md invariants"
+    "diff_scope": "one new ADR, one index row, one AGENTS.md section, one test-double fix plus its unit tests"
   },
-  "open_prs": [],
+  "open_prs": [
+    141,
+    144,
+    139,
+    142,
+    137,
+    138,
+    140,
+    143,
+    133,
+    136,
+    145,
+    147
+  ],
   "blockers": [
     {
       "id": "B-001",
@@ -79,9 +90,9 @@
   "ready_queue": [
     {
       "order": 1,
-      "issue": 51,
-      "title": "P3-01: extend RecurrenceRule (scope, duty position, default assignment, due time, pause/resume)",
-      "priority": "P1-high"
+      "issue": 13,
+      "title": "ADR-011: notification channels and audit retention",
+      "priority": "P2-normal"
     },
     {
       "order": 2,
@@ -91,33 +102,9 @@
     },
     {
       "order": 3,
-      "issue": 5,
-      "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
+      "issue": 51,
+      "title": "P3-01: extend RecurrenceRule (claimed by the recurrence lane)",
       "priority": "P1-high"
-    },
-    {
-      "order": 4,
-      "issue": 10,
-      "title": "ADR-008: agent identity, delegation, approval binding",
-      "priority": "P1-high"
-    },
-    {
-      "order": 5,
-      "issue": 11,
-      "title": "ADR-009: Jev provider, context assembly, failure strategy",
-      "priority": "P1-high"
-    },
-    {
-      "order": 6,
-      "issue": 12,
-      "title": "ADR-010: workflow persistence, retries, cancellation, idempotency",
-      "priority": "P1-high"
-    },
-    {
-      "order": 7,
-      "issue": 13,
-      "title": "ADR-011: notification channels and audit retention",
-      "priority": "P2-normal"
     }
   ],
   "blocked_queue": [
@@ -161,10 +148,10 @@
     }
   ],
   "recommended_next_ticket": {
-    "issue": 51,
-    "title": "P3-01: extend RecurrenceRule with scope, duty position, default assignment, due time, pause/resume",
-    "priority": "P1-high",
-    "why": "ADR-007 (merged in PR #119) specifies every field and invariant it needs; it unblocks #52-#54 and the persistence/API lane #55-#62."
+    "issue": 13,
+    "title": "ADR-011: notification channels and audit retention",
+    "priority": "P2-normal",
+    "why": "Last unclaimed architecture decision. It answers the notification-channel and audit-retention questions that #30/#31 and the ADR-010 W5 run-retention default depend on, while #5/#10/#11/#12 wait on review and #51 sits in the recurrence lane."
   },
   "corrections_recorded": [
     "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
@@ -174,10 +161,13 @@
     "Session 7: STATE.md listed #14 in the READY queue and 206 tests; corrected to in-review, 215 tests.",
     "Session 8: run workspace deleted mid-session (third occurrence); a clone's `origin` pointed at the deleted path so `git push origin` reported success against a dead remote. Always add an explicit GitHub remote and verify with `git ls-remote`.",
     "Session 8: the local clone at ~/wingman/adr-007 was created from the run workspace, not from GitHub; treat its `origin` as untrusted.",
-    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected)."
+    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected).",
+    "Session 16: CHECKPOINT.json was stale at session 8 (11 PRs have merged or opened since); rewritten against live GitHub state.",
+    "Session 16: main @ a99f2dc was red - abstract MailboxProvider.purge() shipped without the in-memory double; the baseline had to be repaired (issue #146) before any validation could be trusted.",
+    "Session 16: the inherited run state said 'Next action was fixing InMemoryMailboxProvider' with no ticket; the fix was filed as issue #146 rather than slipped in untracked."
   ],
-  "next_execution_action": "Read #51 plus docs/adr/ADR-007 sections 1/5/9, extend RecurrenceRule in backend/app/domain/tasks/recurrence.py, add domain unit tests, run pytest + ruff. First confirm no sibling holds #51.",
-  "main_sha_now": "4c413a8",
+  "next_execution_action": "Claim #13 via coordination.py, confirm no sibling branch, then write docs/adr/ADR-011-notifications-and-audit-retention.md (channels, preference precedence, digest batching, quiet hours via the clock port, audit retention class with the ADR-010 run history, redaction), flip the ADR index row, run pytest + ruff, open a PR, comment on #13.",
+  "main_sha_now": "a99f2dc",
   "merged_prs": [
     {
       "number": 119,
@@ -224,5 +214,38 @@
     }
   ],
   "main_sha": "4c413a8",
-  "in_review_queue": []
+  "in_review_queue": [
+    {
+      "issue": 5,
+      "pr": 133,
+      "title": "ADR-003 squadron bootstrap, invitation, membership lifecycle"
+    },
+    {
+      "issue": 10,
+      "pr": 136,
+      "title": "ADR-008 agent identity, delegation, approval binding"
+    },
+    {
+      "issue": 11,
+      "pr": 145,
+      "title": "ADR-009 Jev provider, context assembly, failure strategy"
+    },
+    {
+      "issue": 12,
+      "pr": 147,
+      "title": "ADR-010 workflow persistence, retries, cancellation, idempotency"
+    },
+    {
+      "issue": 146,
+      "pr": 147,
+      "title": "Mailbox test double purge() regression"
+    }
+  ],
+  "run_id": "20261124T2235Z-30d0",
+  "secondary_ticket": {
+    "issue": 146,
+    "title": "test(double): InMemoryMailboxProvider missing purge()",
+    "status": "fixed in PR #147",
+    "size": "XS"
+  }
 }

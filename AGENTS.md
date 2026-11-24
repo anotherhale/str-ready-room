@@ -148,6 +148,34 @@ here. Keep this file current when a durable invariant or boundary changes.
   and may never perform a human-accountability action (`tasks:acknowledge`,
   `turnover:acknowledge`, `approvals:decide`).
 
+## Workflow runs (ADR-010)
+
+- **A run is a row, not a process.** `workflow_runs` holds current state,
+  `workflow_run_events` is append-only, `workflow_run_steps` holds one row per
+  idempotent unit of work. There is no workflow engine, DSL, or designer.
+- **Terminal states never reopen.** `succeeded`/`failed`/`cancelled` have no
+  outgoing transition; a retry is a **new** run with `retry_of_run_id`.
+- **Approval waiting is durable and digest-bound.** A consequential step stops at
+  `waiting_approval`; execution requires an `approved` row whose `action_digest`
+  still matches the recomputed proposal. Denial, expiry, or a changed proposal
+  fails the run. Silence is never approval, and an agent never decides.
+- **Idempotency is two-level and constraint-enforced.** Run creation is unique on
+  `(squadron_id, idempotency_key)`; step execution is unique on
+  `(run_id, step_key)`. A step may only wrap a use case that is already
+  idempotent.
+- **Retries are bounded per step**, not per run: 3 attempts, 5 s/30 s backoff,
+  run deadline 15 minutes, 20 steps, one recovery attempt. Authorization and
+  validation errors are never retried.
+- **Cancellation is cooperative** at step boundaries; an in-flight step finishes,
+  because aborting mid-use-case leaves the half-committed state the transaction
+  rules exist to prevent.
+- **Runs store references and digests, never payloads.** No prompts, completions,
+  tokens, credentials, mail bodies, or calendar descriptions. The audit entry is
+  the accountability record; the run is the operational view.
+- **One open run per `(workflow_type, subject)`**, enforced by a unique
+  `active_key` that is `NULL` in terminal states, and a conditional-update claim
+  that is portable to SQLite and PostgreSQL.
+
 ## Seed and reset
 
 - Seeding is guarded by a `seed_version` marker **and** an "any tasks exist?"

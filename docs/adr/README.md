@@ -16,7 +16,7 @@ record rather than deleting it.
 | [ADR-007](ADR-007-shared-recurrence.md) | Shared recurrence, duty-position routing, occurrence exceptions | Accepted 2026-11-24 ([#9](https://github.com/anotherhale/str-ready-room/issues/9)) |
 | ADR-008 | Agent identity, delegation, and approval binding | Pending ([#10](https://github.com/anotherhale/str-ready-room/issues/10)) |
 | ADR-009 | Jev AI provider, context assembly, and failure strategy | Pending ([#11](https://github.com/anotherhale/str-ready-room/issues/11)) |
-| ADR-010 | Workflow persistence, retries, cancellation, and idempotency | Pending ([#12](https://github.com/anotherhale/str-ready-room/issues/12)) |
+| [ADR-010](ADR-010-workflow-persistence.md) | Workflow persistence, retries, cancellation, and idempotency | Accepted 2026-11-24 ([#12](https://github.com/anotherhale/str-ready-room/issues/12)) |
 | ADR-011 | Notification channels/preferences and audit retention | Pending ([#13](https://github.com/anotherhale/str-ready-room/issues/13)) |
 
 Product requirements live in `docs/SQUADRON_PLATFORM_EXPANSION.md` (merged to

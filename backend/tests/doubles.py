@@ -130,6 +130,13 @@ class InMemoryMailboxProvider(MailboxProvider):
                 return message
         raise MailboxError(f"Message {message_id!r} not found", status=404, code="not_found")
 
+    def purge(self) -> int:
+        if not self._reachable:
+            raise MailboxError("mailbox offline", status=502)
+        removed = len(self._messages)
+        self._messages.clear()
+        return removed
+
 
 # -- multi-principal identity harness (test-only) --------------------------
 

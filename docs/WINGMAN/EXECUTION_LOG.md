@@ -672,3 +672,61 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 16 — 2026-11-24T22:33Z (run `20261124T2235Z-30d0`)
+
+**Ticket:** #12 / ADR-010 (P1, architecture, READY, XS-S) — claimed at epoch 1 via
+`coordination.py claim` before any writing.
+
+**Branch:** `wingman/issue-12/adr-010-workflow-persistence` from `main` @ `a99f2dc`.
+
+**Actions**
+
+1. Recovered state from `main`, `STATE.md`, `CHECKPOINT.json` (stale at session 8)
+   and live GitHub; confirmed no claim existed for #12 and no sibling branch/PR.
+2. Wrote `docs/adr/ADR-010-workflow-persistence.md`: run record shape, the fixed
+   seven-type catalog, the six-state machine with a legal-transition table, durable
+   digest-bound approvals, two-level idempotency by plain unique constraints,
+   bounded retries (3 attempts/step, 5 s/30 s, 20 steps, 15 min, 1 recovery),
+   cooperative cancellation, heartbeat recovery, payload minimization, portable
+   `active_key` concurrency, and the `P5-10` API surface.
+3. Flipped the ADR-010 row in `docs/adr/README.md` to Accepted and added a
+   "Workflow runs (ADR-010)" durable-invariant section to `AGENTS.md`.
+4. **Found `main` red.** `a99f2dc` added abstract `MailboxProvider.purge()` but not
+   the implementation in `tests/doubles.py::InMemoryMailboxProvider`, so 11
+   integration tests errored at setup. Filed #146 and fixed it under that ticket in
+   the same branch, with three new unit tests.
+
+**Commits**
+
+| SHA | Message |
+|---|---|
+| `b01db47` | docs(adr): ADR-010 workflow persistence, retries, cancellation, idempotency (#12) |
+| `8f20394` | test(double): implement MailboxProvider.purge in the in-memory mailbox (#146) |
+
+**Validation**
+
+- `cd backend && python -m pytest` → **223 passed**, 1 warning, 14.98 s
+  (baseline before the #146 fix: 11 setup errors)
+- `cd backend && ruff check app tests` → **All checks passed!**
+- Frontend not run: no frontend file changed.
+
+**GitHub**
+
+- PR **#147** opened (base `main`), not merged.
+- #12 and #146 each received a progress comment with evidence.
+
+**Dependency reconciliation**
+
+- `P5-03` (run domain) and `P5-10` (run service/API) become READY once #147 merges;
+  until then they are decision-satisfied but unmerged.
+- #146 is a new XS ticket discovered this run; it blocked every integration test,
+  so it took priority over any further product work in the remaining window.
+- No new blockers. B-007 (workspace deletion) did not recur; commits were pushed
+  immediately after each validated slice.
+
+**Next**
+
+#13 (ADR-011) is the only unclaimed architecture decision left in the ADR lane;
+#5/#10/#11 remain in review. Product-lane recommendation is unchanged (#51, after
+#147 lands, since #51 is already claimed/being worked in the recurrence lane).

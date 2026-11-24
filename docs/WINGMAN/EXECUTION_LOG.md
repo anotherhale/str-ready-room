@@ -588,3 +588,87 @@ no `tasks:read` grant under C-007. Fixed by asserting the empty list with
 `iceman` (`read_only`, which does hold `tasks:read`), so the assertion proves
 ownership filtering rather than a permission denial.
 
+---
+
+## Session 8 — 2026-11-24T18:40Z–19:20Z
+
+**Ticket:** #9 — ADR-007: shared recurrence, duty-position routing, occurrence
+exceptions (P1-high, architecture, 20 min). **Status:** implemented, in review.
+
+### Context recovered
+
+- Run workspace `.../automation-runs/ad8dcd7c-.../str-ready-room` **was deleted**
+  mid-session (third occurrence of this failure). Work moved to a clone at
+  `~/wingman/adr-007` (branch `main` = `4e0abbd`, merge of #116).
+- The clone's `origin` pointed at the deleted path, so `git push origin`
+  reported success against a dead remote; the branch was pushed to an explicit
+  GitHub remote instead and verified with `git ls-remote`.
+- Sibling sessions were live: PR **#117** (#14 multi-principal test harness) and
+  PR **#118** (coordinator state, session 7). #14 was **not** touched.
+- The inherited tracker named #14 as the session ticket; #14 was already owned by
+  the sibling (#117), so it was abandoned rather than duplicated (B-006).
+
+### Work
+
+`docs/adr/ADR-007-shared-recurrence.md` — 12 sections, consequences, 6 rejected
+alternatives, 6 open questions with defaults. Core decisions:
+
+- Chain of `Task` rows kept; **no** `TaskOccurrence` table.
+- Rule becomes a versioned series definition (scope, duty position, default
+  assignee/collaborators, start date, timezone + due time, pause/resume,
+  revision, escalation extension point).
+- Occurrences snapshot schedule and assignment; revisions and exceptions are
+  append-only tables keyed by `(series_id, occurrence_number, kind)`.
+- "This occurrence" vs "this and future": two endpoints, two permissions
+  (`recurrence:override` / `recurrence:write`); `scope=past|all` → 422.
+- Duty-position holder change routes open + future occurrences; closed rows,
+  owner, and assignee history untouched; vacancy falls back to the owner.
+- `TaskStatus.CANCELLED` is closed but never counted as completion.
+- Due time as `due_at_utc` (naive UTC) computed in the series' stored zone.
+
+Also: ADR README row → Accepted; five durable invariants added to `AGENTS.md`.
+
+### Validation
+
+| Command | Result |
+|---|---|
+| `backend/.venv/bin/python -m pytest` | 206 passed, 1 warning (17.85s) — identical to baseline |
+| `backend/.venv/bin/ruff check app tests` | All checks passed |
+| `git diff --stat` | docs only |
+
+Frontend not run: no frontend file changed.
+
+### Git
+
+- Work branch `wingman/p0-07-adr-007-shared-recurrence`, commit `e5ff56f`
+  (+ a follow-up correcting the escalation ticket reference).
+- PR **#119** → `main`, open, not merged.
+
+### Dependency reconciliation
+
+- **#9 → in review** (PR #119).
+- **#51 (P3-01) promoted blocked → READY**: its only dependency was #9, and
+  ADR-007 now specifies every field it must add.
+- #52/#53/#54 become dependency-satisfied once #51 lands; #55–#62 follow.
+- No new blockers. B-006 (concurrent sessions) re-confirmed with a new
+  mitigation: verify the push remote.
+
+### Next
+
+**#51 — P3-01** (P1-high, 25 min). Alternatives: #15 (CI), #5 (ADR-003).
+
+## Merge reconciliation — 2026-11-24
+
+All four open PRs were merged at the coordinator's request, in dependency order:
+
+| Order | PR | Content | Merge commit |
+|---|---|---|---|
+| 1 | #117 | P0-12 multi-principal test harness (issue #14) | `937a899` |
+| 2 | #118 | Coordinator state, session 7 | `7a033d0` |
+| 3 | #119 | ADR-007 (issue #9) | `4c413a8` |
+| 4 | #120 | Coordinator state, session 8 (this PR) | rebased onto `4c413a8` |
+
+PR #120 was rebased rather than force-merged: its conflicts with #118 were in
+`STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
+the session-7 log entry and notes above are kept intact, and stale "in review"
+claims written before #117/#119 merged are corrected in the live state files.

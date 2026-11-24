@@ -1,69 +1,75 @@
 {
-  "last_run": "2026-11-24T11:20Z",
-  "session": 7,
+  "last_run": "2026-11-24T19:15Z",
+  "session": 8,
   "main_sha_at_start": "4e0abbd",
-  "branch": "wingman/p0-12-multi-principal-test-harness",
+  "local_clone_sha_at_start": "4e0abbd",
+  "branch": "wingman/state-session-8",
   "last_ticket": {
-    "issue": 14,
-    "title": "Build the multi-principal test harness and configurable test auth provider",
-    "priority": "P0-critical",
-    "type": "qa",
-    "status": "in_review",
-    "issue_state": "open",
-    "labels": [
-      "wingman",
-      "qa",
-      "P0-critical",
-      "in-progress"
-    ],
-    "pr": 117,
+    "issue": 9,
+    "title": "ADR-007: shared recurrence, duty-position routing, occurrence exceptions",
+    "priority": "P1-high",
+    "type": "architecture",
+    "status": "merged",
+    "issue_state": "closed by PR #119",
+    "pr": 119,
     "pr_base": "main",
-    "pr_state": "open",
-    "closes_on": "merge of PR #117",
-    "commit": "e42f06a"
+    "pr_state": "merged",
+    "merge_commit": "4c413a8",
+    "commit": "e5ff56f + reference fix"
   },
-  "last_commit": "e42f06a",
-  "last_commit_message": "test: multi-principal identity harness and 401 mapping (P0-12, #14)",
+  "last_ticket_work_branch": "wingman/p0-07-adr-007-shared-recurrence",
+  "last_commit": "e5ff56f (ADR-007) on wingman/p0-07-adr-007-shared-recurrence",
+  "last_commit_message": "docs(adr): ADR-007 shared recurrence, duty-position routing, exceptions",
   "changed_files": [
-    "backend/app/domain/shared/errors.py",
-    "backend/app/api/error_handlers.py",
-    "backend/tests/doubles.py",
-    "backend/tests/conftest.py",
-    "backend/tests/integration/test_identity_authorization.py"
+    "docs/adr/ADR-007-shared-recurrence.md",
+    "docs/adr/README.md",
+    "AGENTS.md"
   ],
   "validation": {
-    "backend_pytest": "215 passed, 0 failed, 0 errors (206 baseline + 9 new)",
-    "backend_ruff": "All checks passed",
+    "backend_pytest": "206 passed, 1 warning in 17.85s (session 8, identical to baseline)",
+    "backend_pytest_post_merge": "215 passed, 0 failed, 0 errors on main @ 937a899 after PR #117 merged",
+    "backend_ruff": "All checks passed!",
     "backend_mypy": "Success: no issues found in 84 source files",
-    "frontend_tests": "not run - no frontend file changed; node_modules absent",
+    "frontend_tests": "not run - no frontend file changed",
     "frontend_build": "not run - same reason",
-    "notes": "Full suite run with --junitxml to confirm the count; the new tests also cover the 401 mapping through a real TestClient."
+    "diff_scope": "documentation only: one new ADR, one index row, five AGENTS.md invariants"
   },
-  "open_prs": [
-    {
-      "number": 117,
-      "issue": 14,
-      "title": "P0-12 multi-principal test harness",
-      "state": "open",
-      "mergeable": null
-    }
-  ],
+  "open_prs": [],
   "blockers": [
     {
       "id": "B-001",
       "description": "Formal confirmation of the adopted Q1-Q7 defaults by the named officials",
       "effect": "Real operational/personnel data cannot be stored; cloud hosting and default egress remain unauthorized",
+      "blocks_issues": [
+        "real-data deployment",
+        "cloud deployment"
+      ],
       "does_not_block": [
         "the unclassified synthetic build",
-        "ADR-003, ADR-007..ADR-011"
+        "ADR-003, ADR-008..ADR-011"
       ],
       "tracking_issue": 113,
       "status": "product owner accepted defaults 2026-11-24; official sign-off outstanding"
     },
     {
+      "id": "B-006",
+      "description": "Concurrent WINGMAN sessions sharing one workspace / repository",
+      "effect": "Session 8 saw two sibling sessions (#117, #118) and a deleted run workspace; #14 was correctly left to its owner.",
+      "mitigation": "At run start, check for a sibling branch/PR for the selected ticket and for open PRs before writing; use an isolated clone with an explicit GitHub remote.",
+      "does_not_block": [
+        "#51",
+        "#15",
+        "#5",
+        "#10",
+        "#11",
+        "#12",
+        "#13"
+      ]
+    },
+    {
       "id": "B-007",
       "description": "The automation run workspace directory is deleted mid-session and recreated empty",
-      "effect": "Uncommitted work is lost. Observed in sessions 6 and 7 (session 7 lost a validated implementation).",
+      "effect": "Uncommitted work is lost. Observed in sessions 6, 7 and 8 (session 7 lost a validated implementation).",
       "mitigation": "Commit and push as soon as a slice validates; never defer git to the end of the run.",
       "does_not_block": [
         "any ticket"
@@ -73,26 +79,26 @@
   "ready_queue": [
     {
       "order": 1,
+      "issue": 51,
+      "title": "P3-01: extend RecurrenceRule (scope, duty position, default assignment, due time, pause/resume)",
+      "priority": "P1-high"
+    },
+    {
+      "order": 2,
+      "issue": 15,
+      "title": "CI workflow for backend and frontend verification",
+      "priority": "P1-high"
+    },
+    {
+      "order": 3,
       "issue": 5,
       "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
       "priority": "P1-high"
     },
     {
-      "order": 2,
-      "issue": 9,
-      "title": "ADR-007: shared recurrence, duty-position routing, occurrence exceptions",
-      "priority": "P1-high"
-    },
-    {
-      "order": 3,
+      "order": 4,
       "issue": 10,
       "title": "ADR-008: agent identity, delegation, approval binding",
-      "priority": "P1-high"
-    },
-    {
-      "order": 4,
-      "issue": 15,
-      "title": "CI workflow running backend and frontend verification",
       "priority": "P1-high"
     },
     {
@@ -110,62 +116,86 @@
     {
       "order": 7,
       "issue": 13,
-      "title": "ADR-011: notification channels/preferences and audit retention",
+      "title": "ADR-011: notification channels and audit retention",
       "priority": "P2-normal"
-    }
-  ],
-  "in_review_queue": [
-    {
-      "issue": 14,
-      "title": "Multi-principal test harness",
-      "pr": 117,
-      "closes_on": "merge"
     }
   ],
   "blocked_queue": [
     {
+      "issue": "52-54",
+      "title": "P3-02..P3-04 domain tickets",
+      "blocked_on": [
+        51
+      ]
+    },
+    {
       "issue": 16,
+      "title": "Squadron aggregate",
       "blocked_on": [
         5
       ]
     },
     {
       "issue": 34,
+      "title": "Two-user isolation and access denial",
       "blocked_on": [
-        "#14 merge (PR #117)"
+        27,
+        28,
+        29,
+        32
       ]
     },
     {
       "issue": "18-21,32,35-41,46,49",
+      "title": "Squadron foundation chain",
       "blocked_on": [
         "#16 and their ADRs"
       ]
     },
     {
       "issue": "50,71,86,90,94,97,98,101",
+      "title": "Frontend and docs",
       "blocked_on": [
         "backend and ADR dependencies"
       ]
     }
   ],
   "recommended_next_ticket": {
-    "issue": 5,
-    "title": "ADR-003: squadron bootstrap, invitation, and membership lifecycle",
+    "issue": 51,
+    "title": "P3-01: extend RecurrenceRule with scope, duty position, default assignment, due time, pause/resume",
     "priority": "P1-high",
-    "why": "#16 lists #5 and #7; #7 is merged, so #5 is the only remaining gate on the P0 squadron foundation chain (#16 -> #18-#21, #32, #35-#41, #46, #49). Highest downstream unblock value of any READY ticket."
+    "why": "ADR-007 (merged in PR #119) specifies every field and invariant it needs; it unblocks #52-#54 and the persistence/API lane #55-#62."
   },
-  "next_execution_action": "Verify PR #117 is merged (if not, review/land it first). Then start #5: read the issue, ADR-005 and ADR-006, write docs/adr/ADR-003-*, add the README index row and the AGENTS.md membership invariants, run pytest + ruff, and open a PR.",
   "corrections_recorded": [
-    "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale (decision C-001).",
-    "Session 6: inherited checkpoint was two merges stale; ADR-005 was already merged in PR #111.",
-    "Session 6 and 7: the run workspace directory was deleted mid-session. Session 7 lost a validated, uncommitted implementation and re-implemented it; the checkpoint now records the mitigation (push before documenting).",
-    "Session 7: STATE.md listed #14 in the READY queue and 206 tests; corrected to in-review, 215 tests."
+    "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
+    "Session 6: inherited checkpoint (session 4) was two merges stale; ADR-005 was already merged in PR #111. A duplicate ADR-005 draft was discarded uncommitted instead of being opened as a second PR.",
+    "Session 6: the run workspace directory was deleted mid-session; contents were found relocated to a new run directory with changes intact and work resumed there. Second occurrence of this failure mode.",
+    "Session 6: STATE.md still described ADR-002/ADR-004 as 'awaiting merge' and listed merged ADRs in the READY queue; corrected against live GitHub state.",
+    "Session 7: STATE.md listed #14 in the READY queue and 206 tests; corrected to in-review, 215 tests.",
+    "Session 8: run workspace deleted mid-session (third occurrence); a clone's `origin` pointed at the deleted path so `git push origin` reported success against a dead remote. Always add an explicit GitHub remote and verify with `git ls-remote`.",
+    "Session 8: the local clone at ~/wingman/adr-007 was created from the run workspace, not from GitHub; treat its `origin` as untrusted.",
+    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected)."
   ],
-  "main_sha": "4e0abbd",
+  "next_execution_action": "Read #51 plus docs/adr/ADR-007 sections 1/5/9, extend RecurrenceRule in backend/app/domain/tasks/recurrence.py, add domain unit tests, run pytest + ruff. First confirm no sibling holds #51.",
+  "main_sha_now": "4c413a8",
   "merged_prs": [
     {
+      "number": 119,
+      "issue": 9,
+      "title": "ADR-007 shared recurrence, duty-position routing, exceptions"
+    },
+    {
+      "number": 118,
+      "title": "Coordinator state - session 7"
+    },
+    {
+      "number": 117,
+      "issue": 14,
+      "title": "P0-12 multi-principal test harness"
+    },
+    {
       "number": 116,
-      "title": "coordinator state session 6"
+      "title": "Coordinator state - session 6"
     },
     {
       "number": 114,
@@ -192,5 +222,7 @@
       "issue": 3,
       "title": "ADR-001 deployment classification"
     }
-  ]
+  ],
+  "main_sha": "4c413a8",
+  "in_review_queue": []
 }

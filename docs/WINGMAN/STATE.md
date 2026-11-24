@@ -75,6 +75,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 | ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
+| ADR-002 (#4) in review as PR #109 (parallel session) | The identity lane (#24-#27, #30, #34) cannot start | Reviewer |
 
 Nothing currently blocks ticket execution.
 

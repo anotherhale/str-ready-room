@@ -211,5 +211,7 @@ already `in-progress` with work to land and it gates #18, #19, #35, and #37.
 
 ### Next
 
-**#4 — ADR-002 (authentication provider, session storage, cookie strategy).**
-Alternatives if it is claimed elsewhere: #7 (ADR-005), #8 (ADR-006).
+**#7 — ADR-005 (squadron data isolation, owner migration, schema evolution).**
+#4 turned out to be claimed: a parallel session opened PR #109 for ADR-002 while
+this one was running, so the recommendation moved to the next unclaimed
+priority order. Alternatives: #8 (ADR-006), #14 (test harness).

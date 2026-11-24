@@ -37,7 +37,15 @@
       "number": 108,
       "branch": "wingman/adr-004-role-permission-matrix",
       "title": "docs(adr): ADR-004 role and scoped-permission matrix",
-      "state": "open"
+      "state": "open",
+      "mergeable_state": "clean"
+    },
+    {
+      "number": 109,
+      "branch": "wingman/adr-002-authentication-session",
+      "title": "ADR-002: authentication provider, session storage, and cookie strategy",
+      "state": "open",
+      "note": "opened by a parallel session; #4 is in review"
     }
   ],
   "blockers": [
@@ -66,7 +74,8 @@
       "order": 1,
       "issue": 4,
       "title": "ADR-002: authentication provider, session storage, cookie strategy",
-      "priority": "P0-critical"
+      "priority": "P0-critical",
+      "note": "in review (PR #109, opened by a parallel session)"
     },
     {
       "order": 2,
@@ -140,12 +149,12 @@
     }
   ],
   "recommended_next_ticket": {
-    "issue": 4,
-    "title": "ADR-002: authentication provider, session storage, cookie strategy",
-    "rationale": "Position 1 in the merged queue and already dependency-satisfied; ADR-001 section 4 fixes its inputs. Gates the identity lane (#24-#27, #30, #34).",
+    "issue": 7,
+    "title": "ADR-005: squadron data isolation, owner migration, and schema evolution",
+    "rationale": "The highest-priority ADR that is READY and not already claimed: #6 is in review (#108), #4 is in review (#109). ADR-005 fixes the ownership and schema-evolution model that #8, #20-#21, and #32 all build on.",
     "alternatives": [
-      7,
-      8
+      8,
+      14
     ]
   },
   "corrections_recorded": [
@@ -155,6 +164,6 @@
     "PR #107 was superseded by PR #108 (rebuilt on main after #105 merged).",
     "Session 3 took #6 rather than session 2's recommendation #4 because #6 was already in progress and gates more downstream work."
   ],
-  "next_execution_action": "Read docs/WINGMAN/STATE.md and CHECKPOINT.json. Recheck whether PR #108 merged: if yes, close #6 and unblock #18/#19. Then claim #4 (ADR-002) and write docs/adr/ADR-002-*.md against ADR-001 section 4.",
+  "next_execution_action": "Read docs/WINGMAN/STATE.md and CHECKPOINT.json. Recheck PRs #108 and #109: on merge, close #6/#4 and unblock their dependents (#18, #19, #24-#27, #30, #34). Then claim #7 (ADR-005) unless a parallel session already has it.",
   "main_sha_now": "6b48e66"
 }

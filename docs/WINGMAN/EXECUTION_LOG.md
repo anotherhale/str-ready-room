@@ -350,3 +350,56 @@ not from the previous checkpoint.
 
 **#14 — multi-principal test harness** (P0-critical). Alternatives: #5 (ADR-003),
 #15 (CI). Do not start #9 before #8 closes.
+
+---
+
+## Session 6 (continued) — post-merge reconciliation, 2026-11-24T18:19Z-18:32Z
+
+### What changed since the checkpoint above
+
+PR **#114 merged** into `main` as **`3d6efd6`** at 18:19:20Z, and **#8 was
+closed** and relabelled `verification`. The checkpoint written minutes earlier
+said `in-review`, so it was corrected in the same PR (#116) rather than left
+stale for the next run to trust.
+
+### Concurrent-session collision (new failure mode, B-006)
+
+A second WINGMAN session was working in the same workspace and selected the same
+ticket. It committed the working tree (which contained this session's ADR-006
+draft), pushed `wingman/adr-006-task-scope-sharing`, opened PR #114, wrote the
+issue comment, and produced the session-6 state branch — all while this session
+was still writing. Nothing was lost: the committed ADR is the same 351-line file
+this session authored, and both sessions independently measured 206 passed /
+ruff clean.
+
+What did go wrong is drift: the PR #114 body described a section layout that the
+committed file does not have (it cited "§5/§6", invariants `I1`-`I9`, and
+soft-revoked shares; the file actually has `§1`-`§10`, seven invariants in `§2`,
+one `task_shares` table with `read`/`write`, and open questions `T1`-`T5`). The
+description was rewritten against the file, with a note that it had been
+corrected.
+
+**Mitigation for future runs:** before writing to a ticket, check whether a
+sibling branch or PR for that ticket already exists. If it does, verify and
+correct it instead of re-implementing.
+
+### Also lost and recovered
+
+The run directory was deleted a second time mid-session, taking this session's
+uncommitted `STATE.md` edit with it. The repository was re-cloned into a fresh
+directory and the state edits were re-applied there. The failure mode is now
+recorded twice; work in progress must be committed early rather than batched at
+the end of the run.
+
+### Dependency reconciliation
+
+- **#9 (ADR-007) promoted `blocked` -> `ready`.** Its only dependency, #8, is
+  merged. Nothing else in the queue moved.
+- #35-#39 still gated on the Phase-1 domain/persistence chain (#16-#21), not on
+  ADR-006.
+- No new blockers discovered beyond B-006.
+
+### Next
+
+**#9 — ADR-007** (P1-high, 20 min): the last unmerged ADR that gates a whole
+implementation lane. Alternatives: #14 (P0-critical test harness), #15 (CI).

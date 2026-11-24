@@ -78,13 +78,15 @@ ADR set is settled; the ADR tickets are the only work in flight.
   replaces the additive helper; every existing table backfills to one
   deterministic bootstrap squadron; Alembic is deferred.
   See `docs/adr/ADR-005-data-isolation-migration.md`.
-- **ADR-006 accepted, in PR #114** (issue #8, branch
-  `wingman/adr-006-task-scope-sharing`). Four task scopes on a strict ladder
-  (`personal` < `shared` < `team` < `squadron`) with `personal` as the default
-  for every capture path; exactly one accountable owner, at most one typed
-  assignee, many collaborators and watchers; shares are user-only, additive,
-  non-transitive, capped at the grantor's authority, and soft-revoked;
-  occurrences snapshot scope and roles at generation.
+- **ADR-006 accepted and merged** (PR #114 -> `3d6efd6`, issue #8 closed).
+  Four task scopes (`personal`/`shared`/`team`/`squadron`) with `personal` as the
+  default for every capture path; exactly one accountable owner (a user), at most
+  one typed assignee (user/team/duty position), many collaborators and watchers.
+  Sharing is **one** `task_shares` table with `read`/`write`: a write share *is* a
+  collaborator, a read share *is* a watcher, so access and the people-list cannot
+  drift. `duty_position` is an assignee kind, never a fifth task scope. "No
+  accountable owner" means the owner's membership is not `ACTIVE`, not a null
+  column. Visibility is computed once and emits the repository filter keys.
   See `docs/adr/ADR-006-task-scope-sharing.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
@@ -96,8 +98,6 @@ ADR set is settled; the ADR tickets are the only work in flight.
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 
-| ADR-006 (#8) awaiting merge in PR #114 | #9 (ADR-007) stays `blocked`; #35-#39 stay gated | Reviewer |
-
 Nothing currently blocks the remaining READY ADRs or the test harness.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
@@ -108,39 +108,40 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
-| 2 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
-| 3 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 4 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
-| 5 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
-| 6 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
-| 7 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
+| 1 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) | ADR-007: shared recurrence, duty-position routing, occurrence exceptions | P1-high | 20 min |
+| 2 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
+| 3 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 4 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
+| 5 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
+| 6 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
+| 7 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
+| 8 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
 ## Blocked queue
 
 | Issue | Blocked on |
 |---|---|
-| [#9](https://github.com/anotherhale/str-ready-room/issues/9) ADR-007 | #8 |
 | #16–#104 (implementation tickets) | Their ADR and foundation dependencies; see each issue |
 
 ## Next recommended ticket
 
-**#14 — multi-principal test harness and configurable test auth provider**
-(P0-critical). Rationale: it is the only remaining P0-critical READY ticket, and
-every Phase-1/2 implementation ticket (#16-#21, #34, #46) needs a way to act as
-two different principals in one test. ADR-002 (merged) fixed the session shape
-and ADR-004 (merged) fixed the scope model, so #14 has the contracts it needs.
+**#9 — ADR-007: shared recurrence, duty-position routing, occurrence exceptions**
+(P1-high). Rationale: its only dependency (#8, ADR-006) merged in `3d6efd6`, so
+it is newly READY, and it is the last unmerged ADR that gates a whole
+implementation lane (#38 recurrence). ADR-006 fixed the two inputs it needs:
+occurrences inherit the series scope, and `duty_position` is an assignee kind
+rather than a task scope.
 
-Alternatives if #14 is claimed: **#5 — ADR-003** (P1-high, gates the membership
-lifecycle in #16 and #22), then **#15 — CI workflow**.
-
-Do not start #9 (ADR-007) until PR #114 merges and #8 closes.
+Alternatives if #9 is claimed: **#14 — multi-principal test harness**
+(P0-critical; ADR-002 and ADR-004 already give it its contracts), then
+**#15 — CI workflow**, then **#5 — ADR-003**.
 
 In flight, awaiting merge — check before starting anything:
 
 | PR | Ticket | Status |
 |---|---|---|
-| #114 | #8 ADR-006 | open; close #8 when merged |
+| #116 | session-6 checkpoint | open (this branch) |
+| #114 | #8 ADR-006 | **merged** (`3d6efd6`); #8 closed |
 | #111 | #7 ADR-005 | **merged** (`dc98f8d`) |
 | #109 | #4 ADR-002 | merged |
 | #108 | #6 ADR-004 | merged |

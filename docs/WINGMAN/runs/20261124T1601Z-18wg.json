@@ -1,0 +1,48 @@
+{
+  "run_id": "20261124T1601Z-18wg",
+  "session": 16,
+  "started_at": "2026-11-24T16:01Z",
+  "base_sha": "a99f2dc",
+  "branch": "wingman/issue-18/permission-catalog-role-grants",
+  "ticket": {
+    "issue": 18,
+    "title": "P1-03: first-class permissions and role grants per ADR-004",
+    "priority": "P0-critical",
+    "estimated_minutes": 20,
+    "status": "in review",
+    "pr": 148,
+    "pr_state": "open"
+  },
+  "changed_files": [
+    "backend/app/domain/authorization/permissions.py",
+    "backend/app/domain/authorization/policies.py",
+    "backend/tests/unit/domain/test_authorization.py"
+  ],
+  "validation": {
+    "authorization_unit": "17 passed",
+    "ruff": "All checks passed",
+    "auth_surface": "tests/unit + tests/integration/test_identity_authorization.py exit 0",
+    "full_suite": "13 failed, 22 errors \u2014 pre-existing main baseline in the mailbox tests (#146/#137, PR #138); none authorization-related",
+    "frontend": "not run \u2014 no frontend file changed"
+  },
+  "commits": [
+    "f0ce000"
+  ],
+  "unblocked": [
+    19,
+    20,
+    21
+  ],
+  "blockers": [],
+  "state_files_deferred": [
+    "docs/WINGMAN/CHECKPOINT.json",
+    "docs/WINGMAN/STATE.md",
+    "docs/WINGMAN/EXECUTION_LOG.md"
+  ],
+  "state_files_deferred_reason": "two open state PRs (#140, #144) own those files; a third concurrent edit would conflict",
+  "next_recommended_ticket": {
+    "issue": 19,
+    "title": "P1-04 scope-aware authorization evaluation",
+    "why": "consumes ROLE_GRANTS and the 54-value catalog; gates #27/#28/#29 and the squadron chain"
+  }
+}

@@ -17,7 +17,7 @@ record rather than deleting it.
 | ADR-008 | Agent identity, delegation, and approval binding | Pending ([#10](https://github.com/anotherhale/str-ready-room/issues/10)) |
 | ADR-009 | Jev AI provider, context assembly, and failure strategy | Pending ([#11](https://github.com/anotherhale/str-ready-room/issues/11)) |
 | ADR-010 | Workflow persistence, retries, cancellation, and idempotency | Pending ([#12](https://github.com/anotherhale/str-ready-room/issues/12)) |
-| ADR-011 | Notification channels/preferences and audit retention | Pending ([#13](https://github.com/anotherhale/str-ready-room/issues/13)) |
+| [ADR-011](ADR-011-notifications-and-audit.md) | Notification channels/preferences and audit retention | Accepted 2026-11-24 ([#13](https://github.com/anotherhale/str-ready-room/issues/13)) |
 
 Product requirements live in `docs/SQUADRON_PLATFORM_EXPANSION.md` (merged to
 `main` by PR #1). Durable repository invariants live in `AGENTS.md`.

@@ -1,0 +1,48 @@
+{
+  "run_id": "20261124T2336Z-7b3e",
+  "session": 12,
+  "ticket": 13,
+  "ticket_title": "ADR-011: Decide notification channels/preferences and audit retention",
+  "ticket_type": "architecture",
+  "ticket_priority": "P2-normal",
+  "run_status": "VALIDATING",
+  "branch": "wingman/issue-13/adr-011",
+  "worktree": "/home/ahale/.openhands/agent-canvas/workspaces/automation-runs/187b5843-6929-4289-8cd7-153a5b4e022f/str-ready-room",
+  "started_at": "2026-11-24T23:15:00Z",
+  "last_heartbeat": "2026-11-24T23:40:00Z",
+  "attempt_number": 1,
+  "claim": {
+    "ticket": 13,
+    "status": "RELEASED",
+    "note": "issue had no refs/wingman claim and no lease; ADR lane ticket, docs-only, released at PR-open"
+  },
+  "reconciled": [
+    "CHECKPOINT.json still reports session 8 while run records exist for sessions 9 and 11; shared state files are stale and contended, so this run writes only a run-scoped record",
+    "Open PRs at start: #136 (ADR-008), #145 (ADR-009), #147 (ADR-010), #148 (permission catalog #18), #141 (#16), #143 (#142), #138 (#137), plus state PRs #130/#134/#140/#144/#149",
+    "No open claim or lease for #13; #12 and #10 already have PRs (#147, #136), so the ADR lane is fully in flight after this ticket"
+  ],
+  "incidents": [],
+  "findings": [
+    "Backend baseline is red on main: InMemoryMailboxProvider does not implement MailboxProvider.purge, so integration fixtures error at setup. Independently reproduced (#137, fix in PR #138).",
+    "Seven state PRs (#130/#134/#140/#144/#149 plus session 10-16 records) are open and unmerged, so STATE.md/CHECKPOINT.json/EXECUTION_LOG.md no longer reflect reality. This run deliberately did not edit them."
+  ],
+  "files_changed": [
+    "docs/adr/ADR-011-notifications-and-audit.md",
+    "docs/adr/README.md",
+    "AGENTS.md",
+    "docs/WINGMAN/runs/20261124T2336Z-7b3e.json",
+    "docs/WINGMAN/runs/20261124T2336Z-7b3e.md"
+  ],
+  "validation": {
+    "backend_pytest": "red before and after; identical failure set, all from #137 (abstract class InMemoryMailboxProvider missing purge)",
+    "python_files_touched": 0,
+    "docs_only": true
+  },
+  "dependencies_satisfied": [
+    "#88 (notification domain) no longer waits on ADR-011 for its decisions; still blocked on domain foundation and the ADR-004 permission catalog (#18)"
+  ],
+  "next_recommended_ticket": 137,
+  "next_recommended_reason": "The ADR lane (#10/#11/#12) is fully in flight in PRs #136/#145/#147. The highest-value dependency-satisfied work is restoring a green baseline: land PR #138 for #137, then review and merge the ADR PRs so #88/#89 and #76-#85 can be promoted.",
+  "pr": 150,
+  "commit_sha": "1b88dc6"
+}

@@ -1,0 +1,41 @@
+{
+  "run_id": "20261124T2235Z-30d0",
+  "session": 16,
+  "ticket": 12,
+  "ticket_title": "ADR-010: workflow persistence, durable workflows, retries, cancellation, idempotency",
+  "run_status": "VALIDATING",
+  "branch": "wingman/issue-12/adr-010-workflow-persistence",
+  "worktree": "/home/ahale/.openhands/agent-canvas/workspaces/automation-runs/06601980-3dc5-4400-ac89-552b969d0872/str-ready-room",
+  "started_at": "2026-11-24T22:35:00Z",
+  "attempt_number": 1,
+  "claim_epoch": 1,
+  "secondary_ticket": 146,
+  "commits": [
+    "b01db47 docs(adr): ADR-010 workflow persistence, retries, cancellation, idempotency (#12)",
+    "8f20394 test(double): implement MailboxProvider.purge in the in-memory mailbox (#146)",
+    "dd7cfd6 docs(wingman): session 16 state, checkpoint and execution log (#12, #146)"
+  ],
+  "changed_files": [
+    "docs/adr/ADR-010-workflow-persistence.md",
+    "docs/adr/README.md",
+    "AGENTS.md",
+    "backend/tests/doubles.py",
+    "backend/tests/unit/adapters/test_mailbox_double.py",
+    "docs/WINGMAN/STATE.md",
+    "docs/WINGMAN/EXECUTION_LOG.md",
+    "docs/WINGMAN/CHECKPOINT.json",
+    "docs/WINGMAN/runs/20261124T2235Z-30d0.json",
+    "docs/WINGMAN/runs/20261124T2235Z-30d0.md"
+  ],
+  "validation": {
+    "backend_pytest": "223 passed, 1 warning in 14.98s",
+    "backend_pytest_baseline_before_fix": "11 setup errors - InMemoryMailboxProvider missing abstract purge()",
+    "backend_ruff": "All checks passed!",
+    "frontend": "not run - no frontend file changed"
+  },
+  "pr": 147,
+  "next_recommended_ticket": 13,
+  "supersedes_stale_state": "CHECKPOINT.json had been stale since session 8",
+  "claim_status": "RELEASED",
+  "release_note": "PR #147 open for review; #12 and #146 stay open until it merges"
+}

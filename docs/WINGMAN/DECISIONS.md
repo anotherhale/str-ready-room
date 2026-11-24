@@ -9,10 +9,10 @@ invariants. This file records *how the coordinator works* and *why*.
 | ADR | Title | Status | Issue |
 |---|---|---|---|
 | [ADR-001](../adr/ADR-001-deployment-classification.md) | Deployment, classification, data handling | **Accepted and merged** (`90decc5`); Q1–Q7 defaults adopted, formal confirmation outstanding | #3 |
-| ADR-002 | Authentication provider, session storage, cookies | READY | #4 |
+| [ADR-002](../adr/ADR-002-authentication-session.md) | Authentication provider, session storage, cookies | **Accepted and merged** (PR #109, `f594bb7`) | #4 |
 | ADR-003 | Squadron bootstrap, invitation, membership lifecycle | READY | #5 |
-| ADR-004 | Role and scoped-permission matrix | READY | #6 |
-| ADR-005 | Data isolation, owner migration, schema evolution | READY | #7 |
+| [ADR-004](../adr/ADR-004-role-permission-matrix.md) | Role and scoped-permission matrix | **Accepted and merged** (PR #108, `af31b65`) | #6 |
+| [ADR-005](../adr/ADR-005-data-isolation-migration.md) | Data isolation, owner migration, schema evolution | **Accepted and merged** (PR #111, `dc98f8d`) | #7 |
 | ADR-006 | Task scope, sharing, accountable ownership | READY | #8 |
 | ADR-007 | Shared recurrence, duty routing, occurrence exceptions | Blocked on #8 | #9 |
 | ADR-008 | Agent identity, delegation, approval binding | READY | #10 |

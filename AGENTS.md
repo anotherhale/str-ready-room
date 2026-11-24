@@ -38,6 +38,22 @@ here. Keep this file current when a durable invariant or boundary changes.
   occurrence so clamping is deterministic (31 Jan → 31 Mar, not 28 Mar).
 - **Editing a recurring task edits the existing rule** and preserves series
   identity and `occurrences_generated`; re-anchoring uses the current due date.
+- **Occurrences snapshot, the rule evolves** (ADR-007). Each occurrence stores
+  its `rule_revision`, `scheduled_date`, due date/instant, assignee snapshot,
+  routing position, scope and owner, so a later revision can never reinterpret
+  history. Rule revisions and per-occurrence exceptions are append-only tables,
+  not extra occurrence rows.
+- **"This occurrence" and "this and future" are separate operations.** A series
+  edit writes a revision effective from the next ungenerated occurrence and
+  changes no existing occurrence; an occurrence edit writes an exception and
+  never touches the rule. There is no "edit the past".
+- **A duty-position holder change routes open and future occurrences forward**
+  and never rewrites closed ones; the accountable owner and the append-only
+  assignee history are unchanged. A vacant position falls back to the
+  accountable owner and is flagged for the scan.
+- **`cancelled` is closed but is not completion.** It leaves active sections like
+  a completed task, is excluded from completion metrics, and generates no
+  successor.
 - **A rule is deactivated, never hard-deleted, while any occurrence references
   it** — completed history keeps its linkage.
 - **Overdue tasks never disappear.** Completed tasks never appear in active

@@ -40,6 +40,17 @@ class ConflictError(DomainError):
     code = "conflict"
 
 
+class AuthenticationError(DomainError):
+    """The request carries no usable identity (maps to HTTP 401).
+
+    Distinct from ``AuthorizationError``: authentication is *who is asking*, and
+    authorization is *what that identity may do*.  A membership that is not
+    active yields no identity at all, so it fails here rather than as a 403.
+    """
+
+    code = "unauthenticated"
+
+
 class AuthorizationError(DomainError):
     """The principal may not perform the requested action (maps to HTTP 403)."""
 

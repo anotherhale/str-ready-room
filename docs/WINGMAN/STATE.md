@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 7)
+**Last updated:** 2026-11-24 (session 8, reconciled when PR #120 merged)
 
 ## Artifact map
 
@@ -35,7 +35,7 @@ containerized. It has **no authentication**, **no squadron/membership model**, a
 | Backend (FastAPI, DDD + hexagonal) | Working | 215 tests pass, ruff clean |
 | Frontend (React/TS SPA) | Working | 39 tests pass, typecheck clean, build succeeds |
 | Deployment | Single-host Docker Compose, SQLite volume, Radicale + GreenMail | `docker-compose.yml` |
-| Identity | `single_user` demo adapter only — no login, no session; a **test-only** multi-principal provider exists (P0-12, PR #117) | `backend/app/adapters/identity/`, `backend/tests/doubles.py` |
+| Identity | `single_user` demo adapter only — no login, no session; a **test-only** multi-principal provider is on `main` (P0-12, PR #117 merged) | `backend/app/adapters/identity/`, `backend/tests/doubles.py` |
 | Authorization | Permission checks exist; no scope/ownership model for multiple principals | `backend/app/domain/authorization/` |
 | Squadron / membership | Absent | — |
 | Jev / agent runtime | Absent | — |
@@ -91,6 +91,18 @@ ADR set is settled; the ADR tickets are the only work in flight.
   accountable owner" means the owner's membership is not `ACTIVE`, not a null
   column. Visibility is computed once and emits the repository filter keys.
   See `docs/adr/ADR-006-task-scope-sharing.md`.
+- **ADR-007 accepted and merged** (PR #119 -> `4c413a8`, issue #9 closed).
+  The chain of `Task` rows is kept — **no** `TaskOccurrence` table. The rule
+  becomes a versioned series definition (`scope`, `responsible_duty_position_id`,
+  `default_assignee`, `default_collaborator_ids`, `start_date`, `timezone` +
+  `due_time_local`, `paused_at`, `revision`). Occurrences **snapshot** their
+  schedule and assignment; `recurrence_rule_revisions` and
+  `recurrence_exceptions` are append-only. "This occurrence" and "this and
+  future" are two endpoints with different permissions (`recurrence:override` vs
+  `recurrence:write`) and there is no edit-the-past. A duty-position holder
+  change routes open and future occurrences forward and never rewrites closed
+  rows or the owner. `cancelled` is closed but never counted as completion.
+  See `docs/adr/ADR-007-shared-recurrence.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
   authorizes cloud hosting, default egress, or any compliance claim.
@@ -103,10 +115,8 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 Nothing currently blocks the remaining READY ADRs.
 
-**In review:** #14 (P0-12) — PR
-[#117](https://github.com/anotherhale/str-ready-room/pull/117), branch
-`wingman/p0-12-multi-principal-test-harness`, base `4e0abbd`. Implementation and
-validation are complete; the ticket closes on merge.
+**In review:** nothing. #14 (P0-12, PR #117), ADR-007 (#9, PR #119), and the
+session-7 state PR #118 are all merged to `main`.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -116,38 +126,37 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 2 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) | ADR-007: shared recurrence, duty-position routing, occurrence exceptions | P1-high | 20 min |
-| 3 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
-| 4 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 1 | [#51](https://github.com/anotherhale/str-ready-room/issues/51) | P3-01: extend `RecurrenceRule` with scope, duty position, default assignment, due time, pause/resume | P1-high | 25 min |
+| 2 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 3 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
+| 4 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
 | 5 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
 | 6 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
 | 7 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
-#14 (multi-principal test harness) is **in review** on PR #117 and leaves this
-queue on merge.
+#9 (ADR-007) and #14 (multi-principal test harness) left this queue: both are
+merged (PR #119 and PR #117). #52/#53/#54 are dependency-satisfied by ADR-007
+but remain blocked on #51, so they are not queued yet.
 
 ## Blocked queue
 
 | Issue | Blocked on |
 |---|---|
 | #16 (squadron aggregate) | #5 (ADR-003) — #7 already merged |
-| #34 (two-user isolation tests) | #14 (PR #117) merge — the harness exists but is not on `main` |
+| #52–#54 (P3-02..P3-04) | #51 (P3-01) |
+| #34 (two-user isolation tests) | #27, #28, #29, #32 (the P0-12 harness from #117 is merged) |
 | #18–#21, #32, #35–#41, #46, #49 (squadron foundation chain) | #16, and their ADRs |
 | #50, #71, #86, #90, #94, #97, #98, #101 (frontend/docs) | Their backend and ADR dependencies |
 
 ## Next recommended ticket
 
-**#5 — ADR-003: squadron bootstrap, invitation, and membership lifecycle**
-(P1-high, architecture). Rationale: it is the highest-value READY ticket. #16
-(squadron aggregate, P0-critical) lists #5 and #7 as its dependencies; #7 is
-merged, so #5 is the only remaining gate. #16 in turn gates the whole squadron
-foundation chain (#18–#21, #32, #35–#41, #46, #49) and the frontend tickets
-behind them. Nothing else in the READY queue unblocks as much downstream work.
+**#51 — P3-01: extend `RecurrenceRule`** (P1-high, 25 min). Rationale: ADR-007
+fixed every field and invariant it needs, so it is the highest-value
+dependency-satisfied ticket and it unblocks #52, #53, #54 and the whole
+persistence/API lane (#55–#62).
 
-Alternatives if #5 is claimed: **#9 — ADR-007** (gates the recurrence lane),
-**#15 — CI workflow** (independent, prevents silent regressions), then
-**#10 — ADR-008**.
+Alternatives if #51 is claimed: **#15 — CI workflow** (nothing depends on it, but
+it makes every later validation trustworthy), then **#5 — ADR-003**.
 
 ## Session 7 notes (operational)
 
@@ -159,3 +168,13 @@ Alternatives if #5 is claimed: **#9 — ADR-007** (gates the recurrence lane),
   → `operator`, `read_only` → `viewer`). `member` and `team_lead` deliberately
   hold no permission until ADR-004's matrix is implemented (DECISIONS C-007), so
   no test can pass against grants the role will never have.
+
+## Session 8 notes (operational)
+
+- The run workspace `.../automation-runs/ad8dcd7c-.../str-ready-room` was deleted
+  mid-session again (third occurrence). Work continued in a clone at
+  `~/wingman/adr-007`; its `origin` pointed at the deleted path, so a push to
+  `origin` silently succeeded against a dead remote. **Push to the GitHub remote
+  explicitly and verify with `git ls-remote`.**
+- Two sibling sessions were live (`#117`, `#118`). Check for a sibling branch/PR
+  for the selected ticket before writing (B-006).

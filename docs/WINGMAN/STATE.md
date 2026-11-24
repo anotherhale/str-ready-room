@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 2)
+**Last updated:** 2026-11-24 (session 3)
 
 ## Artifact map
 
@@ -58,6 +58,13 @@ ADR set is settled; the ADR tickets are the only work in flight.
   authorized deletion; operator nightly backups with 30-day retention
   (RPO 24h / RTO 4h); secrets injected as environment variables from an
   operator-managed store.
+- **ADR-004 accepted, awaiting merge** (PR #108, issue #6). Fixes five roles
+  (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
+  54-permission catalog (20 existing + 34 new), a role x permission grant matrix
+  with an explicit scope ceiling per grant, and an ordered deny-by-default
+  evaluation: membership -> permission -> scope -> relationship -> approval.
+  Agents hold no roles and act only by revocable delegation; they never record
+  human accountability. See `docs/adr/ADR-004-role-permission-matrix.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
   authorizes cloud hosting, default egress, or any compliance claim.
@@ -67,7 +74,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 | Blocker | Effect | Owner |
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
-| State checkpoint PR unmerged | Coordinator state is not yet on `main`; until merged, a fresh session recovers from GitHub issues | Reviewer |
+| ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
 
 Nothing currently blocks ticket execution.
 

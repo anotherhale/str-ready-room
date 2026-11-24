@@ -1,38 +1,42 @@
 {
-  "last_run": "2026-11-24T11:05Z",
-  "session": 2,
-  "main_sha_at_start": "1185ce9",
+  "last_run": "2026-11-24T18:20Z",
+  "session": 3,
+  "main_sha_at_start": "90decc5",
   "local_clone_sha_at_start": "5fdae63",
   "branch": "wingman/coordinator-state",
   "last_ticket": {
-    "issue": 3,
-    "title": "ADR-001: decide deployment, classification, and data-handling constraints",
+    "issue": 6,
+    "title": "ADR-004: Define the role and scoped-permission matrix",
     "priority": "P0-critical",
     "type": "architecture",
-    "status": "done",
-    "issue_state": "closed",
-    "closed_by": "merge commit 90decc5 (PR #105)"
+    "status": "verification",
+    "issue_state": "open",
+    "pr": 108,
+    "pr_base": "main",
+    "pr_state": "open",
+    "closes_on": "merge of PR #108"
   },
-  "last_ticket_work_branch": "wingman/adr-001-deployment-classification",
-  "last_commit": "90decc5",
+  "last_ticket_work_branch": "wingman/adr-004-role-permission-matrix",
+  "last_commit": "2a75665",
   "last_commit_message": "docs(adr): add ADR-001 deployment, classification, and data-handling constraints",
   "changed_files": [
-    "docs/adr/ADR-001-deployment-classification.md",
-    "docs/adr/README.md"
+    "docs/adr/ADR-004-role-permission-matrix.md",
+    "docs/adr/README.md",
+    "AGENTS.md"
   ],
   "validation": {
-    "backend_pytest": "206 passed, 1 warning (session 1; not re-run \u2014 docs-only change, no venv in recreated workspace)",
-    "backend_ruff": "All checks passed! (session 1)",
-    "frontend_tests": "10 files / 39 tests passed (session 1)",
-    "frontend_typecheck": "clean (session 1)",
-    "frontend_build": "succeeded (session 1)",
-    "notes": "Session 2 changed Markdown and JSON only; suites were not re-run because the workspace was recreated and dependencies are not installed."
+    "backend_pytest": "206 passed, 1 warning (re-run on post-#105 main)",
+    "backend_ruff": "All checks passed",
+    "frontend_tests": "10 files / 39 tests passed",
+    "frontend_typecheck": "clean",
+    "frontend_build": "succeeded",
+    "adr_consistency": "54 catalog rows, 34 new, 54 matrix rows, identical sets, no malformed cells, negative assertions hold"
   },
   "open_prs": [
     {
-      "number": 106,
-      "branch": "wingman/coordinator-state",
-      "title": "WINGMAN: coordinator state, execution log, and architecture map",
+      "number": 108,
+      "branch": "wingman/adr-004-role-permission-matrix",
+      "title": "docs(adr): ADR-004 role and scoped-permission matrix",
       "state": "open"
     }
   ],
@@ -51,10 +55,10 @@
       ]
     },
     {
-      "id": "B-003",
-      "description": "State checkpoint PR #106 unmerged",
-      "effect": "Coordinator state not yet on main; a fresh session recovers from GitHub issues until merged",
-      "unblock_action": "Merge PR #106"
+      "id": "B-004",
+      "description": "ADR-004 (#6) awaiting merge in PR #108",
+      "effect": "#18 and #19 stay blocked; the Phase 2/3 domain lanes cannot start",
+      "unblock_action": "Merge PR #108"
     }
   ],
   "ready_queue": [
@@ -74,7 +78,8 @@
       "order": 3,
       "issue": 6,
       "title": "ADR-004: role and scoped-permission matrix",
-      "priority": "P0-critical"
+      "priority": "P0-critical",
+      "note": "in review (PR #108); remove from the ready queue on merge"
     },
     {
       "order": 4,
@@ -137,17 +142,19 @@
   "recommended_next_ticket": {
     "issue": 4,
     "title": "ADR-002: authentication provider, session storage, cookie strategy",
-    "rationale": "Unblocked by #3's closure; ADR-001 \u00a74 already fixes its inputs (self-contained auth, revocable server-side sessions, cookie flags, demo provider refused outside demo). P0-critical and gates every identity-dependent ticket.",
+    "rationale": "Position 1 in the merged queue and already dependency-satisfied; ADR-001 section 4 fixes its inputs. Gates the identity lane (#24-#27, #30, #34).",
     "alternatives": [
-      5,
-      6
+      7,
+      8
     ]
   },
   "corrections_recorded": [
     "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
     "Local clone was shallow at 5fdae63 while origin/main had advanced to 1185ce9; state work was branched from current origin/main.",
-    "The run workspace was deleted mid-session; the repository was re-cloned and work resumed from origin branches."
+    "The run workspace was deleted mid-session; the repository was re-cloned and work resumed from origin branches.",
+    "PR #107 was superseded by PR #108 (rebuilt on main after #105 merged).",
+    "Session 3 took #6 rather than session 2's recommendation #4 because #6 was already in progress and gates more downstream work."
   ],
-  "next_execution_action": "Read docs/WINGMAN/STATE.md, confirm #4 has no open dependency issues, claim it (label in-progress), then write docs/adr/ADR-002-*.md against ADR-001 \u00a74 and append it to docs/adr/README.md.",
-  "main_sha_now": "90decc5"
+  "next_execution_action": "Read docs/WINGMAN/STATE.md and CHECKPOINT.json. Recheck whether PR #108 merged: if yes, close #6 and unblock #18/#19. Then claim #4 (ADR-002) and write docs/adr/ADR-002-*.md against ADR-001 section 4.",
+  "main_sha_now": "6b48e66"
 }

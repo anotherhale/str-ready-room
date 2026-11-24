@@ -154,3 +154,62 @@ beyond the seven questions already listed in the ADR.
 ### Next
 
 **#4 — ADR-002 (authentication provider, session storage, cookie strategy).**
+
+## 2026-11-24 — ADR-004 role and scoped-permission matrix (#6), session 3
+
+### Ticket
+
+#6, `architecture`, P0-critical, status `verification`, PR #108.
+
+### Work
+
+- `docs/adr/ADR-004-role-permission-matrix.md`: five roles, 54-permission
+  catalog (20 existing + 34 new), full grant matrix with a scope ceiling per
+  grant, ordered evaluation, denial codes, team-lead and duty-position bounds,
+  approval-gated vs agent-delegable classification, and a mapping table from
+  matrix row to owning issue.
+- `AGENTS.md`: nine authorization invariants that survive implementation drift.
+- `docs/adr/README.md`: ADR-004 index row flipped to Accepted.
+
+### Validation
+
+- Backend `pytest`: 206 passed, 1 warning. `ruff check app tests`: clean.
+- Frontend `vitest run`: 10 files / 39 tests passed. `tsc --noEmit`: clean.
+  `vite build`: succeeded (184.64 kB JS, 11.74 kB CSS).
+- ADR self-consistency script: 54 catalog rows, 34 new, 54 matrix rows,
+  identical sets, no malformed cells, no write permission for `read_only`, no
+  `:manage` for `team_lead`, no escalation for `member`, no `demo:*` granted to
+  any role.
+
+### Git
+
+- `2a75665` on `wingman/adr-004-role-permission-matrix`, cut from `main` after
+  ADR-001 merged. PR #108: 3 files, +465/-1.
+
+### Failures and recovery
+
+- PR #107 was opened against the pre-merge ADR-001 branch. #105 merged
+  mid-session, so #107 would have replayed ADR-001. The change was rebuilt on
+  `main` and pushed to the same branch name; #107 closed automatically. No
+  force-push, and nothing from #105 was altered.
+- The run workspace was deleted by the harness mid-session, after the frontend
+  checks and before the checkpoint. The ADR was recreated in a fresh clone and
+  **every** check was re-run on the new base; the numbers above are from the
+  re-run.
+
+### Deviation from the previous plan
+
+Session 2 recommended #4 (ADR-002). Session 3 took #6 instead because #6 was
+already `in-progress` with work to land and it gates #18, #19, #35, and #37.
+#4 remains READY at position 1.
+
+### Dependency reconciliation
+
+- Nothing unblocked yet: #18, #19 stay `blocked` until PR #108 merges.
+- #9 stays `blocked` on #8.
+- #4, #5, #7, #8, #10, #11, #12, #13, #14, #15 remain READY.
+
+### Next
+
+**#4 — ADR-002 (authentication provider, session storage, cookie strategy).**
+Alternatives if it is claimed elsewhere: #7 (ADR-005), #8 (ADR-006).

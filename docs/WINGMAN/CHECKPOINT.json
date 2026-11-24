@@ -2,22 +2,23 @@
   "last_run": "2026-11-24T11:45Z",
   "session": 5,
   "main_sha_at_start": "6b48e66",
-  "main_sha_now": "4b72868",
+  "main_sha_now": "dc98f8d",
   "branch": "wingman/state-session-5",
   "last_ticket": {
     "issue": 7,
     "title": "ADR-005: squadron data isolation, owner migration, schema evolution",
     "priority": "P0-critical",
     "type": "architecture",
-    "status": "verification",
-    "issue_state": "open",
+    "status": "done",
+    "issue_state": "closed",
     "pr": 111,
     "pr_base": "main",
-    "pr_state": "open",
-    "closes_on": "merge of PR #111"
+    "pr_state": "merged",
+    "closes_on": "merged in PR #111",
+    "pr_merge_sha": "dc98f8d"
   },
   "last_ticket_work_branch": "wingman/adr-005-data-isolation-migration",
-  "last_commit": "61c6621",
+  "last_commit": "28155f2",
   "last_commit_message": "docs(adr): add ADR-005 data isolation, owner migration, and schema evolution",
   "changed_files": [
     "docs/adr/ADR-005-data-isolation-migration.md",
@@ -41,7 +42,8 @@
     "diff_scope": "3 files: ADR-005 added (+333), docs/adr/README.md +1/-1, AGENTS.md +13/-1; no app code, config, dependency, or test",
     "notes": "Documentation-only change. Node modules absent in this workspace, so frontend claims from earlier sessions are not restated.",
     "backend_pytest_at_merged_head": "206 tests, exit 0 (fresh uv venv, python 3.12, run at the merge commit on wingman/adr-005-data-isolation-migration)",
-    "backend_ruff_at_merged_head": "All checks passed!"
+    "backend_ruff_at_merged_head": "All checks passed!",
+    "issue_7": "closed automatically by the merge of PR #111; labels ready/in-progress removed"
   },
   "open_prs": [
     {
@@ -146,7 +148,8 @@
     "Follow-up I1: schedule the NOT NULL contract migration one release after expand/backfill soaks.",
     "P1-05 (#20) must add versioned SQL fixtures under backend/tests/fixtures/schema/ as ADR-005 section 3 requires.",
     "gh CLI is not installed in this workspace; GitHub operations use the REST API with GITHUB_TOKEN.",
-    "The workspace directory was deleted mid-session; recovered by re-cloning and cherry-picking the already-pushed state commit (65187ce). No work was lost besides an unpushed local merge commit, which was redone."
+    "The workspace directory was deleted mid-session; recovered by re-cloning and cherry-picking the already-pushed state commit (65187ce). No work was lost besides an unpushed local merge commit, which was redone.",
+    "PR #111 was merged by the owner at 18:09Z (main dc98f8d); issue #7 auto-closed. ADR-005 is now Accepted in the repository, not just in the PR."
   ],
   "state_pr": 112,
   "main_advanced_during_session": {

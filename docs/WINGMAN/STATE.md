@@ -47,7 +47,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
-- **ADR-005 accepted** (PR #111, awaiting merge). Every squadron-scoped table
+- **ADR-005 accepted and merged** (PR #111, `main` `dc98f8d`). Every squadron-scoped table
   carries `squadron_id` **and** keeps `owner_id`; indexes lead with the tenant
   key; the tenant is derived from the resolved membership and never from a
   request. Isolation has three enforcement layers (ADR-004 authorization → a
@@ -57,7 +57,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
   `schema_migrations` (Alembic deferred), rolled out expand → backfill → startup
   guard → `NOT NULL` contract. See
   `docs/adr/ADR-005-data-isolation-migration.md`.
-- **ADR-005 accepted** (PR #111, awaiting merge). Every squadron-scoped table
+- **ADR-005 accepted and merged** (PR #111, `main` `dc98f8d`). Every squadron-scoped table
   carries `squadron_id` **and** keeps `owner_id`; indexes lead with the tenant
   key; the tenant is derived from the resolved membership and never from a
   request. Isolation is enforced in three layers (ADR-004 authorization → a
@@ -102,7 +102,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 | Formal confirmation of the Q1–Q7 defaults | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 | ADR-004 (#6) awaiting merge in PR #108 | #18 and #19 stay `blocked`; the Phase 2/3 domain lanes cannot start | Reviewer |
 | ADR-002 (#4) in review as PR #109 (parallel session) | The identity lane (#24-#27, #30, #34) cannot start | Reviewer |
-| ADR-005 (#7) in review as PR #111 | #20/#21/#32 can be planned but not merged with their dependency closed | Reviewer |
+| None — #7 merged in PR #111 | — | — |
 
 Nothing currently blocks ticket execution.
 
@@ -123,7 +123,7 @@ downstream work.
 | 7 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
 | 8 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
-#7 (ADR-005) left this queue in session 5 — implemented in PR #111.
+#7 (ADR-005) is done — merged in PR #111 (`dc98f8d`).
 
 ## Blocked queue
 
@@ -153,4 +153,4 @@ In flight, awaiting merge — check before starting anything:
 | #108 | #6 ADR-004 | `verification`; close #6 when merged |
 | #109 | #4 ADR-002 | `verification`; close #4 when merged |
 | #110 | coordinator state | sessions 3–5 |
-| #111 | #7 ADR-005 | `verification`; close #7 when merged |
+| #111 | #7 ADR-005 | merged (`dc98f8d`); #7 closed |

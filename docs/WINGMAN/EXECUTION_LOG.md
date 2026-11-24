@@ -413,3 +413,10 @@ merged `main` and opened as PR #112 (`wingman/state-session-5`).
 The workspace directory was deleted mid-session by the runtime. Recovery: re-clone
 from origin, `cherry-pick 65187ce` (the state commit already pushed), redo the
 merge in the ADR branch, and re-run validation. Nothing was lost.
+
+### Merge of PR #111
+
+The owner merged PR #111 at 18:09Z; `main` is now `dc98f8d` and issue #7 closed
+automatically. `ready`/`in-progress` labels removed. ADR-005 is Accepted in the
+repository, so the tenant key and scoping contract are now binding rather than
+proposed. Next READY ticket: #8 (ADR-006 squadron and membership model).

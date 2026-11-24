@@ -1,6 +1,6 @@
 # ADR-001: Deployment, classification, and data-handling constraints
 
-- **Status:** Accepted — deployment and data-handling defaults adopted 2026-11-24; formal authorization to hold real data still outstanding
+- **Status:** Accepted — deployment and data-handling defaults adopted 2026-11-24; product owner confirmed Q1–Q7 as written 2026-11-24, formal authorization to hold real data still outstanding (tracked in [#113](https://github.com/anotherhale/str-ready-room/issues/113))
 - **Date:** 2026-11-24
 - **Ticket:** [#3](https://github.com/anotherhale/str-ready-room/issues/3) (`P0-01`)
 - **Deciders:** READY ROOM engineering; product owner for the working defaults; see [Organizational questions and adopted defaults](#organizational-questions-and-adopted-defaults) for the official who must confirm each one
@@ -227,6 +227,12 @@ classification ceiling in §2 stands — synthetic data only.
 | Q5 | What retention schedule applies to tasks, briefings, notifications, and audit records? | Retain indefinitely for the first release. No time-based deletion; deletion is explicit and authorized only. Audit records outlive the records they describe. Revisit before real data. | Records Manager | ADR-011 can close on "retain indefinitely, explicit deletion only"; no TTL job is built. |
 | Q6 | What backup, restore, and disaster-recovery objectives apply? | Operator-run nightly snapshot of the database volume plus configuration, retained 30 days, restored quarterly against the demo profile. Targets for the single-host profile: RPO 24 hours, RTO 4 hours. | Operations owner | Backup stays an operator procedure and the application ships no backup service; the restore drill becomes a recurring operational check. |
 | Q7 | Which secret-management mechanism is approved for a real deployment? | Secrets injected as environment variables at deploy time from an operator-managed store (Docker secrets, systemd credentials, or a Kubernetes Secret). Never committed, logged, or returned by an API. `.env` files remain demo-only. | Security Officer / Operations | No vault integration is required for the first release; revisit if Q1 or Q2 raise the ceiling. |
+
+**Confirmation status (2026-11-24):** the product owner accepted Q1–Q7 as
+written. That records the working position only. The named officials above have
+not yet signed off; the open confirmation is tracked in
+[#113](https://github.com/anotherhale/str-ready-room/issues/113). Until it
+closes, §2's ceiling and the real-data prohibition stand.
 
 ### What these defaults do not authorize
 

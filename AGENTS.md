@@ -215,6 +215,13 @@ here. Keep this file current when a durable invariant or boundary changes.
   backend (or the nginx origin) you actually started. The containerized app is
   unaffected: nginx proxies `/api/*` to `backend:8000`.
 
+## Branch hygiene
+
+- Merged PR head branches are deleted automatically (`delete_branch_on_merge`).
+  Agents must not leave a merged branch on `origin`; if auto-delete misses one,
+  delete it explicitly. Never delete an unmerged branch or a branch with an open
+  PR.
+
 ## Commands
 
 ```bash

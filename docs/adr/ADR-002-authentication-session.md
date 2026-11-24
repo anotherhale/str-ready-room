@@ -364,6 +364,10 @@ named owner and an explicit default.
 | A4 | How long are revoked session rows retained? | 30 days, then purged; audit entries follow ADR-011 retention | Records Manager |
 | A5 | Is a service-account or API-token path needed for automation? | No; agent delegation is ADR-008's problem, not a human session | Engineering |
 
+**Confirmation status (2026-11-24):** the product owner accepted A1–A5 as
+written. Named-owner confirmations remain non-blocking and can amend these
+defaults later.
+
 ## Validation
 
 Documentation-only change: this ADR adds `docs/adr/ADR-002-authentication-session.md`

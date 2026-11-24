@@ -378,6 +378,10 @@ These do not block `P1-05`, `P1-06`, or `P1-17`; each has a default now.
 | I4 | How long are pre-migration snapshots retained? | Follows Q6: 30 days, quarterly restore drill | Operations |
 | I5 | Do calendar/mailbox caches need a per-squadron provider account? | One incident/provider configuration per squadron row, set by configuration; revisit if a squadron ever has a second provider | Engineering |
 
+**Confirmation status (2026-11-24):** the product owner accepted I1–I5 as
+written. Named-owner confirmations remain non-blocking and can amend these
+defaults later.
+
 ## Validation
 
 Documentation-only change: this ADR adds

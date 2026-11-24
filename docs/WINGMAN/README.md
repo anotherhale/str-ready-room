@@ -89,7 +89,8 @@ dependency is open.
 4. Add or update tests for the behaviour. Domain rules get unit tests;
    persistence/API/authorization behaviour gets integration tests.
 5. Run the ticket's Validation commands and the full relevant suites.
-6. Open a PR against `main` that references the issue. Do not merge.
+6. Open a PR against `main` that references the issue. Do not merge. After a
+   human merges it, verify the head branch was deleted (auto-delete is enabled).
 7. Comment on the issue with the exact commands, results, and the PR link.
    Move the issue to `verification`; close it only after merge and re-check.
 8. If the work cannot finish in the window: comment with the blocker, leave the
@@ -113,6 +114,7 @@ dependency is open.
 - `AGENTS.md` updated if a durable invariant changed.
 - Validation evidence recorded on the issue.
 - PR reviewed and merged; issue closed.
+- Head branch deleted after merge; no merged branch left on `origin`.
 
 ## Concurrency and conflicts
 

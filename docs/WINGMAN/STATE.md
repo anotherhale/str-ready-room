@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 8, reconciled when PR #120 merged)
+**Last updated:** 2026-11-24 (session 10 - #15 CI written and validated but blocked on token workflow scope; PR #129 independently verified)
 
 ## Artifact map
 
@@ -142,6 +142,8 @@ but remain blocked on #51, so they are not queued yet.
 
 | Issue | Blocked on |
 |---|---|
+| #15 (CI workflow) | B-008: the session token lacks *Workflows: Read and write*, so `.github/workflows/ci.yml` cannot be pushed. Code is written and validated; the diff is posted on the issue |
+| #122 (WINGMAN run registry) | Human merge decision on PR #129 (verified green in session 10) |
 | #16 (squadron aggregate) | #5 (ADR-003) — #7 already merged |
 | #52–#54 (P3-02..P3-04) | #51 (P3-01) |
 | #34 (two-user isolation tests) | #27, #28, #29, #32 (the P0-12 harness from #117 is merged) |
@@ -155,8 +157,10 @@ fixed every field and invariant it needs, so it is the highest-value
 dependency-satisfied ticket and it unblocks #52, #53, #54 and the whole
 persistence/API lane (#55–#62).
 
-Alternatives if #51 is claimed: **#15 — CI workflow** (nothing depends on it, but
-it makes every later validation trustworthy), then **#5 — ADR-003**.
+#15 (CI) was the previous alternative and is now **blocked on a credential**, not
+on engineering: the workflow file is written, lint-clean and locally validated,
+but the session token cannot write `.github/workflows/*`. See B-008 in
+`CHECKPOINT.json`. If the token gains the scope, push `e8b91fa`.
 
 ## Session 7 notes (operational)
 
@@ -178,3 +182,23 @@ it makes every later validation trustworthy), then **#5 — ADR-003**.
   explicitly and verify with `git ls-remote`.**
 - Two sibling sessions were live (`#117`, `#118`). Check for a sibling branch/PR
   for the selected ticket before writing (B-006).
+
+## Session 10 notes (operational)
+
+- **CI cannot be authored with the current token.** `git push` of
+  `.github/workflows/ci.yml` is rejected with *"refusing to allow a Personal
+  Access Token to create or update workflow ... without `workflow` scope"*. The
+  Contents API rejects it identically, so there is no agent-side workaround. Any
+  session that plans CI work must first confirm the token can write workflow
+  files, or it will burn its timebox on a push that cannot succeed.
+- **The validated workflow is not lost.** Commit `e8b91fa` sits on local branch
+  `wingman/issue-15/ci-workflow`, and the full diff is in a comment on #15, so a
+  human can paste it in the web UI in one step.
+- **A revert does not mean the work is gone.** `main` @ `b774e224` reverts the
+  WINGMAN coordination code, yet PR #129 still carries it. Verify against the PR
+  head, not against `main`, before concluding a feature is missing.
+- **Verify, do not reimplement.** PR #129's claim was already `RELEASED`; the
+  useful contribution was independent evidence (16 coordination tests, 215
+  product tests, a live read-only registry read), not a second implementation.
+- Baseline counts for future sessions: backend **215** tests, frontend **39**
+  tests in 10 files. Quote these only after re-running them.

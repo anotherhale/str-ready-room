@@ -672,3 +672,67 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 10 — 2026-11-24 — #15 (CI workflow) attempted; PR #129 verified
+
+### Ticket
+
+- **Issue:** #15 — P0-13 CI workflow for backend and frontend verification
+  (P1-high, devops, S)
+- **Status:** BLOCKED — implementation complete and validated; the push is
+  rejected by credential scope (B-008).
+
+### Work accomplished
+
+- Confirmed the repository is green at `main` @ `b774e224` (a revert of
+  `cf01c22a`): backend `215 passed`, ruff clean, mypy clean; frontend 39 tests,
+  typecheck clean, build OK.
+- Wrote `.github/workflows/ci.yml`: two independent jobs (backend pytest/ruff/
+  mypy on 3.12 with integrations disabled; frontend npm ci/test/typecheck/build
+  on Node 22), `contents: read`, per-ref concurrency with cancel-in-progress,
+  15-minute timeouts, triggers on push to `main` and every pull request.
+- Added a "Continuous integration" section to `README.md` listing the same gates.
+- Verified the workflow with `actionlint` 1.7.12 (exit 0) plus a negative control
+  on a deliberately broken file (exit 1) to prove the checker was live.
+- Independently verified in-flight PR #129 (issue #122) at head `90ef6724`:
+  16 coordination tests pass, the product backend suite still passes (215),
+  the CLI exposes all nine subcommands, and a read-only `status` against the live
+  registry ref returns the expected `RELEASED` claim. Posted the report on the PR.
+
+### Failure and recovery
+
+`git push` of the branch failed: the fine-grained PAT lacks *Workflows: Read and
+write*, so GitHub refuses any create/update of `.github/workflows/*` (the Contents
+API rejects it for the same reason). One attempt, no retry loop — the fix is a
+credential change only a human can make. The validated commit `e8b91fa` was kept
+locally and the complete diff was posted on #15 so it can be applied in one paste.
+
+### Validation
+
+| Gate | Result |
+|---|---|
+| Backend pytest | 215 passed, 1 warning |
+| Backend ruff / mypy | clean / 84 files clean |
+| Frontend test / typecheck / build | 39 passed / clean / built |
+| actionlint on ci.yml | exit 0 (negative control exit 1) |
+| PR #129 coordination tests | 16 passed |
+| PR #129 backend regression | 215 passed |
+
+### GitHub
+
+- #15: detailed blocker comment with remediation, evidence table and ready patch;
+  labels set to `devops, P1-high, qa, blocked, wingman`.
+- #129: independent verification report posted; no code touched.
+
+### Dependency reconciliation
+
+- #15 moved READY → BLOCKED (B-008), unblocks nothing downstream, so the queue is
+  unaffected.
+- #122 / PR #129 now has verification evidence; only a human merge decision
+  remains.
+- #51 remains the highest-value READY ticket.
+
+### Next
+
+**#51 — P3-01** (P1-high, 25 min). Before starting, check for a sibling claim and
+whether B-008 has been lifted.

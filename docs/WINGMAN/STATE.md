@@ -4,7 +4,7 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 5)
+**Last updated:** 2026-11-24 (session 6)
 
 ## Artifact map
 
@@ -47,17 +47,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 ## Decisions in force
 
-- **ADR-005 accepted and merged** (PR #111, `main` `dc98f8d`). Every squadron-scoped table
-  carries `squadron_id` **and** keeps `owner_id`; indexes lead with the tenant
-  key; the tenant is derived from the resolved membership and never from a
-  request. Isolation has three enforcement layers (ADR-004 authorization → a
-  `ScopeCriteria` built in one place → tenant-leading DB indexes); cross-squadron
-  reads return `404`, in-squadron scope denials `403`. Schema evolution becomes a
-  versioned, forward-only, data-preserving runner recorded in
-  `schema_migrations` (Alembic deferred), rolled out expand → backfill → startup
-  guard → `NOT NULL` contract. See
-  `docs/adr/ADR-005-data-isolation-migration.md`.
-- **ADR-002 accepted and merged** (PR #109, `main` `f594bb7`). First mechanism: local
+- **ADR-002 accepted and merged** (PR #109, issue #4; now on `main`). First mechanism: local
   credentials plus server-side sessions; OIDC is an extension seam only. stdlib
   `scrypt` hashing, opaque 256-bit tokens with only the SHA-256 stored, 30-minute
   idle / 12-hour absolute expiry, nine enumerated revocation triggers, and a
@@ -77,13 +67,30 @@ ADR set is settled; the ADR tickets are the only work in flight.
 - **Non-blocking ADR defaults accepted as written** (product owner,
   2026-11-24): ADR-002 A1–A5, ADR-004 Q1–Q5, ADR-005 I1–I5. Named-owner
   confirmations remain non-blocking and can amend these defaults later.
-- **ADR-004 accepted and merged** (PR #108, `main` `af31b65`; issue #6). Fixes five roles
+- **ADR-004 accepted and merged** (PR #108, issue #6; now on `main`). Fixes five roles
   (`squadron_admin`, `officer`, `team_lead`, `member`, `read_only`), a
   54-permission catalog (20 existing + 34 new), a role x permission grant matrix
   with an explicit scope ceiling per grant, and an ordered deny-by-default
   evaluation: membership -> permission -> scope -> relationship -> approval.
   Agents hold no roles and act only by revocable delegation; they never record
   human accountability. See `docs/adr/ADR-004-role-permission-matrix.md`.
+- **ADR-005 accepted and merged** (PR #111, issue #7, `main` @ `dc98f8d`).
+  `squadron_id` is a required positional argument on every squadron-scoped
+  repository method and is filtered in SQL; repositories never commit; a
+  versioned forward-only migration runner with a `schema_migrations` ledger
+  replaces the additive helper; every existing table backfills to one
+  deterministic bootstrap squadron; Alembic is deferred.
+  See `docs/adr/ADR-005-data-isolation-migration.md`.
+- **ADR-006 accepted and merged** (PR #114 -> `3d6efd6`, issue #8 closed).
+  Four task scopes (`personal`/`shared`/`team`/`squadron`) with `personal` as the
+  default for every capture path; exactly one accountable owner (a user), at most
+  one typed assignee (user/team/duty position), many collaborators and watchers.
+  Sharing is **one** `task_shares` table with `read`/`write`: a write share *is* a
+  collaborator, a read share *is* a watcher, so access and the people-list cannot
+  drift. `duty_position` is an assignee kind, never a fifth task scope. "No
+  accountable owner" means the owner's membership is not `ACTIVE`, not a null
+  column. Visibility is computed once and emits the repository filter keys.
+  See `docs/adr/ADR-006-task-scope-sharing.md`.
 - Those defaults are **project decisions, not accreditation**. The named official
   must still confirm each one before real data is stored, and none of them
   authorizes cloud hosting, default egress, or any compliance claim.
@@ -94,7 +101,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 |---|---|---|
 | Formal confirmation of the Q1–Q7 defaults (product owner accepted defaults 2026-11-24; official sign-off outstanding, tracked in [#113](https://github.com/anotherhale/str-ready-room/issues/113)) | Real operational/personnel data cannot be stored until confirmed. Does **not** block the unclassified synthetic build or the remaining ADRs. | Authorizing Official, Security Officer, Privacy/HR, Records Manager, Operations |
 
-Nothing currently blocks ticket execution.
+Nothing currently blocks the remaining READY ADRs or the test harness.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -104,36 +111,32 @@ downstream work.
 
 | Order | Issue | Title | Priority | Est |
 |---|---|---|---|---|
-| 1 | [#8](https://github.com/anotherhale/str-ready-room/issues/8) | ADR-006: task scope, sharing, accountable ownership | P0-critical | 20 min |
+| 1 | [#9](https://github.com/anotherhale/str-ready-room/issues/9) | ADR-007: shared recurrence, duty-position routing, occurrence exceptions | P1-high | 20 min |
 | 2 | [#14](https://github.com/anotherhale/str-ready-room/issues/14) | Multi-principal test harness and configurable test auth provider | P0-critical | 25 min |
-| 3 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
-| 4 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 3 | [#15](https://github.com/anotherhale/str-ready-room/issues/15) | CI workflow running backend and frontend verification | P1-high | 20 min |
+| 4 | [#5](https://github.com/anotherhale/str-ready-room/issues/5) | ADR-003: squadron bootstrap, invitation, membership lifecycle | P1-high | 15 min |
 | 5 | [#10](https://github.com/anotherhale/str-ready-room/issues/10) | ADR-008: agent identity, delegation, approval binding | P1-high | 20 min |
 | 6 | [#11](https://github.com/anotherhale/str-ready-room/issues/11) | ADR-009: Jev provider, context assembly, failure strategy | P1-high | 20 min |
 | 7 | [#12](https://github.com/anotherhale/str-ready-room/issues/12) | ADR-010: workflow persistence, retries, cancellation, idempotency | P1-high | 20 min |
 | 8 | [#13](https://github.com/anotherhale/str-ready-room/issues/13) | ADR-011: notification channels/preferences and audit retention | P2-normal | 20 min |
 
-#7 (ADR-005) is done — merged in PR #111 (`dc98f8d`).
-
 ## Blocked queue
 
 | Issue | Blocked on |
 |---|---|
-| [#9](https://github.com/anotherhale/str-ready-room/issues/9) ADR-007 | #8 |
 | #16–#104 (implementation tickets) | Their ADR and foundation dependencies; see each issue |
 
 ## Next recommended ticket
 
-**#8 — ADR-006 (task scope, sharing, and accountable ownership).**
-Rationale: the highest-priority READY ADR and the last P0-critical decision that
-does not wait on another ticket. ADR-005 now fixes the tenant key and query
-enforcement, and ADR-004 fixes the scope vocabulary, so #8 can decide what a
-scope *means* for a task (shares, collaborators, acknowledgment vs completion,
-handoff) without re-deciding isolation or permissions.
+**#9 — ADR-007: shared recurrence, duty-position routing, occurrence exceptions**
+(P1-high). Rationale: its only dependency (#8, ADR-006) merged in `3d6efd6`, so
+it is newly READY, and it is the last unmerged ADR that gates a whole
+implementation lane (#38 recurrence). ADR-006 fixed the two inputs it needs:
+occurrences inherit the series scope, and `duty_position` is an assignee kind
+rather than a task scope.
 
-Alternative if #8 is claimed: **#14 — multi-principal test harness**, which is
-the cheapest way to make the ADR-005 isolation matrix executable, then **#5 —
-ADR-003**.
-Do not start #9 (ADR-007) until #8 is closed.
+Alternatives if #9 is claimed: **#14 — multi-principal test harness**
+(P0-critical; ADR-002 and ADR-004 already give it its contracts), then
+**#15 — CI workflow**, then **#5 — ADR-003**.
 
-In flight: none. All session 3-5 PRs (#108, #109, #110, #111) are merged.
+In flight: none.

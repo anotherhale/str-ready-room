@@ -420,3 +420,116 @@ The owner merged PR #111 at 18:09Z; `main` is now `dc98f8d` and issue #7 closed
 automatically. `ready`/`in-progress` labels removed. ADR-005 is Accepted in the
 repository, so the tenant key and scoping contract are now binding rather than
 proposed. Next READY ticket: #8 (ADR-006 squadron and membership model).
+
+## Session 6 — 2026-11-24
+
+**Ticket:** #8 `P0-06` — ADR-006: task scope, sharing, and accountable-ownership
+semantics (P0-critical, architecture, 20 min).
+
+### Reorientation correction
+
+The checkpoint this session inherited (`session 4`, `main_sha 6b48e66`) was two
+merges stale. `origin/main` was at `dc98f8d` (PR #111) and **ADR-005 was already
+written and merged** (PR #111, issue #7) — the recommended "next ticket" in
+`CHECKPOINT.json` was done. An ADR-005 draft produced before that discovery was
+discarded uncommitted rather than opened as a duplicate.
+
+Lesson applied: verify `git fetch` + `git ls-remote` before trusting a checkpoint
+recommendation. The READY queue in this file is recomputed from live issue state,
+not from the previous checkpoint.
+
+### Work
+
+- `docs/adr/ADR-006-task-scope-sharing.md` — new, 351 lines. Four scopes on a
+  strict ladder with `personal` as the only default; exactly one accountable
+  owner and at most one typed assignee; collaborators and watchers; user-only,
+  additive, non-transitive, soft-revoked shares; a single visibility predicate;
+  a per-scope permission matrix mapped onto ADR-004 permissions and denial codes;
+  occurrence snapshotting for ADR-007.
+- `docs/adr/README.md` — ADR-006 row: Pending -> Accepted.
+- `AGENTS.md` — five durable task-scope invariants added to the Domain section.
+
+### Validation
+
+- Backend `pytest`: **206 passed, 1 warning in 23.93s** (unchanged from baseline).
+- Backend `ruff check app tests`: **All checks passed!**
+- Frontend not run: `node_modules` absent in this workspace and no frontend file
+  changed. No frontend claim is made.
+
+### Git
+
+- Branch `wingman/adr-006-task-scope-sharing` from `dc98f8d`, one commit,
+  pushed. PR **#114**.
+
+### Failure and recovery
+
+- The run workspace directory was **deleted mid-session**, losing the working
+  tree. The same repository contents were found relocated under a new run
+  directory with the changes intact; work resumed there without re-cloning.
+  (Second occurrence of this failure mode — recorded in `CHECKPOINT.json`.)
+
+### Dependency reconciliation
+
+- #9 (ADR-007) stays `blocked` on #8 until PR #114 merges; its dependency is
+  satisfied by decision but not by merge, so no relabel.
+- #35-#39 gain a fixed implementation contract but stay gated on the Phase-1
+  chain (#16-#21), so no relabel.
+- #4, #6, #7 are merged; their issues are ready to close on verification.
+
+### Next
+
+**#14 — multi-principal test harness** (P0-critical). Alternatives: #5 (ADR-003),
+#15 (CI). Do not start #9 before #8 closes.
+
+---
+
+## Session 6 (continued) — post-merge reconciliation, 2026-11-24T18:19Z-18:32Z
+
+### What changed since the checkpoint above
+
+PR **#114 merged** into `main` as **`3d6efd6`** at 18:19:20Z, and **#8 was
+closed** and relabelled `verification`. The checkpoint written minutes earlier
+said `in-review`, so it was corrected in the same PR (#116) rather than left
+stale for the next run to trust.
+
+### Concurrent-session collision (new failure mode, B-006)
+
+A second WINGMAN session was working in the same workspace and selected the same
+ticket. It committed the working tree (which contained this session's ADR-006
+draft), pushed `wingman/adr-006-task-scope-sharing`, opened PR #114, wrote the
+issue comment, and produced the session-6 state branch — all while this session
+was still writing. Nothing was lost: the committed ADR is the same 351-line file
+this session authored, and both sessions independently measured 206 passed /
+ruff clean.
+
+What did go wrong is drift: the PR #114 body described a section layout that the
+committed file does not have (it cited "§5/§6", invariants `I1`-`I9`, and
+soft-revoked shares; the file actually has `§1`-`§10`, seven invariants in `§2`,
+one `task_shares` table with `read`/`write`, and open questions `T1`-`T5`). The
+description was rewritten against the file, with a note that it had been
+corrected.
+
+**Mitigation for future runs:** before writing to a ticket, check whether a
+sibling branch or PR for that ticket already exists. If it does, verify and
+correct it instead of re-implementing.
+
+### Also lost and recovered
+
+The run directory was deleted a second time mid-session, taking this session's
+uncommitted `STATE.md` edit with it. The repository was re-cloned into a fresh
+directory and the state edits were re-applied there. The failure mode is now
+recorded twice; work in progress must be committed early rather than batched at
+the end of the run.
+
+### Dependency reconciliation
+
+- **#9 (ADR-007) promoted `blocked` -> `ready`.** Its only dependency, #8, is
+  merged. Nothing else in the queue moved.
+- #35-#39 still gated on the Phase-1 domain/persistence chain (#16-#21), not on
+  ADR-006.
+- No new blockers discovered beyond B-006.
+
+### Next
+
+**#9 — ADR-007** (P1-high, 20 min): the last unmerged ADR that gates a whole
+implementation lane. Alternatives: #14 (P0-critical test harness), #15 (CI).

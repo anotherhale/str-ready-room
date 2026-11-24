@@ -1,0 +1,40 @@
+{
+  "run_id": "20261124T2105Z-a8a1",
+  "session": 15,
+  "ticket": 16,
+  "ticket_title": "Domain: Squadron aggregate and membership lifecycle",
+  "run_status": "VALIDATING",
+  "branch": "wingman/issue-16/squadron-aggregate",
+  "worktree": "deleted mid-run by the scheduler; recovered from origin/wingman/issue-16/squadron-aggregate",
+  "started_at": "2026-11-24T21:05:00Z",
+  "attempt_number": 1,
+  "claim_epoch": 1,
+  "delivered": [
+    "app/domain/squadron/enums.py: MembershipStatus (invited/active/suspended/removed), SquadronRole (5 production roles)",
+    "app/domain/squadron/entities.py: Squadron aggregate, Membership state machine, ensure_not_last_administrator",
+    "tests/unit/domain/test_squadron_membership.py: 26 tests covering every legal and illegal transition"
+  ],
+  "invariants": [
+    "exactly one membership state; only ACTIVE authorizes work",
+    "INVITED holds no authority",
+    "removal retains the row for audit; re-entry requires a fresh invitation",
+    "role change is a membership update, not a transition",
+    "no transition may leave zero active squadron_admin (last_administrator)"
+  ],
+  "validation": {
+    "squadron_domain_tests": "26 passed",
+    "unit_suite": "111 passed",
+    "architecture_suite": "5 passed",
+    "ruff_check": "All checks passed",
+    "ruff_format": "4 files already formatted",
+    "mypy": "Success: no issues found in 3 source files",
+    "integration_suite": "RED on main baseline: InMemoryMailboxProvider missing purge (#137, PR #138) - unrelated to this change"
+  },
+  "next_recommended_ticket": 137,
+  "claim_status": "RELEASED",
+  "pr": "#141",
+  "incidents": [
+    "B-010 run workspace deleted mid-run while writing run artifacts; the code commit had already been pushed, so only uncommitted docs/WINGMAN files were lost and were re-created from this record"
+  ],
+  "release_note": "claim released at handoff; #16 domain slice complete, persistence/API remain with #5 and #18"
+}

@@ -1,40 +1,48 @@
 {
-  "last_run": "2026-11-24T19:15Z",
-  "session": 8,
-  "main_sha_at_start": "4e0abbd",
-  "local_clone_sha_at_start": "4e0abbd",
-  "branch": "wingman/state-session-8",
+  "last_run": "2026-11-24T19:25Z",
+  "session": 10,
+  "main_sha_at_start": "b774e224",
+  "local_clone_sha_at_start": "b774e224",
+  "branch": "wingman/session-10/state",
   "last_ticket": {
-    "issue": 9,
-    "title": "ADR-007: shared recurrence, duty-position routing, occurrence exceptions",
+    "issue": 15,
+    "title": "P0-13: CI workflow for backend and frontend verification",
     "priority": "P1-high",
-    "type": "architecture",
-    "status": "merged",
-    "issue_state": "closed by PR #119",
-    "pr": 119,
-    "pr_base": "main",
-    "pr_state": "merged",
-    "merge_commit": "4c413a8",
-    "commit": "e5ff56f + reference fix"
+    "type": "devops",
+    "status": "blocked - implementation complete and validated, push rejected by credential scope",
+    "issue_state": "open, labelled blocked",
+    "pr": null,
+    "commit": "e8b91fa (local only, branch wingman/issue-15/ci-workflow, unpushed)",
+    "patch_copy": "/tmp/issue-15-ci.patch (session-local; full diff also posted on #15)"
   },
-  "last_ticket_work_branch": "wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit": "e5ff56f (ADR-007) on wingman/p0-07-adr-007-shared-recurrence",
-  "last_commit_message": "docs(adr): ADR-007 shared recurrence, duty-position routing, exceptions",
+  "last_ticket_work_branch": "wingman/issue-15/ci-workflow",
+  "last_commit": "e8b91fa (ci workflow) - LOCAL ONLY, cannot be pushed without workflow scope",
+  "last_commit_message": "ci: run backend and frontend verification on push and PRs",
   "changed_files": [
-    "docs/adr/ADR-007-shared-recurrence.md",
-    "docs/adr/README.md",
-    "AGENTS.md"
+    ".github/workflows/ci.yml",
+    "README.md"
   ],
   "validation": {
-    "backend_pytest": "206 passed, 1 warning in 17.85s (session 8, identical to baseline)",
-    "backend_pytest_post_merge": "215 passed, 0 failed, 0 errors on main @ 937a899 after PR #117 merged",
+    "backend_pytest": "215 passed, 1 warning (main @ b774e224, also with READY_ROOM_*_PROVIDER=none)",
     "backend_ruff": "All checks passed!",
     "backend_mypy": "Success: no issues found in 84 source files",
-    "frontend_tests": "not run - no frontend file changed",
-    "frontend_build": "not run - same reason",
-    "diff_scope": "documentation only: one new ADR, one index row, five AGENTS.md invariants"
+    "frontend_tests": "10 files / 39 tests passed",
+    "frontend_typecheck": "tsc --noEmit clean",
+    "frontend_build": "built in 587ms",
+    "workflow_syntax": "actionlint 1.7.12 exit 0 on ci.yml; negative control on a broken file exit 1",
+    "pr129_coordination_tests": "16 passed (scripts/wingman/tests at 90ef6724)",
+    "pr129_backend_regression": "215 passed at 90ef6724 - identical to main",
+    "pr129_cli": "coordination.py --help lists 9 subcommands; read-only status returns claim_status RELEASED, health live, phase VALIDATING"
   },
-  "open_prs": [],
+  "open_prs": [
+    {
+      "number": 129,
+      "issue": 122,
+      "head": "90ef6724",
+      "state": "open, mergeable clean, not draft",
+      "verified_by": "session 10"
+    }
+  ],
   "blockers": [
     {
       "id": "B-001",
@@ -74,6 +82,24 @@
       "does_not_block": [
         "any ticket"
       ]
+    },
+    {
+      "id": "B-008",
+      "description": "The session GITHUB_TOKEN is a fine-grained PAT without the Workflows: Read and write permission",
+      "effect": "No agent can create or update .github/workflows/*; `git push` and the Contents API both reject the file. Blocks #15.",
+      "remediation": "Grant Workflows: Read and write to the fine-grained PAT, or use a classic PAT with the `workflow` scope, then push commit e8b91fa or apply the patch posted on #15.",
+      "blocks_issues": [
+        15
+      ],
+      "does_not_block": [
+        "#51",
+        "#5",
+        "#10",
+        "#11",
+        "#12",
+        "#13",
+        "state PRs"
+      ]
     }
   ],
   "ready_queue": [
@@ -85,36 +111,30 @@
     },
     {
       "order": 2,
-      "issue": 15,
-      "title": "CI workflow for backend and frontend verification",
-      "priority": "P1-high"
-    },
-    {
-      "order": 3,
       "issue": 5,
       "title": "ADR-003: squadron bootstrap, invitation, membership lifecycle",
       "priority": "P1-high"
     },
     {
-      "order": 4,
+      "order": 3,
       "issue": 10,
       "title": "ADR-008: agent identity, delegation, approval binding",
       "priority": "P1-high"
     },
     {
-      "order": 5,
+      "order": 4,
       "issue": 11,
       "title": "ADR-009: Jev provider, context assembly, failure strategy",
       "priority": "P1-high"
     },
     {
-      "order": 6,
+      "order": 5,
       "issue": 12,
       "title": "ADR-010: workflow persistence, retries, cancellation, idempotency",
       "priority": "P1-high"
     },
     {
-      "order": 7,
+      "order": 6,
       "issue": 13,
       "title": "ADR-011: notification channels and audit retention",
       "priority": "P2-normal"
@@ -158,13 +178,29 @@
       "blocked_on": [
         "backend and ADR dependencies"
       ]
+    },
+    {
+      "issue": 15,
+      "title": "P0-13 CI workflow",
+      "blocked_on": [
+        "B-008 token workflow scope"
+      ],
+      "note": "code written and validated; only the push is blocked"
+    },
+    {
+      "issue": 122,
+      "title": "WINGMAN shared run registry",
+      "blocked_on": [
+        "human merge decision on PR #129"
+      ],
+      "note": "verified in session 10: 16 coordination tests + 215 backend tests pass at 90ef6724"
     }
   ],
   "recommended_next_ticket": {
     "issue": 51,
     "title": "P3-01: extend RecurrenceRule with scope, duty position, default assignment, due time, pause/resume",
     "priority": "P1-high",
-    "why": "ADR-007 (merged in PR #119) specifies every field and invariant it needs; it unblocks #52-#54 and the persistence/API lane #55-#62."
+    "why": "Highest-value dependency-satisfied ticket: ADR-007 (merged) fixes every field and invariant; it unblocks #52-#54 and the persistence/API lane #55-#62. #15 is now blocked on a credential only a human can change."
   },
   "corrections_recorded": [
     "The WINGMAN instruction's 'Issue #100 / ADR-1' pointer is stale: #100 is a frontend Notes/references ticket and ADR-001 is #3 (decision C-001).",
@@ -174,10 +210,12 @@
     "Session 7: STATE.md listed #14 in the READY queue and 206 tests; corrected to in-review, 215 tests.",
     "Session 8: run workspace deleted mid-session (third occurrence); a clone's `origin` pointed at the deleted path so `git push origin` reported success against a dead remote. Always add an explicit GitHub remote and verify with `git ls-remote`.",
     "Session 8: the local clone at ~/wingman/adr-007 was created from the run workspace, not from GitHub; treat its `origin` as untrusted.",
-    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected)."
+    "Merge reconciliation: PR #117, #118 and #119 merged in order (#117 -> #118 -> #119); this state PR was rebased onto 4c413a8 and conflicts resolved additively (session-7 records kept, stale \"in review\" claims corrected).",
+    "Session 10: an interim comment on #15 said the baseline suite was 143 tests - it is 215 (misread progress dots). Corrected in the follow-up comment on the same issue.",
+    "Session 10: main @ b774e224 is a revert of cf01c22a, so scripts/wingman is absent on main while PR #129 still carries it. The revert touched only coordination files - product tests are unaffected (215 pass on both)."
   ],
-  "next_execution_action": "Read #51 plus docs/adr/ADR-007 sections 1/5/9, extend RecurrenceRule in backend/app/domain/tasks/recurrence.py, add domain unit tests, run pytest + ruff. First confirm no sibling holds #51.",
-  "main_sha_now": "4c413a8",
+  "next_execution_action": "Read #51 and docs/adr/ADR-007 sections 1/5/9; extend RecurrenceRule in backend/app/domain/tasks/recurrence.py with scope, duty position, default assignment, due time and pause/resume; add domain unit tests; run pytest + ruff + mypy. First confirm no sibling holds #51 and check whether B-008 (workflow scope) has been lifted so #15 can be pushed.",
+  "main_sha_now": "b774e224",
   "merged_prs": [
     {
       "number": 119,
@@ -223,6 +261,6 @@
       "title": "ADR-001 deployment classification"
     }
   ],
-  "main_sha": "4c413a8",
+  "main_sha": "b774e224",
   "in_review_queue": []
 }

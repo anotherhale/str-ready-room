@@ -261,6 +261,34 @@ here. Keep this file current when a durable invariant or boundary changes.
   backend (or the nginx origin) you actually started. The containerized app is
   unaffected: nginx proxies `/api/*` to `backend:8000`.
 
+## Coordination (WINGMAN, ADR-012)
+
+- **GitHub issues are the ticket authority; `refs/wingman/*` is the ownership
+  authority.** A local workspace file, a merged checkpoint, or a comment never
+  proves which session owns a ticket.
+- **Claim before you write.** Register the run and acquire the ticket claim
+  before touching a file for that ticket. Two sessions read the same *merged*
+  state by design; only a create-only claim ref serialises them.
+- **State is derived from create-only refs.** `POST /git/refs` is the only atomic
+  write this design may use; `PATCH` is last-writer-wins, so a mutable ref is
+  never state. Each fact is an immutable, uniquely named ref
+  (`run-events/…/e<N>`, `claim-epochs/issue-<T>/e<K>`) and the current value is
+  the highest sequence.
+- **An expired claim is not free.** `claim` returns `HELD_EXPIRED`; only
+  `recover` proceeds, under `locks/recovery-issue-<N>`, after inspecting the
+  branch, commits, and PR. Never discard work because a heartbeat lapsed.
+- **Interruption is fail-closed.** A lease is written before its run event, so a
+  crash can only make a claim look expired, never available.
+- **Run records are run-scoped** (`docs/WINGMAN/runs/<RUN_ID>.*`);
+  `STATE.md`/`CHECKPOINT.json` are derived summaries and `RUNS.md` is generated —
+  never hand-edit `RUNS.md`.
+- **A ref cannot be a leaf and a directory.** Legacy `runs/<RUN_ID>` /
+  `claims/issue-<N>` refs stay read-only in their own namespace (B-009).
+- **Concurrency is enabled by evidence.** Phase A (one implementation session)
+  holds until #127 validates live races; no prompt may raise the cap earlier.
+- Design and incident record: `docs/WINGMAN/CONCURRENCY.md`; decision record:
+  `docs/adr/ADR-012-multi-session-coordination.md`.
+
 ## Branch hygiene
 
 - Merged PR head branches are deleted automatically (`delete_branch_on_merge`).

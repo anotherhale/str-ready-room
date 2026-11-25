@@ -1,0 +1,36 @@
+{
+  "run_id": "20261125T0004Z-6b5b",
+  "session": 17,
+  "ticket": 123,
+  "ticket_title": "ADR-012: multi-session coordination authority",
+  "run_status": "VALIDATING",
+  "branch": "wingman/issue-123/adr-012-coordination-authority",
+  "worktree": "/home/ahale/.openhands/agent-canvas/workspaces/automation-runs/70bbbd5c-71ba-4303-8d16-0d2786e75d77/str-ready-room",
+  "started_at": "2026-11-25T00:04:45Z",
+  "attempt_number": 1,
+  "claim_epoch": 1,
+  "selection": {
+    "rejected_ticket": 15,
+    "rejection_reason": "token lacks GitHub Workflows scope; push of .github/workflows/ci.yml rejected (re-verified this session)",
+    "dependency_check": "#122 merged by PR #129 and #131 merged by PR #132, so #123 was READY"
+  },
+  "files_changed": [
+    "docs/adr/ADR-012-multi-session-coordination.md (new)",
+    "docs/adr/README.md",
+    "AGENTS.md"
+  ],
+  "validation": {
+    "backend_suite": "13 failed, 185 passed, 22 errors (identical with docs diff stashed)",
+    "backend_failure_cause": "#137 InMemoryMailboxProvider missing purge(); pre-existing on main, fix in PR #138",
+    "coordination_tests": "30 passed",
+    "ruff_scripts_wingman": "All checks passed",
+    "link_check": "all referenced ADR files exist"
+  },
+  "next_recommended_ticket": 124,
+  "blockers": [
+    "B-009 workflow scope: agent token cannot create .github/workflows (blocks #15)",
+    "main is red on #137 until PR #138 merges"
+  ],
+  "claim_status": "RELEASED",
+  "pr": "opened against main"
+}

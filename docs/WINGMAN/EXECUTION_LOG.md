@@ -672,3 +672,22 @@ PR #120 was rebased rather than force-merged: its conflicts with #118 were in
 `STATE.md`, `EXECUTION_LOG.md` and `CHECKPOINT.json`. Resolution was additive —
 the session-7 log entry and notes above are kept intact, and stale "in review"
 claims written before #117/#119 merged are corrected in the live state files.
+
+## Session 17 — 2026-11-25 — run `20261125T0004Z-6b5b`
+
+- **Ticket:** #123 ADR-012 multi-session coordination authority (P0-critical, architecture).
+- **Re-verified and rejected:** #15 CI workflow — token has no `workflow` scope, so
+  `.github/workflows/ci.yml` cannot be pushed. Claim released as BLOCKED; nothing outstanding
+  but the credential.
+- **Work:** wrote `docs/adr/ADR-012-multi-session-coordination.md` from the as-built
+  `scripts/wingman/coordination.py` and the `CONCURRENCY.md` audit (refs own claims, issues own
+  the queue, create-only refs, fail-closed interruption). Added the invariants to `AGENTS.md`,
+  the index row to `docs/adr/README.md`, and the run record.
+- **Validation:** backend `13 failed, 185 passed, 22 errors` — byte-identical with the diff
+  stashed, so the docs-only change alters nothing; cause is #137. `scripts/wingman/tests`
+  30 passed; `ruff check scripts/wingman` clean; ADR link check clean.
+- **Git:** branch `wingman/issue-123/adr-012-coordination-authority`, commit `b269c70`
+  (rebased off the unpushable #15 commit before the first successful push), PR #151.
+- **GitHub:** #123 moved from `blocked` to `verification`; #15 re-verified with evidence.
+- **Unblocked:** #124 (`P0-critical`) once PR #151 merges; #127/#128 follow.
+- **Incident:** run workspace deleted mid-session (4th, B-007) *after* the push — no loss.

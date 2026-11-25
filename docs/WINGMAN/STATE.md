@@ -4,7 +4,23 @@ Live coordinator state. GitHub Issues remain authoritative for ticket status; th
 file records what the last session actually verified and what the next session
 should do. Update it at the end of every run.
 
-**Last updated:** 2026-11-24 (session 9 — coordination upgrade foundation, PR #129)
+**Last updated:** 2026-11-25 (session 17 — ADR-012 multi-session coordination authority, PR #151)
+
+## Immediate state (session 17, verified live)
+
+The review queue, not the engineering queue, is what limits progress. Sixteen PRs are
+open against `main`; every dependency-satisfied ticket is either in one of them or
+blocked behind one of them.
+
+| Item | Verified state |
+|---|---|
+| [#123](https://github.com/anotherhale/str-ready-room/issues/123) ADR-012 | **in review**, PR #151, labelled `verification`; gates #124–#128 |
+| [#15](https://github.com/anotherhale/str-ready-room/issues/15) CI workflow | **blocked on credential scope**, re-verified session 17: this token cannot push `.github/workflows/**` |
+| `main` test suite | **red, pre-existing**: `InMemoryMailboxProvider` has no `purge()` (#137, fix in PR #138). 13 failed, 185 passed, 22 errors |
+| #137/#138, #142/#143, #16/#141, #18/#148, ADR-003/008/009/010/011 | all open PRs awaiting review/merge |
+| Next ticket | **#124** once #123 merges; otherwise nothing is unblocked faster than merging #138 |
+
+Concurrency stays **Phase A (one implementation session)** until #127 passes.
 
 ## Artifact map
 
@@ -140,8 +156,7 @@ ADR set is settled; the ADR tickets are the only work in flight.
 
 Nothing currently blocks the remaining READY ADRs.
 
-**In review:** nothing. #14 (P0-12, PR #117), ADR-007 (#9, PR #119), and the
-session-7 state PR #118 are all merged to `main`.
+**In review:** see *Immediate state* above — the queue is PR-bound, not ticket-bound.
 
 ## READY queue (dependency-satisfied, no open dependency issues)
 
@@ -221,3 +236,15 @@ it makes every later validation trustworthy), then **#5 — ADR-003**.
   fix: worktree isolation (#125).
 - **Next recommended ticket: #124** (mandatory handshake + skill), then #125, then
   #127. Product-lane next recommendation is unchanged from session 8 (#51).
+
+## Session 17 notes (operational)
+
+- The run workspace was deleted again mid-session (fourth recorded occurrence, B-007).
+  It happened *after* the branch was pushed, so nothing was lost; the state files were
+  then updated from a fresh clone. Commit and push before writing documentation — the
+  same lesson sessions 7 and 8 recorded.
+- The local `#15` commit (`.github/workflows/ci.yml`) sat underneath the new branch, so
+  the first push of a docs-only branch was refused for missing `workflow` scope. Rebasing
+  onto `main` fixed it. **Stack never on an unpushable commit in this account.**
+- Ticketing correction: session start inherited a claim comment on #15 but no live
+  evidence; re-verification (not assumption) is what kept it out of the dispatch queue.
